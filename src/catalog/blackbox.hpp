@@ -1,7 +1,7 @@
 // Prospero BlackBox - The built-in catalog: the Black Box Need for Speed games.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
-#include "catalog/client.hpp"
+#include "catalog/catalog.hpp"
 #include <span>
 #include <string>
 

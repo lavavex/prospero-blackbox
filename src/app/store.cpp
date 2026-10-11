@@ -319,14 +319,18 @@ void Screen::rebuild()
     {
         const auto all = visible_;
         visible_.clear();
-        // order: 0 as listed, 1 the twelve updated last, 2 the twelve listed last.
+        // order: 0 as listed, 1 the twelve updated last, 2 the twelve listed last,
+        // 3 oldest release first.
         const auto shelf = [&](std::string title, auto keep, int order)
         {
             std::vector<std::size_t> members;
             for (const auto index : all)
                 if (keep(apps_[index]))
                     members.push_back(index);
-            if (order)
+            if (order == 3)
+                std::stable_sort(members.begin(), members.end(), [&](auto a, auto b)
+                                 { return apps_[a].released < apps_[b].released; });
+            else if (order)
             {
                 std::stable_sort(members.begin(), members.end(),
                                  [&](auto a, auto b) {
@@ -342,6 +346,13 @@ void Screen::rebuild()
             next.title = std::move(title);
             next.start = static_cast<int>(visible_.size());
             next.count = static_cast<int>(members.size());
+            // At first the focus rests on the first game that can be installed.
+            for (int k = 0; k < next.count; ++k)
+                if (apps_[members[static_cast<std::size_t>(k)]].catalog_badge != "Coming soon")
+                {
+                    next.pos = k;
+                    break;
+                }
             for (const auto &old : previous)
                 if (old.title == next.title)
                 {
@@ -351,48 +362,13 @@ void Screen::rebuild()
             visible_.insert(visible_.end(), members.begin(), members.end());
             shelves_.push_back(std::move(next));
         };
-        const auto listed = [](const App &a) { return a.catalog_badge != "Coming soon"; };
-        // What's new: apps the catalog listed in the last thirty days, then the others it
-        // changed last. "Today" is the catalog's newest date, so the console's clock is not
-        // trusted; a catalog that doesn't say when it listed an app keeps the single shelf.
-        const auto day = [](const std::string &iso)
-        {
-            return iso.size() < 10 ? 0L
-                                   : std::atol(iso.substr(0, 4).c_str()) * 372L +
-                                         std::atol(iso.substr(5, 2).c_str()) * 31L +
-                                         std::atol(iso.substr(8, 2).c_str());
-        };
-        long today = 0;
-        for (const auto index : all)
-            today = std::max({today, day(apps_[index].added), day(apps_[index].updated)});
-        const auto fresh = [&](const App &a)
-        { return !a.local_only && listed(a) && !a.added.empty() && today - day(a.added) <= 30; };
-        const auto current = [&](const App &a) { return !a.local_only && listed(a); };
         shelf("Updates for you", [](const App &a) { return a.badge == "Update"; }, 0);
-        if (std::any_of(all.begin(), all.end(), [&](auto index) { return fresh(apps_[index]); }))
-        {
-            shelf("New in the catalog", fresh, 2);
-            // The other shelf leaves out the apps that one shows.
-            std::vector<std::string> shown_new;
-            for (int k = 0; k < shelves_.back().count; ++k)
-                shown_new.push_back(
-                    apps_[visible_[static_cast<std::size_t>(shelves_.back().start + k)]].title_id);
-            shelf(
-                "Recently updated",
-                [&](const App &a)
-                {
-                    return current(a) && std::find(shown_new.begin(), shown_new.end(),
-                                                   a.title_id) == shown_new.end();
-                },
-                1);
-        }
-        else
-            shelf("New and updated", current, 1);
-        shelf("Apps", [&](const App &a) { return a.kind == "app" && listed(a); }, 0);
-        shelf("Games", [&](const App &a) { return a.kind == "game" && listed(a); }, 0);
-        shelf("Tools", [&](const App &a) { return a.kind == "tool" && listed(a); }, 0);
-        shelf("In progress", [](const App &a) { return a.catalog_badge == "Coming soon"; }, 0);
+        // The whole collection in release order, the games still in progress greyed.
+        shelf("The collection", [](const App &) { return true; }, 3);
         shelf("On this console", [](const App &a) { return !a.installed.empty(); }, 0);
+        // A fresh page opens on its first shelf's resting place (Most Wanted, not a greyed game).
+        if (previous.empty() && !shelves_.empty() && focus_ == 0)
+            focus_ = shelves_.front().start + shelves_.front().pos;
     }
     // The stage features the newest releases.
     featured_.clear();
@@ -1321,7 +1297,7 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     else if (panel_)
         update_panel(input, feedback);
     else if (input.is_pressed(Action::menu) ||
-             (input.is_pressed(Action::west) && !details_ && section_ != 6))
+             (input.is_pressed(Action::west) && !details_ && section_ != kUpdates))
     {
         // Options opens the settings; Square, the queue.
         open_panel(input.is_pressed(Action::menu) ? 1 : 0);
@@ -1509,13 +1485,8 @@ void Screen::draw_top_bar(const ui::Fonts &fonts)
     list.gradient_rect({0, 0, kWidth, 200.0f}, 0, kDeep.with_alpha(0.7f), kDeep.with_alpha(0.0f));
     if (logo_ && !intro_showing())
         list.image(logo_, {kMargin - 4.0f, kTopY - 17.0f, 34.0f, 34.0f}, {0, 0, 1, 1}, kWhite, 7.0f);
-    const float brand = ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin + 42.0f,
+    ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin + 42.0f,
                                  centred(kTopY, 22), 22, kInk, gfx::Align::left, 5.0f);
-    // What the collection is, said once and quietly beside the name.
-    const float x = kMargin + 42.0f + brand + 20.0f;
-    list.rounded_rect({x, kTopY - 11.0f, 1.5f, 22.0f}, 0, kInk.with_alpha(0.25f));
-    ui::text(list, fonts.semibold, "Need for Speed", x + 20.0f, centred(kTopY, 20), 20,
-             kAccent.with_alpha(0.92f));
 
     // The sections: words, the active one lit, one gold line gliding under it.
     const auto glyphs = ui::GlyphStyle::dark();
@@ -1621,16 +1592,11 @@ void Screen::draw_stage(const ui::Fonts &fonts)
         if (index < 0 || alpha <= 0.01f)
             return;
         const App &app = apps_[static_cast<std::size_t>(index)];
-        const bool featured_now =
-            zone_ != Zone::grid && !featured_.empty() &&
-            featured_[static_cast<std::size_t>(banner_)] == static_cast<std::size_t>(index);
         const std::string kicker =
             app.badge == "Update"                ? "UPDATE AVAILABLE"
             : app.badge == "Installed"           ? "ON THIS CONSOLE"
             : app.catalog_badge == "Coming soon" ? "IN PROGRESS"
-            : featured_now && banner_ == 0       ? "NEW RELEASE"
-            : featured_now                       ? "FEATURED"
-                           : ui::upper(app.kind.empty() ? std::string("app") : app.kind);
+                                                 : "NEED FOR SPEED";
         list.push_opacity(alpha);
         list.push_transform(1.0f, 0, 0, dx, 0);
         list.rounded_rect({kMargin, kStageKickerY - 9.0f, 28.0f, 3.0f}, 1.5f, kAccent);
@@ -1644,12 +1610,8 @@ void Screen::draw_stage(const ui::Fonts &fonts)
             if (!part.empty())
                 meta += (meta.empty() ? "" : "  \xC2\xB7  ") + part;
         };
-        if (!app.kind.empty())
-        {
-            std::string kind = app.kind;
-            kind[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(kind[0])));
-            add(kind);
-        }
+        if (app.released.size() >= 4)
+            add(app.released.substr(0, 4));
         add(app.version);
         if (app.size)
             add(size_text(app.size));
@@ -1794,7 +1756,15 @@ void Screen::draw_tile(const ui::Fonts &fonts, int k, unsigned layers)
     // Fitting allocates: once per app, the first time it is drawn.
     if (auto &fit = fits_[index]; !fit.ready)
         fit = {fonts.semibold.font->fit(app.name, 24, kTileW - 100.0f),
-               fonts.regular.font->fit(app.author, 18, kTileW - 100.0f), true};
+               fonts.regular.font->fit(app.released.size() >= 4
+                                           ? app.author + "  \xC2\xB7  " + app.released.substr(0, 4)
+                                           : app.author,
+                                       18, kTileW - 100.0f),
+               true};
+    // A game still in progress is shown, greyed: no colour of its own, its picture dimmed.
+    const bool greyed = app.catalog_badge == "Coming soon";
+    const float dim = greyed ? 0.4f : 1.0f;
+    const Color tone = greyed ? gfx::mix(app.accent, kMid, 0.9f) : app.accent;
     const float lift = lift_[static_cast<std::size_t>(k)].value;
     const float in = swap_.running ? tween::stagger(swap_.elapsed, k % 8, 0.035f, 0.3f) : 1.0f;
     const float shake = k == focus_ && zone_ == Zone::grid ? ui::shake(nudge_.value, time_) : 0.0f;
@@ -1802,17 +1772,18 @@ void Screen::draw_tile(const ui::Fonts &fonts, int k, unsigned layers)
                         shake * nudge_y_ + 18.0f * motion() * (1.0f - in));
     const float top = in * fade_at(r.y + 1.0f), foot = in * fade_at(r.y + r.h);
     const float middle = in * fade_at(r.y + r.h * 0.4f); // where a centred icon sits
-    const float light = 0.74f + 0.26f * lift;            // resting tiles sit back a little
+    // Resting tiles sit back a little; a greyed one far back.
+    const float light = (0.74f + 0.26f * lift) * (greyed ? 0.3f : 1.0f);
     const float shown = appear_[index].value;
     if (layers & kPlates)
     {
-        list.gradient_rect(r, kTileRadius, gfx::mix(app.accent, kMid, 0.25f).with_alpha(0.9f * top),
-                           gfx::mix(app.accent, kDeep, 0.86f).with_alpha(foot));
+        list.gradient_rect(r, kTileRadius, gfx::mix(tone, kMid, 0.25f).with_alpha(0.9f * top),
+                           gfx::mix(tone, kDeep, 0.86f).with_alpha(foot));
         if (!keyart)
         {
             const float size = r.h * 0.48f;
             list.glow({r.cx() - size * 0.5f, r.y + r.h * 0.4f - size * 0.5f, size, size},
-                      size * 0.3f, 60, gfx::mix(app.accent, kInk, 0.2f).with_alpha(0.35f * top));
+                      size * 0.3f, 60, gfx::mix(tone, kInk, 0.2f).with_alpha(0.35f * top * dim));
         }
     }
     if (layers & kImages)
@@ -1832,7 +1803,7 @@ void Screen::draw_tile(const ui::Fonts &fonts, int k, unsigned layers)
         {
             const float size = r.h * 0.48f;
             list.image(texture, {r.cx() - size * 0.5f, r.y + r.h * 0.4f - size * 0.5f, size, size},
-                       gfx::kFullUv, kWhite.with_alpha(middle * shown), size * 0.22f);
+                       gfx::kFullUv, Color{dim, dim, dim, middle * shown}, size * 0.22f);
         }
     }
     const bool queued = std::find(activity_.waiting.begin(), activity_.waiting.end(),
@@ -1872,7 +1843,7 @@ void Screen::draw_tile(const ui::Fonts &fonts, int k, unsigned layers)
     const float x = r.x + (keyart && app.icon ? 78.0f : 20.0f);
     if (layers & kSemibold)
         ui::text(list, fonts.semibold, fits_[index].title, x, r.y + r.h - 40.0f, 24,
-                 kInk.with_alpha(foot * (0.9f + 0.1f * lift)));
+                 kInk.with_alpha(foot * (0.9f + 0.1f * lift) * (greyed ? 0.6f : 1.0f)));
     if (app.badge == "Installed")
     {
         if (layers & kShapes)

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
-#include "catalog/client.hpp"
+#include "catalog/catalog.hpp"
 #include "core/image.hpp"
 #include "install/transaction.hpp"
 #include "system/inventory.hpp"

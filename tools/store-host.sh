@@ -32,3 +32,13 @@ ninja_run > "$build/build.log" 2>&1 || { tail -60 "$build/build.log"; exit 1; }
 mkdir -p "$root/build/snapshots"
 EGL_PLATFORM=surfaceless LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe \
     "$build/store-host" "$root/assets" "$root/build/snapshots/browse-loading.png"
+# The collection, from a built app folder (make app): the home page and the stage.
+app=${STORE_APP:-$root/dist/PPSA99400}
+if [[ -d $app/assets/games ]]; then
+    for mode in home stage shelf-2; do
+        args=("$root/assets" "$root/build/snapshots/collection-$mode.png" "$app")
+        [[ $mode == home ]] || args+=("$mode")
+        EGL_PLATFORM=surfaceless LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe \
+            "$build/store-host" "${args[@]}"
+    done
+fi

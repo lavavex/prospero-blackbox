@@ -175,7 +175,7 @@ int main()
                game.icon.ends_with(".png"));
     assert(service.request_detail("PPSA99403"));
     const auto page = next(service, store::Update::Kind::detail);
-    assert(page.entry.id == "PPSA99403" && page.entry.name == "Need for Speed: Most Wanted");
+    assert(page.entry.id == "PPSA99403" && page.entry.name == "Most Wanted");
     assert(service.request_detail("PPSA99001"));
     const auto unknown = next(service, store::Update::Kind::error);
     assert(unknown.entry.id == "PPSA99001" && !unknown.message.empty());

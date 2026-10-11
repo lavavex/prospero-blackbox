@@ -111,4 +111,15 @@ struct News
 // At most twenty items are kept. An item this version can't read is left out; a file that
 // is not the feed at all is an error.
 bool parse_news(std::string_view body, std::vector<News> &out, std::string &error);
+
+// The catalog the store shows: the built-in collection (catalog/blackbox.hpp).
+struct Snapshot
+{
+    Manifest manifest;
+    std::vector<Entry> entries;
+    std::map<std::string, std::string> versions;
+    bool verified = false;
+    bool accepted = false; // complete and valid
+    bool online = false;
+};
 } // namespace store::catalog

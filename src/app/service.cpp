@@ -620,14 +620,6 @@ void Service::run_installer()
 }
 void Service::run()
 {
-#ifdef STORE_SANDBOX_CONTROL
-    std::string probe_body;
-    const auto probe =
-        net::fetch("https://homebrew.page/api/v1/manifest.json", net::Purpose::catalog,
-                   catalog::kVersionsLimit, probe_body, control_);
-    hui::sys::log("[STORE] sandbox TLS control status=%d bytes=%zu error=%s", probe.status,
-                  probe_body.size(), probe.error.c_str());
-#endif
     if (!root_.empty() && !hui::save::ensure_directory(root_))
     {
         Update failure;
@@ -670,7 +662,7 @@ void Service::run()
         Update result;
         result.kind = Update::Kind::catalog;
         result.snapshot = catalog::blackbox_snapshot(system::app_folder());
-        result.message = "Need for Speed: Black Box collection";
+        result.message = "Black Box collection";
         hui::sys::log("[STORE] catalog built-in games=%zu", result.snapshot.entries.size());
         publish(std::move(result));
     }

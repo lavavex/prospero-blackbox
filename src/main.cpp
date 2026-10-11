@@ -132,7 +132,6 @@ int main()
     if (store::diag::enabled())
     {
         store::diag::trace_console("start");
-        store::diag::curl_probe("sandboxed");
     }
 #endif
 #ifdef STORE_SANDBOX_CONTROL
@@ -177,8 +176,6 @@ int main()
     if (debug_at_start)
     {
         store::diag::trace_console("after elevation");
-        if (elevated)
-            store::diag::curl_probe("after elevation");
     }
     store::diag::trace("app folder: %s; network: %s (0x%08x)", app_root.c_str(),
                        store::net::transport_name(), static_cast<unsigned>(transport));

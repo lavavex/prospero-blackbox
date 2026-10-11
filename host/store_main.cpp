@@ -5,7 +5,7 @@
 #include "app/ambient.hpp"
 #include "app/keyboard_map.hpp"
 #include "app/store.hpp"
-#include "catalog/client.hpp"
+#include "catalog/blackbox.hpp"
 #include "catalog/icons.hpp"
 #include "core/image.hpp"
 #include "core/qr.hpp"
@@ -87,10 +87,10 @@ static void check_search_and_sort()
     b.updated = "2026-09-01";
     c.title_id = "PPSA99003";
     c.name = "Coming Soon";
-    a.kind = b.kind = c.kind = "app";
+    a.kind = b.kind = c.kind = "game";
     screen.set_catalog({a, b, c}, "test");
     {
-        // Sorting and search work on a section's grid: go to Apps.
+        // Sorting and search work on a section's grid: go to Games.
         hui::InputFrame next;
         next.pressed = hui::action_bit(hui::Action::page_next);
         hui::ui::Feedback quiet;
@@ -209,55 +209,6 @@ static void check_wrapping_and_closing()
     assert(screen.wants_quit());
 }
 
-static void check_news_and_new_apps()
-{
-    // The feed: items this version can read, twenty at most; not a feed at all is an error.
-    std::vector<store::catalog::News> news;
-    std::string error;
-    assert(store::catalog::parse_news(
-        R"({"schema":3,"news":[{"id":"2026-10-11-a","date":"2026-10-11T10:00:00Z","title":"Hello",)"
-        R"("body":"First.\n\nSecond."},{"id":"x","title":"no date"},7]})",
-        news, error));
-    assert(news.size() == 1 && news[0].id == "2026-10-11-a" && news[0].body == "First.\n\nSecond.");
-    assert(!store::catalog::parse_news(R"({"schema":3,"apps":[]})", news, error));
-    assert(!store::catalog::parse_news(R"({"schema":2,"news":[]})", news, error));
-    assert(store::catalog::parse_news(R"({"schema":3,"news":[]})", news, error) && news.empty());
-    // An item is announced until its room has been opened; that is remembered in the settings.
-    store::Screen screen;
-    screen.set_news({{"2026-10-11-a", "2026-10-11T10:00:00Z", "Hello", "First."}});
-    assert(screen.settings().news_seen.empty() && !screen.settings_changed);
-    screen.open_panel(3);
-    assert(screen.settings().news_seen == "2026-10-11-a" && screen.settings_changed);
-    const auto kept = store::parse_settings(store::format_settings(screen.settings()));
-    assert(kept.news_seen == "2026-10-11-a");
-    // Discover: apps the catalog listed in the last thirty days have their own shelf, ahead of
-    // the others it changed last. Without those dates there is the one shelf, as before.
-    store::App fresh, old, undated;
-    fresh.title_id = "PPSA99001";
-    fresh.name = "Fresh";
-    fresh.added = "2026-10-05T00:00:00Z";
-    fresh.updated = "2026-10-06T00:00:00Z";
-    old.title_id = "PPSA99002";
-    old.name = "Old";
-    old.added = "2026-07-01T00:00:00Z";
-    old.updated = "2026-10-10T00:00:00Z";
-    undated.title_id = "PPSA99003";
-    undated.name = "Undated";
-    undated.updated = "2026-09-01T00:00:00Z";
-    fresh.kind = old.kind = undated.kind = "app";
-    screen.set_catalog({old, undated, fresh}, "dated");
-    auto shown = screen.artwork();
-    assert(shown.size() >= 3 && shown[0] == fresh.title_id && shown[1] == old.title_id &&
-           shown[2] == undated.title_id);
-    fresh.added.clear();
-    old.added.clear();
-    store::Screen plain; // a new screen: the focus is on the first tile again
-    plain.set_catalog({old, undated, fresh}, "undated");
-    shown = plain.artwork();
-    assert(shown.size() >= 3 && shown[0] == old.title_id && shown[1] == fresh.title_id &&
-           shown[2] == undated.title_id);
-}
-
 static void check_installed_sections()
 {
     store::Screen screen;
@@ -278,7 +229,8 @@ static void check_installed_sections()
     hui::InputFrame section;
     section.pressed = hui::action_bit(hui::Action::page_next);
     hui::ui::Feedback feedback;
-    for (int index = 0; index < 5; ++index)
+    // Installed is the fourth section, Updates the fifth.
+    for (int index = 0; index < 3; ++index)
         screen.update(section, 1.0f / 60.0f, feedback);
     assert(screen.artwork() == std::vector<std::string>{app.title_id});
     screen.update(section, 1.0f / 60.0f, feedback);
@@ -396,102 +348,14 @@ static void check_hold_to_uninstall()
     assert(!store::parse_settings("location=/data/homebrew\n").reduce_motion);
 }
 
-static void check_catalog_settings()
-{
-    using namespace store;
-    assert(parse_settings("").verify_signatures);
-    Settings settings;
-    settings.catalog_url = "https://dev.example/api/v1/";
-    settings.verify_signatures = false;
-    const auto saved = parse_settings(format_settings(settings));
-    assert(saved.catalog_url == settings.catalog_url && !saved.verify_signatures);
-    assert(parse_settings("catalog_url=http://bad/\nverify_signatures=oops\n").verify_signatures);
-    assert(parse_settings("catalog_url=http://bad/\n").catalog_url == catalog::kDefaultApi);
-    Screen screen;
-    screen.open_panel(1);
-    hui::ui::Feedback feedback;
-    hui::InputFrame down, up, confirm, back, right;
-    down.nav = hui::Direction::down;
-    up.nav = hui::Direction::up;
-    right.nav = hui::Direction::right;
-    confirm.pressed = hui::action_bit(hui::Action::confirm);
-    back.pressed = hui::action_bit(hui::Action::back);
-    for (int i = 0; i < 7; ++i)
-        screen.update(down, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback); // Development options: Official catalog.
-    // The official catalog can't go while no custom one is in use.
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.settings().use_official && !screen.settings().use_custom);
-    // Custom catalog on: with no address yet, the store asks for one.
-    screen.update(down, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.settings().use_custom && screen.pending_catalog_url);
-    assert(screen.settings().use_official); // not active yet: the official one stays
-    screen.pending_catalog_url = false;
-    screen.set_catalog_url("https://dev.example/api/v1");
-    assert(screen.settings().catalog_url == settings.catalog_url && screen.settings_changed);
-    screen.set_catalog_url("http://bad/");
-    assert(screen.settings().catalog_url == settings.catalog_url);
-    // As typed on the console: spaces around it, or no scheme.
-    screen.set_catalog_url("  dev.example/api/v1 \n");
-    assert(screen.settings().catalog_url == settings.catalog_url);
-    // The official address is not a custom catalog, and an empty answer changes nothing.
-    screen.set_catalog_url(catalog::kDefaultApi);
-    assert(screen.settings().catalog_url == settings.catalog_url);
-    screen.set_catalog_url("https://");
-    assert(screen.settings().catalog_url == settings.catalog_url && screen.settings().use_custom);
-    assert(screen.settings().custom_active() && screen.settings().use_official); // both
-    // Now the official catalog can be switched off (custom only), and on again.
-    screen.update(up, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(!screen.settings().use_official);
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.settings().use_official);
-    // The address row asks again.
-    screen.update(down, 0.016f, feedback);
-    screen.update(down, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.pending_catalog_url);
-    screen.pending_catalog_url = false;
-    // Signature checks: asking is not consent.
-    screen.update(down, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.settings().verify_signatures);
-    screen.update(back, 0.016f, feedback);
-    assert(screen.settings().verify_signatures);
-    screen.update(confirm, 0.016f, feedback);
-    screen.update(right, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(!screen.settings().verify_signatures);
-    // Restore: the official catalog alone, checked.
-    screen.update(down, 0.016f, feedback);
-    screen.update(confirm, 0.016f, feedback);
-    assert(screen.settings().verify_signatures &&
-           screen.settings().catalog_url == catalog::kDefaultApi);
-    assert(screen.settings().use_official && !screen.settings().use_custom);
-    // The two switches survive the settings file, and a file can't switch both off.
-    Settings both;
-    both.catalog_url = "https://dev.example/api/v1/";
-    both.use_custom = true;
-    both.use_official = false;
-    const auto kept = parse_settings(format_settings(both));
-    assert(kept.use_custom && !kept.use_official && kept.custom_active());
-    assert(parse_settings("use_official=0\nuse_custom=0\n").use_official);
-    assert(parse_settings("use_official=0\nuse_custom=1\n").use_official); // no address: not active
-    // A switch saved on with no address reads as off.
-    assert(!parse_settings("use_official=1\nuse_custom=1\n").use_custom);
-}
-
 int main(int argc, char **argv)
 {
     check_artwork_requests();
     check_search_and_sort();
-    check_news_and_new_apps();
     check_wrapping_and_closing();
     check_installed_sections();
     check_hold_to_uninstall();
     check_keyboard_keys();
-    check_catalog_settings();
     if (argc < 3 || argc > 5)
         return 2;
     const auto get_display = reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
@@ -554,14 +418,9 @@ int main(int argc, char **argv)
         if (argc >= 4 && std::string(argv[3]) != "settings" &&
             std::string(argv[3]) != "catalog-settings")
         {
-            store::catalog::Client catalog(argv[3]);
-            store::catalog::Snapshot snapshot;
-            std::string error;
-            if (!catalog.cached(snapshot, error))
-            {
-                std::fprintf(stderr, "%s\n", error.c_str());
-                return 8;
-            }
+            // argv[3]: a built app folder (dist/PPSA99400), with assets/games and sce_sys.
+            const std::string app_root = argv[3];
+            const auto snapshot = store::catalog::blackbox_snapshot(app_root);
             std::vector<store::App> apps;
             for (const auto &entry : snapshot.entries)
             {
@@ -571,24 +430,25 @@ int main(int argc, char **argv)
                 apps.back().available_version = entry.content_version;
                 apps.back().size = entry.size;
                 apps.back().added = entry.added;
-                // A preview of the shelves with a catalog that doesn't date its apps yet.
-                if (argc == 5 && std::string(argv[4]) == "whats-new" && entry.added.empty())
-                    apps.back().added = entry.released;
             }
-            screen.set_catalog(std::move(apps), "Verified catalog");
-            store::catalog::Icons icons(std::string(argv[3]) + "/icons");
-            store::net::Control control;
+            screen.set_catalog(std::move(apps), "Black Box collection");
+            const auto picture = [&](const std::string &path, hui::Image &image)
+            {
+                std::string encoded;
+                return hui::save::read_file(path, &encoded, 2u << 20) &&
+                       hui::decode_png(encoded, image);
+            };
+            if (hui::Image logo; picture(app_root + "/sce_sys/icon0.png", logo))
+            {
+                textures.push_back(
+                    renderer.batch().create_texture(logo.width, logo.height, logo.rgba.data()));
+                screen.set_logo(textures.back());
+            }
             for (const auto &entry : snapshot.entries)
             {
                 hui::Image image;
-                if (!icons.cached(entry, image))
-                {
-                    std::string encoded;
-                    const auto response = store::net::fetch(
-                        entry.icon, store::net::Purpose::catalog, 2u << 20, encoded, control);
-                    if (!response.ok() || !icons.store(entry, encoded, image))
-                        continue;
-                }
+                if (!picture(entry.icon, image))
+                    continue;
                 const auto texture =
                     renderer.batch().create_texture(image.width, image.height, image.rgba.data());
                 textures.push_back(texture);
@@ -606,14 +466,9 @@ int main(int argc, char **argv)
                 screen.set_accent(
                     entry.id, hui::gfx::Color::rgb(vivid ? vivid : store::average_colour(image)));
             }
-            // The verified details the stage would ask for, from the cache.
+            // The built-in catalog holds every page's details.
             for (const auto &entry : snapshot.entries)
-            {
-                store::catalog::Entry detail;
-                std::string why;
-                if (catalog.detail(snapshot, entry.id, detail, control, why))
-                    screen.set_detail(detail);
-            }
+                screen.set_detail(entry);
         }
         hui::ui::Feedback feedback;
         if (argc == 5)
@@ -903,21 +758,12 @@ int main(int argc, char **argv)
                     screen.set_detail_error(screen.pending_detail, "The network is unavailable.");
                 else
                 {
-                    store::catalog::Client client(argv[3]);
-                    store::catalog::Snapshot snapshot;
                     store::catalog::Entry entry;
-                    store::net::Control control;
-                    std::string error;
-                    assert(client.cached(snapshot, error));
-                    assert(client.detail(snapshot, screen.pending_detail, entry, control, error));
+                    for (const auto &game : store::catalog::blackbox_snapshot(argv[3]).entries)
+                        if (game.id == screen.pending_detail)
+                            entry = game;
+                    assert(!entry.id.empty());
                     screen.set_detail(entry);
-                    hui::Image qr;
-                    assert(hui::encode_qr("https://homebrew.page/app/" + entry.id + "/", qr));
-                    const auto texture =
-                        renderer.batch().create_texture(qr.width, qr.height, qr.rgba.data());
-                    assert(texture);
-                    textures.push_back(texture);
-                    screen.set_qr(entry.id, texture, qr.width);
                     if (mode == "detail-progress")
                     {
                         // Two samples a second apart give the page a speed, and so a time left.
