@@ -163,3 +163,12 @@ int pclose(FILE *stream)
     errno = ENOSYS;
     return -1;
 }
+
+/* A fortified compiler-rt (Arch's clang, built with _FORTIFY_SOURCE) calls
+ * __memset_chk from __emutls_get_address; the console's libc has no _chk
+ * entry points. The object size is not known here, so forward to memset. */
+void *__memset_chk(void *dest, int value, size_t length, size_t dest_length)
+{
+    (void)dest_length;
+    return memset(dest, value, length);
+}
