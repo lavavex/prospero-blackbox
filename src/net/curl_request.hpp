@@ -1,4 +1,4 @@
-// ProsperoStore - Checked curl transport, shared by host and native fallback.
+// Prospero BlackBox - Checked curl transport, shared by host and native fallback.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

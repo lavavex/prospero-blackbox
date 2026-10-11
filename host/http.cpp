@@ -1,4 +1,4 @@
-// ProsperoStore - Host bindings for the checked curl transport.
+// Prospero BlackBox - Host bindings for the checked curl transport.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "net/curl_request.hpp"

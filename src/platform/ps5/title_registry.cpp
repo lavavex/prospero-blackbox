@@ -1,4 +1,4 @@
-// ProsperoStore - The console's list of installed titles, through libSceAppInstUtil.
+// Prospero BlackBox - The console's list of installed titles, through libSceAppInstUtil.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "system/title_registry.hpp"
@@ -65,7 +65,7 @@ int prepare_title_registry()
 
 int unregister_title(const std::string &title_id)
 {
-    // A title ID is nine characters, four capitals and five digits (PPSA99000).
+    // A title ID is nine characters, four capitals and five digits (PPSA99400).
     if (title_id.size() != 9)
         return -1;
     for (std::size_t i = 0; i < title_id.size(); ++i)

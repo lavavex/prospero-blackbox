@@ -1,4 +1,4 @@
-// ProsperoStore - Is a title running? Asked before its folder is touched.
+// Prospero BlackBox - Is a title running? Asked before its folder is touched.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

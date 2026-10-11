@@ -1,4 +1,4 @@
-// ProsperoStore - Hostile archives, refusals, and a power cut at every transaction step.
+// Prospero BlackBox - Hostile archives, refusals, and a power cut at every transaction step.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "install/archive.hpp"
@@ -295,7 +295,7 @@ struct Fixture
         fs::create_directories(location);
         fs::create_directories(state);
         environment.root = state.string();
-        environment.self = "PPSA99000";
+        environment.self = "PPSA99400";
         environment.work = work.string();
         environment.registered = (root / "user").string();
         environment.data = (root / "data").string();
@@ -489,7 +489,7 @@ void check_transactions(const fs::path &base)
     changed.minimum_version = "01.000.002";
     assert(refused(changed));
     changed = request;
-    changed.entry.id = "PPSA99000";
+    changed.entry.id = "PPSA99400";
     assert(refused(changed));
     changed = request;
     changed.location = f.root.string();
@@ -915,7 +915,7 @@ void check_self_update(const fs::path &base)
     assert(tree(f.target()) == v2 && tree(f.work / "backup" / kId) == v1);
     assert(fs::exists(f.state / "journal.json"));
     // Until the restart nothing else is changed.
-    f.environment.self = "PPSA99000";
+    f.environment.self = "PPSA99400";
     assert(!f.apply(f.request("01.000.001")).ok);
     f.environment.self = kId;
     // The console may start the old store once more: it leaves everything alone.
@@ -1028,22 +1028,22 @@ struct WorkerHost
 void check_worker(const fs::path &base, const std::string &program)
 {
     using install::worker_path;
-    assert(worker_path("/data/prosperostore/staging/PPSA99500"));
+    assert(worker_path("/data/prospero-blackbox/staging/PPSA99500"));
     assert(worker_path("/mnt/usb0/prosperostore/trash/PPSA99500"));
-    assert(!worker_path("/data/prosperostore"));          // The work folder itself.
+    assert(!worker_path("/data/prospero-blackbox"));          // The work folder itself.
     assert(!worker_path("/data/homebrew/PPSA99500"));     // An installed app.
     assert(!worker_path("data/prosperostore/staging/x")); // Not absolute.
-    assert(!worker_path("/data/prosperostore/../etc"));
-    assert(!worker_path("/data/prosperostore/./x"));
-    assert(!worker_path("/data/prosperostore//x"));
-    assert(!worker_path("/data/prosperostore/x/"));
-    assert(!worker_path("/data/prosperostore/a\nb"));
+    assert(!worker_path("/data/prospero-blackbox/../etc"));
+    assert(!worker_path("/data/prospero-blackbox/./x"));
+    assert(!worker_path("/data/prospero-blackbox//x"));
+    assert(!worker_path("/data/prospero-blackbox/x/"));
+    assert(!worker_path("/data/prospero-blackbox/a\nb"));
     assert(!worker_path("/data/myprosperostore/x"));
     assert(!worker_path(""));
 
     const auto v1 = expected_tree(app("01.000.001")), v2 = expected_tree(app("01.000.002"));
     Fixture f(base, "worker");
-    f.work = f.root / "prosperostore";
+    f.work = f.root / "prospero-blackbox";
     f.environment.work = f.work.string();
     WorkerHost host;
     host.program = program;

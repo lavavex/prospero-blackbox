@@ -1,4 +1,4 @@
-// ProsperoStore - The store's own folder, taken back when another user left files in it.
+// Prospero BlackBox - The store's own folder, taken back when another user left files in it.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

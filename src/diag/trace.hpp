@@ -1,4 +1,4 @@
-// ProsperoStore - The debug build's trace: what the store found at each step, for reports.
+// Prospero BlackBox - The debug build's trace: what the store found at each step, for reports.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

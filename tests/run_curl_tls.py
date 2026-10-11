@@ -1,4 +1,4 @@
-# ProsperoStore - Local TLS server, with an ephemeral localhost certificate.
+# Prospero BlackBox - Local TLS server, with an ephemeral localhost certificate.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer

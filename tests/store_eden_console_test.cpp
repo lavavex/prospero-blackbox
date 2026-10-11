@@ -1,4 +1,4 @@
-// ProsperoStore - Isolated PS5 Eden migration and recovery checks.
+// Prospero BlackBox - Isolated PS5 Eden migration and recovery checks.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "install/transaction.hpp"
@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 using namespace store;
-const std::string root = "/data/prosperostore/.eden-fix-test-6b1ebc0-20261010-r2";
+const std::string root = "/data/prospero-blackbox/.eden-fix-test-6b1ebc0-20261010-r2";
 const std::string id = "PPSA99008";
 const char *folders[] = {"keys", "firmware", "roms", "updates", "mods", "ryujinx", "save-import"};
 void require(bool ok, const std::string &message)
@@ -81,7 +81,7 @@ struct Fixture
         env.work = work;
         env.data = base + "/data";
         env.registered.clear();
-        env.self = "PPSA99000";
+        env.self = "PPSA99400";
         env.policy.roots = {apps};
         env.running = [](const std::string &) { return 0; };
         env.space = [](const std::string &, uint64_t &available)

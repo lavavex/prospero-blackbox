@@ -1,4 +1,4 @@
-// ProsperoStore - The debug build's libcurl probe: one request with everything curl says.
+// Prospero BlackBox - The debug build's libcurl probe: one request with everything curl says.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "diag/trace.hpp"

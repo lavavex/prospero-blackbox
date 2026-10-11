@@ -1,4 +1,4 @@
-// ProsperoStore - Storefront composition and navigation.
+// Prospero BlackBox - Storefront composition and navigation.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -302,9 +302,9 @@ void Screen::open_store_offer(ui::Feedback &feedback)
         buttons.push_back({"What's new"});
     buttons.push_back({"Update now", ui::ButtonKind::primary});
     const int update_now = static_cast<int>(buttons.size()) - 1;
-    dialog_.open({ui::StatusKind::info, "ProsperoStore " + store_offer_version_ + " is available",
+    dialog_.open({ui::StatusKind::info, "Prospero BlackBox " + store_offer_version_ + " is available",
                   "You have " + self_version_ +
-                      ". The update is checked against the signed catalog, and ProsperoStore "
+                      ". The update is checked against the signed catalog, and Prospero BlackBox "
                       "closes when it is installed.",
                   std::move(buttons), update_now},
                  feedback);
@@ -1238,7 +1238,7 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
             ask_ = Ask::adopt;
             ask_id_ = shown.title_id;
             dialog_.open({ui::StatusKind::question,
-                          "Manage " + shown.name + " with ProsperoStore?",
+                          "Manage " + shown.name + " with Prospero BlackBox?",
                           "Nothing is changed now. From then on its updates are offered here. An "
                           "update replaces the app's whole folder; the previous one, with "
                           "anything you added inside it, is kept in the store's \"previous\" "
@@ -1412,7 +1412,7 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
                 order(*self, Order::Kind::install);
             else
                 notify("The update couldn't start",
-                       state.reason.empty() ? "Open ProsperoStore's page in About to update it."
+                       state.reason.empty() ? "Open Prospero BlackBox's page in About to update it."
                                             : state.reason);
         }
     }
@@ -2110,7 +2110,7 @@ void Screen::draw_grid(const ui::Fonts &fonts)
             : library && !inventory_.complete
                 ? "Installed apps are unavailable until their locations can be read."
             : !query_.empty() ? "Try another app name or developer."
-            : section_ == 6   ? "Updates for apps installed by ProsperoStore appear here."
+            : section_ == 6   ? "Updates for apps installed by Prospero BlackBox appear here."
             : apps_.empty()   ? "Verified apps will appear here when the catalog is ready."
                               : "Try another section.";
         // While something is on its way an arc draws itself into a full
@@ -2353,13 +2353,13 @@ Screen::Offer Screen::offer(const App &app) const
         const bool newer = catalog::update_available(self_version_, app.available_version);
         out.headline = restart_needed_ ? "Restart to finish"
                        : newer         ? "Update"
-                                       : "This is ProsperoStore";
+                                       : "This is Prospero BlackBox";
         out.note = newer && !restart_needed_
                        ? self_version_ + "  \xE2\x86\x92  " + app.available_version
                        : "Version " + self_version_;
         out.tone = newer || restart_needed_ ? 1 : 0;
         out.reason = restart_needed_
-                         ? "Close ProsperoStore and open it again to use the new version."
+                         ? "Close Prospero BlackBox and open it again to use the new version."
                      : newer ? ""
                              : "You are using it right now.";
         if (newer && !restart_needed_)
@@ -2374,7 +2374,7 @@ Screen::Offer Screen::offer(const App &app) const
             {
                 out.armed = true;
                 out.reason = "The new version is put in place now and starts the next time "
-                             "ProsperoStore is opened.";
+                             "Prospero BlackBox is opened.";
             }
         }
         return out;
@@ -2403,10 +2403,10 @@ Screen::Offer Screen::offer(const App &app) const
                  installed->path.ends_with("/" + app.title_id))
         {
             // Installed by hand, and listed in the catalog: it can be handed over.
-            out.label = "Manage with ProsperoStore";
+            out.label = "Manage with Prospero BlackBox";
             out.primary = Order::Kind::adopt;
             out.armed = installer_;
-            out.reason = installer_ ? "Installed outside ProsperoStore. Hand it over to get its "
+            out.reason = installer_ ? "Installed outside Prospero BlackBox. Hand it over to get its "
                                       "updates here."
                                     : installer_reason_;
             return out;
@@ -2424,7 +2424,7 @@ Screen::Offer Screen::offer(const App &app) const
     {
         out.headline = "Not installable";
         out.note = "Published as a disk image";
-        out.reason = "Can't be installed by this version of ProsperoStore";
+        out.reason = "Can't be installed by this version of Prospero BlackBox";
     }
     else if (!app.local_only)
     {
@@ -3041,7 +3041,7 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
         // The bar that fills while Circle is held; full, the store closes.
         const float filled = tween::clamp01((close_hold_ - kCloseDelay) / kCloseHold);
         const float shown = tween::clamp01((close_hold_ - kCloseDelay) / 0.12f);
-        const char *words = "Keep holding to close ProsperoStore";
+        const char *words = "Keep holding to close Prospero BlackBox";
         const float width = fonts.semibold.measure(words, 24) + 132.0f;
         const Rect pill{(kWidth - width) * 0.5f, 842.0f, width, 76.0f};
         overlay_.push_opacity(shown);
@@ -3280,7 +3280,7 @@ void Screen::write_about()
         for (const auto &line : debug_lines_)
             blocks.push_back(Block::bullet(line));
     }
-    blocks.push_back(Block::paragraph("ProsperoStore installs, updates and uninstalls apps from "
+    blocks.push_back(Block::paragraph("Prospero BlackBox installs, updates and uninstalls apps from "
                                       "your selected homebrew catalog."));
     blocks.push_back(
         Block::key_value("Version", self_version_.empty() ? "Unknown" : self_version_));
@@ -3299,11 +3299,11 @@ void Screen::write_about()
     blocks.push_back(Block::heading("Please note", 3));
     blocks.push_back(Block::paragraph(
         "Apps are published by their own developers, who are responsible for their content "
-        "and licensing. A listing is not a security audit. ProsperoStore and the catalog come "
+        "and licensing. A listing is not a security audit. Prospero BlackBox and the catalog come "
         "without warranty."));
     blocks.push_back(Block::heading("Where things are", 3));
-    blocks.push_back(Block::key_value("Store files", "/data/prosperostore"));
-    blocks.push_back(Block::key_value("Logs", "/data/prosperostore/logs"));
+    blocks.push_back(Block::key_value("Store files", "/data/prospero-blackbox"));
+    blocks.push_back(Block::key_value("Logs", "/data/prospero-blackbox/logs"));
     blocks.push_back(Block::heading("Thanks", 3));
     blocks.push_back(Block::paragraph(
         "ShadowMountPlus by drakmor puts installed apps on the home screen. Built with "
@@ -3444,7 +3444,7 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
             return refuse(feedback, input.nav_repeat, 0.0f, 0.0f);
         }
         settings_.use_official = !settings_.use_official;
-        notify("Catalog settings saved", "Close and reopen ProsperoStore to apply.");
+        notify("Catalog settings saved", "Close and reopen Prospero BlackBox to apply.");
     }
     else if (setting == 6)
     {
@@ -3454,8 +3454,8 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
         if (!settings_.custom_active())
             settings_.use_official = true;
         notify("Catalog settings saved", settings_.use_custom
-                                             ? "Close and reopen ProsperoStore to add your catalog."
-                                             : "Close and reopen ProsperoStore to apply.");
+                                             ? "Close and reopen Prospero BlackBox to add your catalog."
+                                             : "Close and reopen Prospero BlackBox to apply.");
     }
     else if (setting == 7)
     {
@@ -3491,7 +3491,7 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
         settings_.use_official = true;
         settings_.use_custom = false;
         settings_.catalog_url = catalog::kDefaultApi;
-        notify("Official catalog restored", "Close and reopen ProsperoStore to apply.");
+        notify("Official catalog restored", "Close and reopen Prospero BlackBox to apply.");
     }
     else
     {
@@ -3790,7 +3790,7 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
         } rows[] = {
             {3, "Install location", "Where new apps go: a folder ShadowMountPlus scans.", 0, place,
              true},
-            {4, "Check for a newer ProsperoStore", "Asked once at start; a notice appears.", 1, "",
+            {4, "Check for a newer Prospero BlackBox", "Asked once at start; a notice appears.", 1, "",
              settings_.check_updates},
             {5, "Sounds", "The interface's own sounds.", 1, "", settings_.sounds},
             {6, "Vibration", "A light answer from the controller.", 1, "", settings_.vibration},
@@ -3809,7 +3809,7 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
              settings_.verify_signatures},
             {4, "Restore official catalog",
              "Only homebrew.page, with signature checks, next launch.", 2, "Restore", false},
-            {7, "ProsperoStore", "Its page updates it.", 2,
+            {7, "Prospero BlackBox", "Its page updates it.", 2,
              restart_needed_ ? "Restart to finish"
              : newer         ? "Version " + self->available_version + " available"
                              : "Version " + self_version_ + (self ? ", up to date" : ""),
@@ -3901,7 +3901,7 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
         list.glow({cx - 56.0f, cy - 56.0f, 112.0f, 112.0f}, 40, 50, kAccent.with_alpha(0.2f));
         list.rotated_rect({cx - 40.0f, cy - 40.0f, 80.0f, 80.0f}, 16.0f, 0.7854f, kAccent);
         list.rotated_rect({cx - 18.0f, cy - 18.0f, 36.0f, 36.0f}, 7.0f, 0.7854f, kDeep);
-        ui::text(list, fonts.display, "ProsperoStore", px + 150.0f, panel.y + 98.0f, 52, kInk);
+        ui::text(list, fonts.display, "Prospero BlackBox", px + 150.0f, panel.y + 98.0f, 52, kInk);
         float words = ui::text(list, fonts.regular, "Apps from ", px + 152.0f, panel.y + 136.0f, 22,
                                kInk.with_alpha(0.62f));
         ui::text(list, fonts.semibold,

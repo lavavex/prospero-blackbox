@@ -1,4 +1,4 @@
-// ProsperoStore - The boilerplate's update check, over the store's own HTTPS.
+// Prospero BlackBox - The boilerplate's update check, over the store's own HTTPS.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The store is elevated, where the console's own HTTPS can't reach public

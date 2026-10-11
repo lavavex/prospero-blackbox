@@ -1,4 +1,4 @@
-// ProsperoStore - Real TLS refusal and response-boundary checks.
+// Prospero BlackBox - Real TLS refusal and response-boundary checks.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "net/curl_request.hpp"

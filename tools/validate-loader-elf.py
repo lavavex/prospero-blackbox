@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ProsperoStore - Check that a program sent to the payload loader ends at its section table.
+# Prospero BlackBox - Check that a program sent to the payload loader ends at its section table.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 

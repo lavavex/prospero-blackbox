@@ -1,4 +1,4 @@
-// ProsperoStore - The boilerplate's self-update engine, compiled as it ships.
+// Prospero BlackBox - The boilerplate's self-update engine, compiled as it ships.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The store builds the offer from its own verified catalog and supplies the

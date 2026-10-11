@@ -1,4 +1,4 @@
-// ProsperoStore - Where the running store's own files are.
+// Prospero BlackBox - Where the running store's own files are.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

@@ -1,4 +1,4 @@
-// ProsperoStore - Artwork remains available during refresh and bounded during stalls.
+// Prospero BlackBox - Artwork remains available during refresh and bounded during stalls.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "app/service.hpp"
@@ -82,7 +82,7 @@ bool Client::refresh(Snapshot &out, net::Control &control, std::string &)
 bool Client::detail(const Snapshot &, const std::string &id, Entry &entry, net::Control &,
                     std::string &error)
 {
-    if (id != "PPSA99000")
+    if (id != "PPSA99400")
     {
         error = "offline";
         return false;
@@ -110,7 +110,7 @@ Response fetch(const std::string &url, Purpose, std::size_t, std::string &body, 
     if (url == "https://homebrew.page/api/v1/apps/PPSA99000.json")
     {
         // The store's own listing, one release ahead of the running build.
-        body = R"({"schema":3,"titleid":"PPSA99000","status":"available",)"
+        body = R"({"schema":3,"titleid":"PPSA99400","status":"available",)"
                R"("content_version":"01.000.010","version":"1.0.10",)"
                R"("page":"https://homebrew.page/app/PPSA99000/"})";
         Response listed;
@@ -162,7 +162,7 @@ static void check_installer()
     store::install::Environment environment;
     environment.root = (root / "state").string();
     environment.work = (root / "work").string();
-    environment.self = "PPSA99000";
+    environment.self = "PPSA99400";
     environment.policy.roots = {location};
     environment.fetch = [&](const std::string &, std::uint64_t, const store::net::Sink &sink,
                             store::net::Control &control)
@@ -245,7 +245,7 @@ int main()
     assert(service.start());
     const auto cached = next(service, store::Update::Kind::catalog);
     assert(cached.generation == 1 && !cached.snapshot.online);
-    assert(service.request_icons({"PPSA99000"}));
+    assert(service.request_icons({"PPSA99400"}));
     const auto icon = next(service, store::Update::Kind::icon);
     assert(icon.generation == 1 && icon.image.width == 1 && downloads == 0);
     refresh_ready = true;
@@ -278,10 +278,10 @@ int main()
         std::this_thread::sleep_for(5ms);
     }
     assert(received.size() == ids.size() && downloads == 15);
-    assert(service.request_detail("PPSA99000"));
+    assert(service.request_detail("PPSA99400"));
     const auto qr = next(service, store::Update::Kind::qr);
-    assert(qr.entry.id == "PPSA99000" && qr.image.width >= 116 && downloads == 16);
-    assert(service.request_detail("PPSA99000"));
+    assert(qr.entry.id == "PPSA99400" && qr.image.width >= 116 && downloads == 16);
+    assert(service.request_detail("PPSA99400"));
     assert(next(service, store::Update::Kind::detail).image.width == 1 && downloads == 16);
     assert(service.request_detail("PPSA99001"));
     const auto failure = next(service, store::Update::Kind::error);

@@ -1,4 +1,4 @@
-// ProsperoStore - USB keyboards, read through the console's keyboard library.
+// Prospero BlackBox - USB keyboards, read through the console's keyboard library.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "platform/ps5/keyboard.hpp"

@@ -1,4 +1,4 @@
-// ProsperoStore - sceHttp transport based on the boilerplate update-check kit.
+// Prospero BlackBox - sceHttp transport based on the boilerplate update-check kit.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -145,14 +145,14 @@ Response request_once(const std::string &url, std::uint64_t limit, const Sink &s
         }
     } resources{-1, -1, -1, -1, -1, -1, control};
     Response out;
-    int result = resources.pool = sceNetPoolCreate("ProsperoStore", 1024 * 1024, 0);
+    int result = resources.pool = sceNetPoolCreate("Prospero BlackBox", 1024 * 1024, 0);
     if (result >= 0)
         result = resources.ssl = sceSslInit(2 * 1024 * 1024);
     if (result >= 0)
         result = resources.http = sceHttpInit(resources.pool, resources.ssl, 4 * 1024 * 1024);
     if (result >= 0)
         result = resources.tmpl =
-            sceHttpCreateTemplate(resources.http, "ProsperoStore/01.000.060", 2, 0);
+            sceHttpCreateTemplate(resources.http, "Prospero BlackBox/01.000.060", 2, 0);
     if (result >= 0)
         result = sceHttpSetAutoRedirect(resources.tmpl, 0);
     if (result >= 0)

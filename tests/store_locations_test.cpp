@@ -1,4 +1,4 @@
-// ProsperoStore - Scan overrides must never expose staging as an installed app.
+// Prospero BlackBox - Scan overrides must never expose staging as an installed app.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "system/locations.hpp"
@@ -21,15 +21,15 @@ int main()
     assert(std::find(policy.roots.begin(), policy.roots.end(), "/data/custom") ==
            policy.roots.end());
     assert(!work_path_unscanned(policy, "/data/custom/PPSA99002/nested"));
-    assert(work_path_unscanned(policy, "/data/prosperostore/staging/PPSA99002"));
+    assert(work_path_unscanned(policy, "/data/prospero-blackbox/staging/PPSA99002"));
     // A stray "/" or drive line in manual.lst is no scanned place; a game folder still is.
     assert(scan_policy("", "/\n/data\n/mnt/usb0\n/data/custom/PPSA99002\n", policy, error));
     assert(policy.manual.size() == 4);
-    assert(work_path_unscanned(policy, "/data/prosperostore/staging/PPSA99002"));
+    assert(work_path_unscanned(policy, "/data/prospero-blackbox/staging/PPSA99002"));
     assert(work_path_unscanned(policy, "/mnt/usb0/prosperostore/staging/PPSA99002"));
     assert(!work_path_unscanned(policy, "/data/custom/PPSA99002/nested"));
-    assert(scan_policy("scanpath=/data/prosperostore\nscan_depth=2", "", policy, error));
-    assert(!work_path_unscanned(policy, "/data/prosperostore/staging/PPSA99002"));
+    assert(scan_policy("scanpath=/data/prospero-blackbox\nscan_depth=2", "", policy, error));
+    assert(!work_path_unscanned(policy, "/data/prospero-blackbox/staging/PPSA99002"));
     assert(scan_policy("scanpath=/data/../system", "", policy, error) && policy.fell_back);
     assert(std::find(policy.roots.begin(), policy.roots.end(), "/system") == policy.roots.end());
     // A doubled slash or quotes are tidied; a line that still can't be read is left out

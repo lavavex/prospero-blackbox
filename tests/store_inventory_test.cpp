@@ -1,4 +1,4 @@
-// ProsperoStore - Inventory ownership, scan depth, unsafe metadata and cancellation.
+// Prospero BlackBox - Inventory ownership, scan depth, unsafe metadata and cancellation.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "system/inventory.hpp"

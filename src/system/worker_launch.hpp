@@ -1,4 +1,4 @@
-// ProsperoStore - Starts the file worker through the console's payload loader.
+// Prospero BlackBox - Starts the file worker through the console's payload loader.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

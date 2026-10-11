@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ProsperoStore - One locked, bounded, exact-title console startup case.
+# Prospero BlackBox - One locked, bounded, exact-title console startup case.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 import argparse
@@ -58,10 +58,10 @@ if sys.argv[1:] == ["--self-test"]:
     assert artwork_ready(b"[STORE] frames=600 mean=16.68ms icons=10\n")
     assert not artwork_ready(b"[STORE] frames=600 mean=16.68ms icons=0\n")
     assert not artwork_ready(b"icons=10\n")
-    assert launch_accepted(b"[launch] title=PPSA99000 result=0x60000001\n", "PPSA99000")
-    assert not launch_accepted(b"[launch] title=PPSA99000 result=0x80940010\n", "PPSA99000")
-    assert not launch_accepted(b"", "PPSA99000")
-    assert not launch_accepted(b"[launch] title=PPSA99001 result=0x00000000\n", "PPSA99000")
+    assert launch_accepted(b"[launch] title=PPSA99400 result=0x60000001\n", "PPSA99400")
+    assert not launch_accepted(b"[launch] title=PPSA99400 result=0x80940010\n", "PPSA99400")
+    assert not launch_accepted(b"", "PPSA99400")
+    assert not launch_accepted(b"[launch] title=PPSA99001 result=0x00000000\n", "PPSA99400")
     raise SystemExit(0)
 
 parser = argparse.ArgumentParser(__doc__)
@@ -80,7 +80,7 @@ spec = importlib.util.spec_from_file_location("console_tour", args.ui_tools / "c
 transport = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(transport)
 title = json.loads((root / "sce_sys/param.json").read_text())["titleId"]
-assert title == "PPSA99000"
+assert title == "PPSA99400"
 if subprocess.check_output(["git", "status", "--porcelain"], cwd=root):
     raise SystemExit("Commit the exact candidate before hardware testing")
 commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
@@ -112,7 +112,7 @@ logger = None
 console = None
 result = {"classification": "no-run", "title": title, "commit": commit}
 remote = "/data/homebrew/" + title
-state_root = "/data/prosperostore"
+state_root = "/data/prospero-blackbox"
 log_root = state_root + "/logs"
 try:
     if not all(transport.port_open(args.host, port) for port in (2121, 3232, 9021)):

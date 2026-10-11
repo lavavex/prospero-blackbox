@@ -1,4 +1,4 @@
-# ProsperoStore - A pull request's build names itself.
+# Prospero BlackBox - A pull request's build names itself.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 import os

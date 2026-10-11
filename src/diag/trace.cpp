@@ -1,4 +1,4 @@
-// ProsperoStore - The debug build's trace: what the store found at each step, for reports.
+// Prospero BlackBox - The debug build's trace: what the store found at each step, for reports.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "diag/trace.hpp"
@@ -45,14 +45,14 @@ constexpr std::size_t kLines = 600; // kept in memory; the file has them all
 void open_file()
 {
     const char *candidates[] = {
-        "/data/prosperostore/debug-trace.txt", "/mnt/usb0/ProsperoStore-debug-trace.txt",
-        "/mnt/usb1/ProsperoStore-debug-trace.txt", "/mnt/ext0/ProsperoStore-debug-trace.txt"};
+        "/data/prospero-blackbox/debug-trace.txt", "/mnt/usb0/Prospero BlackBox-debug-trace.txt",
+        "/mnt/usb1/Prospero BlackBox-debug-trace.txt", "/mnt/ext0/Prospero BlackBox-debug-trace.txt"};
     for (const char *candidate : candidates)
     {
         if (!file.empty() && file == candidate)
             return;
         if (std::strncmp(candidate, "/data/", 6) == 0)
-            (void)mkdir("/data/prosperostore", 0777);
+            (void)mkdir("/data/prospero-blackbox", 0777);
         const int descriptor = open(candidate, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (descriptor < 0)
             continue;
@@ -194,10 +194,10 @@ void trace_console(const char *when)
     };
     trace("[%s] /data visible: %s, writable: %s", when, stat("/data", &info) == 0 ? "yes" : "no",
           probe_write("/data").c_str());
-    trace("[%s] /system_ex/app/PPSA99000: %s", when,
-          stat("/system_ex/app/PPSA99000/eboot.bin", &info) == 0 ? "found" : "not found");
+    trace("[%s] /system_ex/app/PPSA99400: %s", when,
+          stat("/system_ex/app/PPSA99400/eboot.bin", &info) == 0 ? "found" : "not found");
     trace("[%s] /app0: %s", when, stat("/app0/eboot.bin", &info) == 0 ? "found" : "not found");
-    const char *journal = "/data/prosperostore/journal.json";
+    const char *journal = "/data/prospero-blackbox/journal.json";
     if (lstat(journal, &info) == 0)
         trace("[%s] journal.json: present, mode %o, %lld bytes, uid %u", when,
               static_cast<unsigned>(info.st_mode), static_cast<long long>(info.st_size),
@@ -206,7 +206,7 @@ void trace_console(const char *when)
         trace("[%s] journal.json: lstat errno %d (%s)", when, errno, std::strerror(errno));
     trace("[%s] process uid %u gid %u", when, static_cast<unsigned>(getuid()),
           static_cast<unsigned>(getgid()));
-    for (const char *folder : {"/data", "/data/prosperostore", "/data/homebrew"})
+    for (const char *folder : {"/data", "/data/prospero-blackbox", "/data/homebrew"})
     {
         if (stat(folder, &info) == 0)
             trace("[%s] %s: mode %o, uid %u, gid %u", when, folder,
@@ -246,7 +246,7 @@ void trace_console(const char *when)
         unlink(inner);
         rmdir(fresh);
     }
-    if (DIR *folder = opendir("/data/prosperostore"))
+    if (DIR *folder = opendir("/data/prospero-blackbox"))
     {
         std::string names;
         while (const dirent *entry = readdir(folder))
@@ -254,10 +254,10 @@ void trace_console(const char *when)
                 names.size() < 300)
                 names += std::string(names.empty() ? "" : ", ") + entry->d_name;
         closedir(folder);
-        trace("[%s] /data/prosperostore holds: %s", when,
+        trace("[%s] /data/prospero-blackbox holds: %s", when,
               names.empty() ? "nothing" : names.c_str());
     }
     else
-        trace("[%s] /data/prosperostore can't be listed (%s)", when, std::strerror(errno));
+        trace("[%s] /data/prospero-blackbox can't be listed (%s)", when, std::strerror(errno));
 }
 } // namespace store::diag

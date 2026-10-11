@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ProsperoStore - Build the host screen renderer with the kit's Ninja helper.
+# Prospero BlackBox - Build the host screen renderer with the kit's Ninja helper.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail

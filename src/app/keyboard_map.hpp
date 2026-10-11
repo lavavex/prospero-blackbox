@@ -1,4 +1,4 @@
-// ProsperoStore - Keys of a USB keyboard as the controller buttons they stand for.
+// Prospero BlackBox - Keys of a USB keyboard as the controller buttons they stand for.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

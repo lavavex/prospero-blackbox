@@ -1,4 +1,4 @@
-// ProsperoStore - Invalid artwork never replaces an accepted cached image.
+// Prospero BlackBox - Invalid artwork never replaces an accepted cached image.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "catalog/icons.hpp"
@@ -14,7 +14,7 @@ int main()
     const std::string root = temporary;
     store::catalog::Icons cache(root);
     store::catalog::Entry entry;
-    entry.id = "PPSA99000";
+    entry.id = "PPSA99400";
     entry.icon = "https://homebrew.page/icons/PPSA99000.png";
     entry.icon_hash = "revision-one";
     const auto key = store::catalog::Icons::key(entry);
@@ -42,7 +42,7 @@ int main()
     entry.icon = "http://example.com/icon.png";
     assert(store::catalog::Icons::key(entry).empty() && !cache.store(entry, encoded, image));
     entry.icon = "https://homebrew.page/icon.png";
-    entry.id = "../PPSA99000";
+    entry.id = "../PPSA99400";
     assert(store::catalog::Icons::key(entry).empty());
     std::filesystem::remove_all(root);
 }

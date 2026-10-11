@@ -7,9 +7,9 @@
   "attribute": 1644167168,
   "attribute2": 0,
   "attribute3": 1048576,
-  "conceptId": "99000",
+  "conceptId": "99400",
   "contentBadgeType": 1,
-  "contentId": "UP9000-PPSA99000_00-PROSPEROSTORE000",
+  "contentId": "UP9000-PPSA99400_00-PROSPEROBLACKBOX",
   "contentVersion": "01.000.060",
   "downloadDataSize": 256,
   "gameIntent": {
@@ -22,7 +22,7 @@
   "localizedParameters": {
     "defaultLanguage": "en-US",
     "en-US": {
-      "titleName": "ProsperoStore"
+      "titleName": "Prospero BlackBox"
     }
   },
   "masterVersion": "01.00",
@@ -33,6 +33,6 @@
   },
   "requiredSystemSoftwareVersion": "0x0000000000000000",
   "sdkVersion": "0x0000000000000000",
-  "titleId": "PPSA99000",
+  "titleId": "PPSA99400",
   "versionFileUri": ""
 }

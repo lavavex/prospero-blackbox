@@ -1,4 +1,4 @@
-// ProsperoStore - Probe owns only its new directories and rejects symlink paths.
+// Prospero BlackBox - Probe owns only its new directories and rejects symlink paths.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "system/storage_probe.hpp"

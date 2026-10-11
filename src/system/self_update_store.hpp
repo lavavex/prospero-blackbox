@@ -1,4 +1,4 @@
-// ProsperoStore - The store replacing itself, through the boilerplate's self-update kit.
+// Prospero BlackBox - The store replacing itself, through the boilerplate's self-update kit.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

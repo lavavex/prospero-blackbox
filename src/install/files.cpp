@@ -1,4 +1,4 @@
-// ProsperoStore - Link-refusing file helpers for the installer's work folders.
+// Prospero BlackBox - Link-refusing file helpers for the installer's work folders.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "install/files.hpp"

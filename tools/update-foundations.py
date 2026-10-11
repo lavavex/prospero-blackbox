@@ -1,4 +1,4 @@
-# ProsperoStore - Update each foundation as a complete pinned set.
+# Prospero BlackBox - Update each foundation as a complete pinned set.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 

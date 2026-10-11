@@ -1,4 +1,4 @@
-// ProsperoStore - Talking to the file worker, the process that unpacks and removes.
+// Prospero BlackBox - Talking to the file worker, the process that unpacks and removes.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
@@ -53,7 +53,7 @@ bool worker_folder(std::string_view path);
 // once ran sandboxed left folders an elevated store is refused in. 1: done. 0: failed.
 // -1: no worker could be started, or the folder isn't one of the store's.
 int worker_reclaim(const Connect &connect, const std::string &folder);
-// A title ID, written plainly: four capitals and five digits (PPSA99000).
+// A title ID, written plainly: four capitals and five digits (PPSA99400).
 bool title_id_plain(std::string_view title);
 // 1: the console took the title off the home screen. 0: it refused (code holds
 // its answer). -1: no worker could be started, or the title ID is malformed.

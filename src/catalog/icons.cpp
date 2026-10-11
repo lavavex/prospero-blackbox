@@ -1,4 +1,4 @@
-// ProsperoStore - Icons are untrusted images, never executable paths.
+// Prospero BlackBox - Icons are untrusted images, never executable paths.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "catalog/icons.hpp"

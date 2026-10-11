@@ -1,4 +1,4 @@
-// ProsperoStore - Redirect policy and bounded response handling.
+// Prospero BlackBox - Redirect policy and bounded response handling.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 

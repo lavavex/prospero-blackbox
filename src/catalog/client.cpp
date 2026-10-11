@@ -1,4 +1,4 @@
-// ProsperoStore - Verify before parsing and publish only a complete catalog generation.
+// Prospero BlackBox - Verify before parsing and publish only a complete catalog generation.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 

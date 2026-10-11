@@ -1,4 +1,4 @@
-// ProsperoStore - Install, update and uninstall as journaled transactions.
+// Prospero BlackBox - Install, update and uninstall as journaled transactions.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

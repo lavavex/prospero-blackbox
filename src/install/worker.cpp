@@ -1,4 +1,4 @@
-// ProsperoStore - Talking to the file worker, the process that unpacks and removes.
+// Prospero BlackBox - Talking to the file worker, the process that unpacks and removes.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "install/worker.hpp"
@@ -26,7 +26,7 @@ bool worker_path(std::string_view path)
             if (static_cast<unsigned char>(c) < 0x20 || c == 0x7f)
                 return false;
         // The work folder itself is never the target: something inside it is.
-        if (part == "prosperostore" && end < path.size())
+        if (part == "prospero-blackbox" && end < path.size())
             inside = true;
         start = end + 1;
     }

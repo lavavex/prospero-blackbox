@@ -1,4 +1,4 @@
-// ProsperoStore - Development only: what each storage call costs on the console.
+// Prospero BlackBox - Development only: what each storage call costs on the console.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

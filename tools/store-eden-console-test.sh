@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ProsperoStore - Build the isolated console migration test payload.
+# Prospero BlackBox - Build the isolated console migration test payload.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail

@@ -1,4 +1,4 @@
-// ProsperoStore - The store replacing itself, through the boilerplate's self-update kit.
+// Prospero BlackBox - The store replacing itself, through the boilerplate's self-update kit.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "system/self_update_store.hpp"
@@ -54,9 +54,9 @@ int download(void *user, const char *url, std::uint64_t limit, self_update_sink 
 #ifdef STORE_DEVELOPMENT
     // A scripted self-update reads its archive from the console, since no newer
     // store is published while it is being tested (development builds only).
-    if (address.ends_with("/dev/PPSA99000.zip"))
+    if (address.ends_with("/dev/PPSA99400.zip"))
     {
-        const int file = open("/data/prosperostore/dev/self.zip", O_RDONLY);
+        const int file = open("/data/prospero-blackbox/dev/self.zip", O_RDONLY);
         if (file < 0)
             return -1;
         std::vector<char> piece(256 * 1024);

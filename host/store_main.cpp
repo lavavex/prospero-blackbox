@@ -1,4 +1,4 @@
-// ProsperoStore - Host renderer for inspecting the same screens as the console.
+// Prospero BlackBox - Host renderer for inspecting the same screens as the console.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -735,7 +735,7 @@ int main(int argc, char **argv)
             else if (mode == "news")
             {
                 screen.set_news(
-                    {{"2026-10-11-store-060", "2026-10-11T09:00:00Z", "ProsperoStore 1.000.060",
+                    {{"2026-10-11-store-060", "2026-10-11T09:00:00Z", "Prospero BlackBox 1.000.060",
                       "Developer pages, a News room and a shelf for apps new to the catalog.\n\n"
                       "Open an app and press R3 to see everything else its developer made."},
                      {"2026-10-08-mirror", "2026-10-08T18:00:00Z", "The catalog has a mirror",
@@ -775,7 +775,7 @@ int main(int argc, char **argv)
                      mode == "about")
             {
                 screen.set_installer(true, true, "", "/data/homebrew");
-                screen.set_self("PPSA99000", "01.000.000");
+                screen.set_self("PPSA99400", "01.000.000");
                 screen.set_locations(
                     {{"/data/homebrew", 548ull << 30}, {"/mnt/ext1/homebrew", 912ull << 30}});
                 if (mode == "queue" || mode == "downloads")
@@ -847,13 +847,13 @@ int main(int argc, char **argv)
                     {"PPSA99001", "ProsperoRadio", "01.000.000", "/data/homebrew/PPSA99001", "",
                      false, true, false},
                     {"PPSA99002", "ProsperoLight", "01.000.000", "/data/homebrew/PPSA99002",
-                     "Installed outside ProsperoStore. Not managed by this app.", false, false,
+                     "Installed outside Prospero BlackBox. Not managed by this app.", false, false,
                      false},
                     {"PPSA99980", "Example local app", "01.000.001", "/mnt/ext1/homebrew/PPSA99980",
-                     "Installed outside ProsperoStore. Not managed by this app.", false, false,
+                     "Installed outside Prospero BlackBox. Not managed by this app.", false, false,
                      false},
                     {"", "Example.ffpkg", "", "/mnt/ext1/homebrew/Example.ffpkg",
-                     "Image installed outside ProsperoStore. Not managed by this app.", true, false,
+                     "Image installed outside Prospero BlackBox. Not managed by this app.", true, false,
                      false}};
                 screen.set_inventory(std::move(inventory));
                 screen.set_status("Installed library preview");
@@ -883,7 +883,7 @@ int main(int argc, char **argv)
                     store::system::Inventory inventory;
                     inventory.apps = {{"PPSA99001", "ProsperoRadio", "01.000.005",
                                        "/data/homebrew/PPSA99001",
-                                       "Installed outside ProsperoStore. Not managed by this app.",
+                                       "Installed outside Prospero BlackBox. Not managed by this app.",
                                        false, false, false}};
                     screen.set_inventory(std::move(inventory));
                 }

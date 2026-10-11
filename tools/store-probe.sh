@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ProsperoStore - Build and run the read-only live catalog probe.
+# Prospero BlackBox - Build and run the read-only live catalog probe.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail

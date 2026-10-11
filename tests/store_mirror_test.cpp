@@ -1,4 +1,4 @@
-// ProsperoStore - The catalog's mirror is used when its own site can't be, and only as far as it
+// Prospero BlackBox - The catalog's mirror is used when its own site can't be, and only as far as it
 // verifies. Copyright (C) 2026 BlackBearReloaded SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The fixture is a real, signed copy of the mirror (manifest, signature, index, versions), so the
@@ -97,8 +97,8 @@ int main()
         // Later files are asked of the place that worked, not of the main site again.
         asked.clear();
         Entry detail;
-        assert(client.detail(snapshot, "PPSA99000", detail, control, error));
-        assert(detail.id == "PPSA99000" && detail.large_icon.starts_with(kApiMirror));
+        assert(client.detail(snapshot, "PPSA99400", detail, control, error));
+        assert(detail.id == "PPSA99400" && detail.large_icon.starts_with(kApiMirror));
         assert(asked["mirror"] == 1 && asked["main"] == 0);
         // A file neither place has: both are asked, and the first failure is the one reported.
         asked.clear();

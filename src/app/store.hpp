@@ -1,4 +1,4 @@
-// ProsperoStore - Controller-driven store screens assembled from Homebrew UI.
+// Prospero BlackBox - Controller-driven store screens assembled from Homebrew UI.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -63,7 +63,7 @@ struct Order
     catalog::Entry entry; // install: the app's verified detail record
     std::string id, location;
 };
-// What the player chose, kept in /data/prosperostore/settings.txt.
+// What the player chose, kept in /data/prospero-blackbox/settings.txt.
 struct Settings
 {
     std::string location = "/data/homebrew"; // where new apps are installed
@@ -72,7 +72,7 @@ struct Settings
     bool vibration = true;
     bool reduce_motion = false; // no drifting, floating or sliding: things fade instead
     // Records what the store does at each step, for a report: shown in About, written to
-    // /data/prosperostore/debug-trace.txt (or a USB drive) and the kernel log.
+    // /data/prospero-blackbox/debug-trace.txt (or a USB drive) and the kernel log.
     bool debug_log = false;
     std::string catalog_url = catalog::kDefaultApi;
     // The two sources, each switched on or off by itself in Development options. Both on:
@@ -141,7 +141,7 @@ class Screen
     }
     // A floating notice in the top-right corner; it leaves after ten seconds.
     void notify(std::string title, std::string body);
-    // A newer ProsperoStore is listed: asked once each time the store opens
+    // A newer Prospero BlackBox is listed: asked once each time the store opens
     // (Update now / What's new / Skip), with the release notes in a view of their own.
     void offer_store_update(std::string version);
     // Whether this build and this console can install (reason says why not),

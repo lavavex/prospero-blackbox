@@ -1,4 +1,4 @@
-// ProsperoStore - ShadowMount scan policy and safe store work locations.
+// Prospero BlackBox - ShadowMount scan policy and safe store work locations.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

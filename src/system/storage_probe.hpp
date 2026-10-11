@@ -1,4 +1,4 @@
-// ProsperoStore - Non-destructive qualification of a candidate install directory.
+// Prospero BlackBox - Non-destructive qualification of a candidate install directory.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

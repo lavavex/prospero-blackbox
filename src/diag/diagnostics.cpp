@@ -1,4 +1,4 @@
-// ProsperoStore - Durable logs and crash recovery lifecycle.
+// Prospero BlackBox - Durable logs and crash recovery lifecycle.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "diag/diagnostics.hpp"

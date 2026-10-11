@@ -1,4 +1,4 @@
-// ProsperoStore - Trust, parser, identity and URL regression checks.
+// Prospero BlackBox - Trust, parser, identity and URL regression checks.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -13,7 +13,7 @@ using namespace store::catalog;
 
 int main()
 {
-    assert(title_id("PPSA99000") && !title_id("PPSA99/00") && !title_id("../PPSA99"));
+    assert(title_id("PPSA99400") && !title_id("PPSA99/00") && !title_id("../PPSA99"));
     assert(update_available("01.000.009", "01.000.010"));
     assert(!update_available("01.000.010", "01.000.010"));
     assert(!update_available("02.000.000", "01.999.999"));
@@ -39,7 +39,7 @@ int main()
     assert(
         official_url("https://blackbearreloaded.github.io/ps5-homebrew-catalog/api/v1/index.json"));
     assert(official_url("https://blackbearreloaded.github.io/ps5-homebrew-catalog/api/v1/icons/"
-                        "PPSA99000.png?v=0f"));
+                        "PPSA99400.png?v=0f"));
     for (const char *url :
          {"https://blackbearreloaded.github.io/",
           "https://blackbearreloaded.github.io/other-repo/api/v1/index.json",
@@ -57,7 +57,7 @@ int main()
           "https://evil/github.com/a", "https://github.com:443/a", "https://github.com/\r\na"})
         assert(!artifact_url(url, true));
     const std::string index =
-        R"({"schema":3,"apps":[{"titleid":"PPSA99000","name":"ProsperoStore","kind":"app","status":"coming_soon","content_version":null,"unknown":{"future":true}}]})";
+        R"({"schema":3,"apps":[{"titleid":"PPSA99400","name":"Prospero BlackBox","kind":"app","status":"coming_soon","content_version":null,"unknown":{"future":true}}]})";
     std::vector<Entry> entries;
     std::string error;
     assert(parse_index(index, entries, error) && entries.size() == 1);
@@ -69,24 +69,24 @@ int main()
     Entry detail;
     const std::string full_icon =
         R"({"schema":3,"titleid":"PPSA99000","name":"Store","kind":"app","status":"coming_soon","icon":"https://homebrew.page/icons/PPSA99000.png"})";
-    assert(parse_detail(full_icon, "PPSA99000", detail, error));
+    assert(parse_detail(full_icon, "PPSA99400", detail, error));
     assert(detail.large_icon == "https://homebrew.page/icons/PPSA99000.png");
     // Safety facts: read when present, ignored when unknown, never a reason to refuse an app.
     assert(detail.sandbox.empty() && detail.build.empty() && detail.helpers == 0);
     const std::string with_safety =
-        R"({"schema":3,"titleid":"PPSA99000","name":"Store","kind":"app","status":"coming_soon","safety":{"sandbox":"leaves","routes":["payload"],"helpers":3,"helpers_unapproved":1,"network":true,"build":"attested","build_workflow":"o/r/.github/workflows/x.yml@refs/tags/v1","future":1}})";
+        R"({"schema":3,"titleid":"PPSA99400","name":"Store","kind":"app","status":"coming_soon","safety":{"sandbox":"leaves","routes":["payload"],"helpers":3,"helpers_unapproved":1,"network":true,"build":"attested","build_workflow":"o/r/.github/workflows/x.yml@refs/tags/v1","future":1}})";
     Entry scanned;
-    assert(parse_detail(with_safety, "PPSA99000", scanned, error));
+    assert(parse_detail(with_safety, "PPSA99400", scanned, error));
     assert(scanned.sandbox == "leaves" && scanned.build == "attested");
     assert(scanned.helpers == 3 && scanned.helpers_unapproved == 1);
     const std::string odd_safety =
-        R"({"schema":3,"titleid":"PPSA99000","name":"Store","kind":"app","status":"coming_soon","safety":{"sandbox":"safe","build":7,"helpers":-1,"helpers_unapproved":99999999}})";
-    assert(parse_detail(odd_safety, "PPSA99000", scanned, error));
+        R"({"schema":3,"titleid":"PPSA99400","name":"Store","kind":"app","status":"coming_soon","safety":{"sandbox":"safe","build":7,"helpers":-1,"helpers_unapproved":99999999}})";
+    assert(parse_detail(odd_safety, "PPSA99400", scanned, error));
     assert(scanned.sandbox.empty() && scanned.build.empty());
     assert(scanned.helpers == 0 && scanned.helpers_unapproved == 0);
     assert(parse_detail(
-        R"({"schema":3,"titleid":"PPSA99000","name":"Store","kind":"app","status":"coming_soon","safety":"no"})",
-        "PPSA99000", scanned, error));
+        R"({"schema":3,"titleid":"PPSA99400","name":"Store","kind":"app","status":"coming_soon","safety":"no"})",
+        "PPSA99400", scanned, error));
     const std::string listed =
         R"({"schema":3,"apps":[{"titleid":"PPSA99001","name":"A","kind":"app","status":"coming_soon","sandbox":"stays"},{"titleid":"PPSA99002","name":"B","kind":"app","status":"coming_soon","sandbox":null}]})";
     std::vector<Entry> labelled;
@@ -94,14 +94,14 @@ int main()
     assert(labelled[0].sandbox == "stays" && labelled[1].sandbox.empty());
     auto bad_icon = full_icon;
     bad_icon.replace(bad_icon.find("https://homebrew.page"), 21, "https://untrusted.example");
-    assert(parse_detail(bad_icon, "PPSA99000", detail, error)); // Custom HTTPS icon host.
+    assert(parse_detail(bad_icon, "PPSA99400", detail, error)); // Custom HTTPS icon host.
     bad_icon.replace(bad_icon.find("https://"), 8, "http://");
-    assert(!parse_detail(bad_icon, "PPSA99000", detail, error));
+    assert(!parse_detail(bad_icon, "PPSA99400", detail, error));
     std::map<std::string, std::string> versions;
-    assert(parse_versions(R"({"schema":3,"apps":{"PPSA99000":{"content_version":null}}})", versions,
+    assert(parse_versions(R"({"schema":3,"apps":{"PPSA99400":{"content_version":null}}})", versions,
                           error));
-    assert(versions.at("PPSA99000").empty());
-    assert(!parse_versions(R"({"schema":3,"apps":{"PPSA99000":{"content_version":"latest"}}})",
+    assert(versions.at("PPSA99400").empty());
+    assert(!parse_versions(R"({"schema":3,"apps":{"PPSA99400":{"content_version":"latest"}}})",
                            versions, error));
 
     PublicKey key{};
@@ -133,25 +133,25 @@ int main()
         Snapshot official, custom;
         official.accepted = custom.accepted = true;
         Entry store_app, game, mine, fake;
-        store_app.id = "PPSA99000";
-        store_app.name = "ProsperoStore";
+        store_app.id = "PPSA99400";
+        store_app.name = "Prospero BlackBox";
         game.id = "PPSA99001";
         mine.id = "PPSA12345";
         mine.name = "Mine";
-        fake.id = "PPSA99000";
+        fake.id = "PPSA99400";
         fake.name = "Not the store";
         official.entries = {store_app, game};
-        official.versions = {{"PPSA99000", "01.000.040"}};
+        official.versions = {{"PPSA99400", "01.000.040"}};
         custom.entries = {fake, mine};
-        custom.versions = {{"PPSA99000", "09.000.000"}, {"PPSA12345", "01.000.000"}};
+        custom.versions = {{"PPSA99400", "09.000.000"}, {"PPSA12345", "01.000.000"}};
         std::vector<std::string> clashes;
         const auto both = store::catalog::with_extra(official, custom, &clashes);
-        assert(both.entries.size() == 3 && both.entries[0].name == "ProsperoStore" &&
+        assert(both.entries.size() == 3 && both.entries[0].name == "Prospero BlackBox" &&
                !both.entries[0].extra && both.entries[2].id == "PPSA12345" &&
                both.entries[2].extra);
-        assert(both.versions.at("PPSA99000") == "01.000.040" &&
+        assert(both.versions.at("PPSA99400") == "01.000.040" &&
                both.versions.at("PPSA12345") == "01.000.000");
-        assert(clashes.size() == 1 && clashes[0] == "PPSA99000");
+        assert(clashes.size() == 1 && clashes[0] == "PPSA99400");
         // A custom catalog that wasn't accepted adds nothing.
         custom.accepted = false;
         assert(store::catalog::with_extra(official, custom, &clashes).entries.size() == 2);

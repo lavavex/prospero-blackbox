@@ -1,4 +1,4 @@
-// ProsperoStore - Native display, input, audio and clean application lifecycle.
+// Prospero BlackBox - Native display, input, audio and clean application lifecycle.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -96,7 +96,7 @@ void *development_requests(void *)
 int main()
 {
     using namespace hui;
-    sys::log("[STORE] PPSA99000 startup");
+    sys::log("[STORE] PPSA99400 startup");
     // Start-up steps, timed from here: where the wait before the first frame goes.
     const std::int64_t started_us = sys::monotonic_us();
     const auto since_start = [started_us]
@@ -120,11 +120,11 @@ int main()
     const auto debug_wanted = []
     {
         std::string saved;
-        return hui::save::read_file("/data/prosperostore/settings.txt", &saved, 4096) &&
+        return hui::save::read_file("/data/prospero-blackbox/settings.txt", &saved, 4096) &&
                store::parse_settings(saved).debug_log;
     };
     store::diag::set_enabled(debug_wanted());
-    store::diag::trace("ProsperoStore started");
+    store::diag::trace("Prospero BlackBox started");
     store::diag::trace_firmware();
     store::diag::trace("keyboard library 0x%08x, usb keyboards 0x%08x, title registry 0x%08x",
                        static_cast<unsigned>(keyboard_module),
@@ -140,7 +140,7 @@ int main()
 #else
     const auto elevation_status = elevation::request(elevation::Capability::filesystem);
 #endif
-    constexpr const char *storage_root = "/data/prosperostore";
+    constexpr const char *storage_root = "/data/prospero-blackbox";
     const bool elevated = elevation_status == elevation::Status::ok;
     // Wherever the store is installed (system/app_folder.hpp), now that the root may have changed.
     const std::string app_root = store::system::app_folder();
@@ -244,7 +244,7 @@ int main()
     }
     const std::string own_version = read_content_version(app_root + "/sce_sys/param.json");
     store::Service service(elevated ? storage_root : "", own_version);
-    screen.set_self("PPSA99000", own_version);
+    screen.set_self("PPSA99400", own_version);
     {
         // What the player chose last time; the defaults when there is no file. A store left in
         // its sandbox keeps them too where /data is shown to it (ShadowMountPlus does that):
@@ -265,7 +265,7 @@ int main()
                      descriptor >= 0 ? "kept in the store folder" : "nowhere to keep them");
 #ifdef STORE_DEBUG_TRACE
             store::diag::trace("settings: %s", descriptor >= 0
-                                                   ? "kept in /data/prosperostore (no elevation)"
+                                                   ? "kept in /data/prospero-blackbox (no elevation)"
                                                    : "can't be kept (no store folder)");
 #endif
         }
@@ -371,7 +371,7 @@ int main()
     [[maybe_unused]] std::string press_keys; // development: buttons still to press
     [[maybe_unused]] std::int64_t press_next = 0;
     [[maybe_unused]] bool shot_wanted = false;       // development: save the next frame
-    [[maybe_unused]] std::string shot_name = "shot"; // ... as /data/prosperostore/dev/<name>.tga
+    [[maybe_unused]] std::string shot_name = "shot"; // ... as /data/prospero-blackbox/dev/<name>.tga
     [[maybe_unused]] int bench_step = -1;
     ps5::Ime keyboard;
     bool keyboard_active = false;
@@ -689,8 +689,8 @@ int main()
                 store::catalog::Entry entry;
                 std::string digest;
                 save::read_file(std::string(storage_root) + "/dev/self.sha256", &digest, 80);
-                entry.id = "PPSA99000";
-                entry.name = "ProsperoStore";
+                entry.id = "PPSA99400";
+                entry.name = "Prospero BlackBox";
                 entry.status = "available";
                 entry.format = "zip";
                 entry.version = argument;
@@ -702,7 +702,7 @@ int main()
                 if (stat((std::string(storage_root) + "/dev/self.zip").c_str(), &archive) == 0)
                     entry.size = static_cast<std::uint64_t>(archive.st_size);
                 entry.artifact = "https://github.com/blackbearreloaded/ProsperoStore/releases/"
-                                 "download/dev/PPSA99000.zip";
+                                 "download/dev/PPSA99400.zip";
                 // Or a real release on GitHub: its address and size in dev/self.url and
                 // dev/self.size, downloaded through the store's transport like any release.
                 std::string url, size;
@@ -743,7 +743,7 @@ int main()
             }
             else if (verb == "fsbench")
             {
-                // The folder to measure, e.g. /data/prosperostore/staging.
+                // The folder to measure, e.g. /data/prospero-blackbox/staging.
                 static std::string bench_root;
                 bench_root = argument;
                 pthread_t thread;
@@ -866,7 +866,7 @@ int main()
                                         ? std::string("https://")
                                         : screen.settings().catalog_url,
                                     512, ps5::Ime::Enter::go)
-                    : keyboard.open("Search ProsperoStore", "App name or developer",
+                    : keyboard.open("Search Prospero BlackBox", "App name or developer",
                                     screen.query());
             sys::log("[STORE] keyboard open=%d", keyboard_active ? 1 : 0);
             if (!keyboard_active)
@@ -986,7 +986,7 @@ int main()
 #ifdef STORE_DEVELOPMENT
         if (shot_wanted)
         {
-            // What the TV shows, at half size: /data/prosperostore/dev/shot.tga.
+            // What the TV shows, at half size: /data/prospero-blackbox/dev/shot.tga.
             shot_wanted = false;
             const int w = display.width(), h = display.height(), hw = w / 2, hh = h / 2;
             std::vector<std::uint8_t> pixels(static_cast<std::size_t>(w) * h * 4);
@@ -1011,7 +1011,7 @@ int main()
                     tga.push_back(static_cast<char>(px[0]));
                 }
             const auto error =
-                hui::save::write_atomic("/data/prosperostore/dev/" + shot_name + ".tga", tga);
+                hui::save::write_atomic("/data/prospero-blackbox/dev/" + shot_name + ".tga", tga);
             sys::log("[STORE] shot %dx%d gl=0x%x saved=%d", hw, hh, glGetError(),
                      error.empty() ? 1 : 0);
         }

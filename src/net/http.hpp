@@ -1,4 +1,4 @@
-// ProsperoStore - Bounded HTTPS transport shared by host and console.
+// Prospero BlackBox - Bounded HTTPS transport shared by host and console.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

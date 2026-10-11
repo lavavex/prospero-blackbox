@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ProsperoStore - FTP-only folder install of a frozen build, verified by hash.
+# Prospero BlackBox - FTP-only folder install of a frozen build, verified by hash.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 """FTP-only folder install of a frozen build. Never starts or closes anything.
@@ -11,7 +11,7 @@ from pathlib import Path
 from posixpath import dirname, join
 
 mode, host, frozen = sys.argv[1], sys.argv[2], Path(sys.argv[3])
-TITLE = "PPSA99000"
+TITLE = "PPSA99400"
 ROOT = f"/data/homebrew/{TITLE}"
 
 
@@ -109,7 +109,7 @@ if any(n != TITLE for n in copies):
 if mode == "look":
     for extra in sorted(set(installed) - {p.relative_to(frozen).as_posix() for p in local_files()}):
         print(f"  only on console: {extra} ({installed[extra]} bytes)")
-    print(f"[{host}] /data/prosperostore: {names(ftp, '/data/prosperostore')}")
+    print(f"[{host}] /data/prospero-blackbox: {names(ftp, '/data/prospero-blackbox')}")
     ftp.quit()
     sys.exit(0)
 

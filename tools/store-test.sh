@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ProsperoStore - Sanitized store-specific host checks.
+# Prospero BlackBox - Sanitized store-specific host checks.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail

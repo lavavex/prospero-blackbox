@@ -1,4 +1,4 @@
-# ProsperoStore - The file worker, built as a payload for the console's loader.
+# Prospero BlackBox - The file worker, built as a payload for the console's loader.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 

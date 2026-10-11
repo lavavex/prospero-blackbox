@@ -1,4 +1,4 @@
-// ProsperoStore - An app's ambient picture, made from its own icon.
+// Prospero BlackBox - An app's ambient picture, made from its own icon.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 

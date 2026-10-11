@@ -1,4 +1,4 @@
-// ProsperoStore - Catalog cache and HTTPS never run on the render thread.
+// Prospero BlackBox - Catalog cache and HTTPS never run on the render thread.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -158,7 +158,7 @@ bool Service::load_policy(system::ScanPolicy &out, std::vector<std::string> *not
         out = installer_environment->policy;
         return true;
     }
-    if (root_ != "/data/prosperostore")
+    if (root_ != "/data/prospero-blackbox")
         return false;
     std::string configuration, manual, policy_error;
     const bool configured =
@@ -350,7 +350,7 @@ void Service::run_installer()
     else
     {
         environment.root = root_;
-        environment.self = "PPSA99000";
+        environment.self = "PPSA99400";
         environment.self_version = version_;
         environment.fetch = [](const std::string &url, std::uint64_t limit, const net::Sink &sink,
                                net::Control &control)
@@ -358,11 +358,11 @@ void Service::run_installer()
 #ifdef STORE_DEVELOPMENT
             // A scripted self-update reads its archive from the console, since
             // no newer store is published while it is being tested.
-            if (url.ends_with("/dev/PPSA99000.zip"))
+            if (url.ends_with("/dev/PPSA99400.zip"))
             {
                 // In pieces, as a download arrives: never the whole archive in memory.
                 net::Response response;
-                const int file = open("/data/prosperostore/dev/self.zip", O_RDONLY);
+                const int file = open("/data/prospero-blackbox/dev/self.zip", O_RDONLY);
                 std::vector<char> piece(256 * 1024);
                 std::uint64_t total = 0;
                 bool ok = file >= 0;
@@ -455,22 +455,22 @@ void Service::run_installer()
         else if (recovered.restart)
         {
             // The console started the old store once more after its update.
-            broken = "ProsperoStore is finishing its own update. Close it and open it again.";
+            broken = "Prospero BlackBox is finishing its own update. Close it and open it again.";
             Update notice;
             notice.kind = Update::Kind::job;
             notice.entry.id = environment.self;
             notice.ok = true;
             notice.restart = true;
-            notice.message = "ProsperoStore was updated";
+            notice.message = "Prospero BlackBox was updated";
             notice.detail = "The console is still running the previous version. Close "
-                            "ProsperoStore, restart the console and open it again.";
+                            "Prospero BlackBox, restart the console and open it again.";
             publish(std::move(notice));
         }
         else if (!recovered.operation.empty())
         {
             Update notice;
             notice.kind = Update::Kind::notice;
-            notice.message = "ProsperoStore recovered";
+            notice.message = "Prospero BlackBox recovered";
             notice.detail = "An interrupted " + recovered.operation + " was cleaned up.";
             publish(std::move(notice));
             rescan();
@@ -574,7 +574,7 @@ void Service::run_installer()
         if (result.ok && result.operation == "self-update")
         {
             done.close = true;
-            done.message = "Updating ProsperoStore";
+            done.message = "Updating Prospero BlackBox";
             done.detail = "It closes now. A notification says when the new version is in "
                           "place; then open it again.";
         }
@@ -586,13 +586,13 @@ void Service::run_installer()
                                    : result.operation == "update"  ? " updated"
                                                                    : " installed");
             done.detail =
-                result.restart ? "Close ProsperoStore and open it again to finish. If the "
+                result.restart ? "Close Prospero BlackBox and open it again to finish. If the "
                                  "old version opens, restart the console first."
                 : result.operation == "uninstall"
                     ? (unregistered == 0 ? "It is off the home screen. Its saved data stays."
                                          : "Its saved data stays. Its home-screen tile goes "
                                            "after a restart.")
-                : result.operation == "adopt" ? "ProsperoStore will offer its updates from now on."
+                : result.operation == "adopt" ? "Prospero BlackBox will offer its updates from now on."
                 : result.operation == "update"
                     ? "The new version is in place. Give the console a few minutes "
                       "before starting it."
@@ -668,7 +668,7 @@ void Service::run()
             continue;
         const auto probe = system::probe_storage(path);
         const bool work_safe =
-            system::work_path_unscanned(scan_policy, drive + "/prosperostore/staging/PPSA99000");
+            system::work_path_unscanned(scan_policy, drive + "/prosperostore/staging/PPSA99400");
         hui::sys::log(
             "[STORE] storage path=%s fs=%s available=%llu rename=%d work-safe=%d error=%s",
             path.c_str(), probe.filesystem.c_str(),
@@ -881,7 +881,7 @@ void Service::run()
     }
 }
 
-// Once per launch, after the catalog: is a newer ProsperoStore listed? Any
+// Once per launch, after the catalog: is a newer Prospero BlackBox listed? Any
 // failure means "unknown", and unknown shows nothing.
 void Service::check_store_update()
 {
@@ -889,11 +889,11 @@ void Service::check_store_update()
     notice.kind = Update::Kind::store_update;
     {
         std::lock_guard lock(mutex_);
-        const auto version = versions_.find("PPSA99000");
+        const auto version = versions_.find("PPSA99400");
         if (version == versions_.end() || !catalog::update_available(version_, version->second))
             return;
         const auto app = std::find_if(entries_.begin(), entries_.end(),
-                                      [](const auto &entry) { return entry.id == "PPSA99000"; });
+                                      [](const auto &entry) { return entry.id == "PPSA99400"; });
         if (app == entries_.end())
             return;
         notice.message = app->version;

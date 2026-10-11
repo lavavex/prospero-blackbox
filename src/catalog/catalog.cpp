@@ -1,4 +1,4 @@
-// ProsperoStore - Strict bounded JSON, signed manifests and download policy.
+// Prospero BlackBox - Strict bounded JSON, signed manifests and download policy.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 

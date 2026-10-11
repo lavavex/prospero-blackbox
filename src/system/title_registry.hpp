@@ -1,4 +1,4 @@
-// ProsperoStore - The console's list of installed titles (its home screen).
+// Prospero BlackBox - The console's list of installed titles (its home screen).
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

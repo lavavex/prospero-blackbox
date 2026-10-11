@@ -1,4 +1,4 @@
-# ProsperoStore - App configuration on the unmodified boilerplate build.
+# Prospero BlackBox - App configuration on the unmodified boilerplate build.
 # Copyright (C) 2026 BlackBearReloaded
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -35,7 +35,7 @@ app: opengl system-keyboard-imports store-worker self-update-helper
 # archive permissions still leaves an app the console will start.
 .PHONY: release-zip
 release-zip: app
-	@python3 tools/store-zip-modes.py dist/PPSA99000.zip
+	@python3 tools/store-zip-modes.py dist/PPSA99400.zip
 
 # The console limits how fast an app writes to its storage; this payload, sent
 # to the loader for each job, unpacks and removes apps at full speed.

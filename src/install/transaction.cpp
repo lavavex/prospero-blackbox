@@ -1,4 +1,4 @@
-// ProsperoStore - Install, update and uninstall as journaled transactions.
+// Prospero BlackBox - Install, update and uninstall as journaled transactions.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifdef STORE_DEBUG_TRACE
@@ -312,7 +312,7 @@ bool migrate_eden(const Environment &environment, const std::string &id, const s
         if ((kind(target) != Kind::absent && rmdir(target.c_str()) != 0) ||
             rename(source.c_str(), target.c_str()) != 0 || !sync_directory(from) ||
             !sync_directory(to))
-            return refuse("migration did not finish; restart ProsperoStore to resume. "
+            return refuse("migration did not finish; restart Prospero BlackBox to resume. "
                           "Files remain in " +
                           from + " or " + to);
         const auto step = std::string("eden-moved-") + folder;
@@ -504,7 +504,7 @@ Result apply(const Environment &environment, const Request &request, net::Contro
     if (!catalog::title_id(id) || entry.status != "available")
         return fail("This app can't be installed yet");
     if (entry.format != "zip")
-        return fail("Can't be installed by this version of ProsperoStore");
+        return fail("Can't be installed by this version of Prospero BlackBox");
     if (!catalog::artifact_url(entry.artifact))
         return fail("The download address isn't allowed");
     if (!catalog::hex_bytes(entry.digest, digest) || entry.size > catalog::kArtifactLimit)
@@ -514,7 +514,7 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         return fail("An older version than the catalog's current one was refused");
     const bool self = id == environment.self;
     if (self != request.self_update)
-        return fail("ProsperoStore is updated separately");
+        return fail("Prospero BlackBox is updated separately");
 
     std::string error, previous;
     Paths paths;
@@ -531,7 +531,7 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         // earlier version) and is, of course, running.
         if (self ? !folder_version(paths.target, id, previous)
                  : !managed(paths, id, request.location, previous))
-            return fail("Installed outside ProsperoStore. Not managed by this app.");
+            return fail("Installed outside Prospero BlackBox. Not managed by this app.");
         if (!catalog::update_available(previous, entry.content_version))
             return fail("The catalog doesn't list a newer version");
         if (const int state = self ? 0 : running(environment, id); state != 0)
@@ -540,7 +540,7 @@ Result apply(const Environment &environment, const Request &request, net::Contro
     else if (existing != Kind::absent)
         return fail("The install location holds something unexpected");
     else if (self)
-        return fail("ProsperoStore isn't installed in this location");
+        return fail("Prospero BlackBox isn't installed in this location");
     if (update && id == "PPSA99008")
     {
         // An update made by an earlier store left the game files in the store's previous
@@ -703,7 +703,7 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         if (rename(paths.staged.c_str(), paths.target.c_str()) != 0)
         {
             if (rename(paths.backup.c_str(), paths.target.c_str()) != 0)
-                return fail("The update failed. Restart ProsperoStore to restore the app.");
+                return fail("The update failed. Restart Prospero BlackBox to restore the app.");
             sync_directory(request.location);
             return abandon("The new version could not be put in place");
         }
@@ -732,12 +732,12 @@ Result apply(const Environment &environment, const Request &request, net::Contro
 
     if (!write_receipt(environment, paths, id, request.location, result.version, entry.version,
                        entry.digest))
-        return fail("Installed, but not recorded yet. Restart ProsperoStore to finish.");
+        return fail("Installed, but not recorded yet. Restart Prospero BlackBox to finish.");
     STORE_STEP("recorded");
     // The journal stays on failure, so the next start sets the previous version aside.
     if (update && !keep_previous(environment, paths))
         return fail("Updated, but the previous version is not set aside yet. Restart "
-                    "ProsperoStore to finish.");
+                    "Prospero BlackBox to finish.");
     if (update)
         result.kept_at = paths.keep;
     if (update)
@@ -762,7 +762,7 @@ Result uninstall(const Environment &environment, const std::string &id, const st
         return result;
     };
     if (id == environment.self)
-        return fail("ProsperoStore can't uninstall itself");
+        return fail("Prospero BlackBox can't uninstall itself");
     std::string error;
     Paths paths;
     if (!resolve(environment, id, location, false, paths, error))
@@ -770,7 +770,7 @@ Result uninstall(const Environment &environment, const std::string &id, const st
     if (kind(paths.journal) != Kind::absent)
         return fail("An interrupted operation must be recovered first");
     if (!managed(paths, id, location, result.version))
-        return fail("Installed outside ProsperoStore. Not managed by this app.");
+        return fail("Installed outside Prospero BlackBox. Not managed by this app.");
     if (const int state = running(environment, id); state != 0)
         return fail(running_refusal(state));
     if (!make_directory(paths.work) || !make_directory(paths.trashes) ||
@@ -818,7 +818,7 @@ Result adopt(const Environment &environment, const std::string &id, const std::s
     std::string error;
     Paths paths;
     if (id == environment.self)
-        result.error = "ProsperoStore manages itself";
+        result.error = "Prospero BlackBox manages itself";
     else if (!resolve(environment, id, location, true, paths, error))
         result.error = error;
     else if (kind(paths.journal) != Kind::absent)

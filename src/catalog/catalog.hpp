@@ -1,4 +1,4 @@
-// ProsperoStore - Verified catalog models and trust boundary.
+// Prospero BlackBox - Verified catalog models and trust boundary.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

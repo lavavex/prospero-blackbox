@@ -1,4 +1,4 @@
-// ProsperoStore - Verified catalog refresh and content-addressed offline cache.
+// Prospero BlackBox - Verified catalog refresh and content-addressed offline cache.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once

@@ -1,4 +1,4 @@
-// ProsperoStore - Redirect, cancellation and conditional-response trust boundaries.
+// Prospero BlackBox - Redirect, cancellation and conditional-response trust boundaries.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "net/http.hpp"

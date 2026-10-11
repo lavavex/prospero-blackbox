@@ -1,4 +1,4 @@
-// ProsperoStore - Read-only live catalog trust probe for host development.
+// Prospero BlackBox - Read-only live catalog trust probe for host development.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "catalog/client.hpp"
