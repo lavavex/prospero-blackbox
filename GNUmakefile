@@ -29,7 +29,7 @@ include Makefile
 .PHONY: opengl host-snapshots foundations-check test-store
 opengl:
 	@bash tools/prepare-opengl.sh
-app: opengl system-keyboard-imports store-worker self-update-helper
+app: blackbox-assets opengl system-keyboard-imports store-worker self-update-helper
 
 # The ZIP handed to people: every entry stored as 0777, so a tool that keeps the
 # archive permissions still leaves an app the console will start.
@@ -92,3 +92,8 @@ test: foundations-check test-store test-self-update
 # The self-update kit test includes vendored and kit headers by name; the
 # imported tidy script passes only src, so lint gets them through CPATH.
 lint: export CPATH := $(abspath src/third_party):$(abspath examples/self-update):$(abspath examples/update-check)
+
+# Home-screen art from the workspace's local art folder (never committed).
+.PHONY: blackbox-assets
+blackbox-assets:
+	@bash tools/blackbox-assets.sh
