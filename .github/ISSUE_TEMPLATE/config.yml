@@ -1,8 +1,0 @@
-# ProsperoStore - GitHub form: config.yml
-# Copyright (C) 2026 BlackBearReloaded
-# SPDX-License-Identifier: GPL-3.0-or-later
-blank_issues_enabled: false
-contact_links:
-  - name: Problem with a listed app or its listing
-    url: https://github.com/blackbearreloaded/ps5-homebrew-catalog/issues/new/choose
-    about: Wrong details, a broken download or an unsafe app in the catalog

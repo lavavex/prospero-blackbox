@@ -1,5 +1,9 @@
 # Third-party notices
 
+Prospero BlackBox is a fork of [ProsperoStore](https://github.com/blackbearreloaded/ProsperoStore)
+by BlackBearReloaded (GPL-3.0). The notices below come from it and cover the projects and
+libraries the app still uses.
+
 ## Credits and acknowledgements
 
 | Project | Role |
