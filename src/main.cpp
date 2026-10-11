@@ -242,6 +242,14 @@ int main()
                 renderer.batch().create_texture(image.width, image.height, image.rgba.data());
         screen.set_coming_soon_art(coming_soon_texture);
     }
+    {
+        std::string encoded;
+        Image image;
+        if (save::read_file(app_root + "/sce_sys/icon0.png", &encoded, 2u << 20) &&
+            decode_png(encoded, image))
+            screen.set_logo(
+                renderer.batch().create_texture(image.width, image.height, image.rgba.data()));
+    }
     const std::string own_version = read_content_version(app_root + "/sce_sys/param.json");
     store::Service service(elevated ? storage_root : "", own_version);
     screen.set_self("PPSA99400", own_version);

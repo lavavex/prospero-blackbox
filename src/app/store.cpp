@@ -87,8 +87,20 @@ constexpr float kButtonRadius = 18.0f;
 constexpr float kCloseDelay = 0.3f;
 constexpr float kCloseHold = 1.2f;
 
-constexpr const char *kSectionNames[] = {"Discover",    "Apps",      "Games",  "Tools",
-                                         "Coming soon", "Installed", "Updates"};
+constexpr const char *kSectionNames[] = {"Discover", "Games", "In progress", "Installed",
+                                         "Updates"};
+// The settings shown, as rows of the settings table: install location, sounds,
+// vibration, reduce motion, debug log.
+constexpr int kSettingRows[] = {0, 2, 3, 4, 12};
+// The sections by number (kSectionNames).
+enum Section
+{
+    kDiscover,
+    kGames,
+    kInProgress,
+    kInstalled,
+    kUpdates
+};
 
 // What one pass over the cards records: all covers, then all shapes, then each
 // face, so a grid costs a few draw calls instead of several per card.
@@ -179,7 +191,7 @@ Mark mark(const App &app)
     if (app.badge == "Duplicate")
         return {"Duplicate", false};
     if (app.badge == "Coming soon")
-        return {"Coming soon", false};
+        return {"In progress", false};
     return {};
 }
 
@@ -251,21 +263,17 @@ void Screen::set_setup_notes(std::vector<std::string> notes)
 
 bool Screen::in_section(const App &app, int section) const
 {
-    if (app.local_only && section != 5)
+    if (app.local_only && section != kInstalled)
         return false;
     switch (section)
     {
-    case 1:
-        return app.kind == "app";
-    case 2:
+    case kGames:
         return app.kind == "game";
-    case 3:
-        return app.kind == "tool";
-    case 4:
+    case kInProgress:
         return app.catalog_badge == "Coming soon";
-    case 5:
+    case kInstalled:
         return !app.installed.empty();
-    case 6:
+    case kUpdates:
         return app.badge == "Update";
     default:
         return true;
@@ -383,7 +391,7 @@ void Screen::rebuild()
         shelf("Apps", [&](const App &a) { return a.kind == "app" && listed(a); }, 0);
         shelf("Games", [&](const App &a) { return a.kind == "game" && listed(a); }, 0);
         shelf("Tools", [&](const App &a) { return a.kind == "tool" && listed(a); }, 0);
-        shelf("Coming soon", [](const App &a) { return a.catalog_badge == "Coming soon"; }, 0);
+        shelf("In progress", [](const App &a) { return a.catalog_badge == "Coming soon"; }, 0);
         shelf("On this console", [](const App &a) { return !a.installed.empty(); }, 0);
     }
     // The stage features the newest releases.
@@ -497,19 +505,9 @@ void Screen::set_catalog(std::vector<App> apps, std::string status, bool current
         auto found = known == listed.end()
                          ? apps_.end()
                          : apps_.begin() + static_cast<std::ptrdiff_t>(known->second);
+        // Only the collection's games: other apps on the console are not ours to show.
         if (found == apps_.end())
-        {
-            App local;
-            local.title_id = id;
-            local.name = installed.name;
-            local.author = installed.image ? "Installed image" : "Installed app";
-            local.local_only = true;
-            local.folded_name = folded(local.name);
-            local.folded_author = folded(local.author);
-            apps_.push_back(std::move(local));
-            found = apps_.end() - 1;
-            listed.emplace(found->title_id, apps_.size() - 1);
-        }
+            continue;
         found->installed.push_back(installed);
     }
     for (auto &app : apps_)
@@ -919,7 +917,7 @@ void Screen::update_home(const InputFrame &input, ui::Feedback &feedback)
     }
     if (input.is_pressed(Action::page_next) || input.is_pressed(Action::page_prev))
         return step_section(input.is_pressed(Action::page_next) ? 1 : -1, false, feedback);
-    if (section_ == 6 && input.is_pressed(Action::west) && !visible_.empty())
+    if (section_ == kUpdates && input.is_pressed(Action::west) && !visible_.empty())
     {
         // Update all: every update on this shelf, in the order shown.
         if (!installer_ || !guard_)
@@ -1509,18 +1507,15 @@ void Screen::draw_top_bar(const ui::Fonts &fonts)
     auto &list = scene_;
     // A soft band of Farlight's dark, so the bar reads over any key art.
     list.gradient_rect({0, 0, kWidth, 200.0f}, 0, kDeep.with_alpha(0.7f), kDeep.with_alpha(0.0f));
-    list.rotated_rect({kMargin + 2.0f, kTopY - 11.0f, 22.0f, 22.0f}, 5.0f, 0.7854f, kAccent);
-    list.rotated_rect({kMargin + 8.0f, kTopY - 5.0f, 10.0f, 10.0f}, 2.0f, 0.7854f, kDeep);
+    if (logo_ && !intro_showing())
+        list.image(logo_, {kMargin - 4.0f, kTopY - 17.0f, 34.0f, 34.0f}, {0, 0, 1, 1}, kWhite, 7.0f);
     const float brand = ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin + 42.0f,
                                  centred(kTopY, 22), 22, kInk, gfx::Align::left, 5.0f);
-    // Where the apps come from, said once and quietly beside the name.
+    // What the collection is, said once and quietly beside the name.
     const float x = kMargin + 42.0f + brand + 20.0f;
     list.rounded_rect({x, kTopY - 11.0f, 1.5f, 22.0f}, 0, kInk.with_alpha(0.25f));
-    ui::text(list, fonts.semibold,
-             active_catalog_url_ == catalog::kDefaultApi ? "homebrew.page"
-             : active_with_official_                     ? "Two catalogs"
-                                                         : "Custom catalog",
-             x + 20.0f, centred(kTopY, 20), 20, kAccent.with_alpha(0.92f));
+    ui::text(list, fonts.semibold, "Need for Speed", x + 20.0f, centred(kTopY, 20), 20,
+             kAccent.with_alpha(0.92f));
 
     // The sections: words, the active one lit, one gold line gliding under it.
     const auto glyphs = ui::GlyphStyle::dark();
@@ -1632,7 +1627,7 @@ void Screen::draw_stage(const ui::Fonts &fonts)
         const std::string kicker =
             app.badge == "Update"                ? "UPDATE AVAILABLE"
             : app.badge == "Installed"           ? "ON THIS CONSOLE"
-            : app.catalog_badge == "Coming soon" ? "COMING SOON"
+            : app.catalog_badge == "Coming soon" ? "IN PROGRESS"
             : featured_now && banner_ == 0       ? "NEW RELEASE"
             : featured_now                       ? "FEATURED"
                            : ui::upper(app.kind.empty() ? std::string("app") : app.kind);
@@ -1696,7 +1691,7 @@ void Screen::draw_stage(const ui::Fonts &fonts)
         else if (app.badge == "Update")
             pill(list, fonts, "Update ready", x, cy, 40.0f, kAccent, kOnAccent, 1.0f, kAllLayers);
         else if (app.catalog_badge == "Coming soon")
-            pill(list, fonts, "Coming soon", x, cy, 40.0f, kInk.with_alpha(0.14f), kInk, 1.0f,
+            pill(list, fonts, "In progress", x, cy, 40.0f, kInk.with_alpha(0.14f), kInk, 1.0f,
                  kAllLayers);
     }
     // The featured apps: dots, the current one a bar that fills as its seconds pass.
@@ -1740,7 +1735,7 @@ void Screen::draw_section_header(const ui::Fonts &fonts)
                              kMargin - 3.0f, kHeaderY, 60, kInk);
     ui::text(list, fonts.mono, std::to_string(visible_.size()), kMargin + w + 18.0f, kHeaderY, 26,
              kInk.with_alpha(0.5f));
-    const bool all = section_ == 6 && !visible_.empty() && installer_ && guard_;
+    const bool all = section_ == kUpdates && !visible_.empty() && installer_ && guard_;
     if (!developer_.empty())
     {
         // The developer's code, where the sorting is said on other pages.
@@ -1949,12 +1944,12 @@ void Screen::draw_grid(const ui::Fonts &fonts)
     }
     if (count == 0)
     {
-        const bool library = section_ == 5;
+        const bool library = section_ == kInstalled;
         const char *title = library && !inventory_ready_      ? "Checking your library"
                             : library && !inventory_.complete ? "Library unavailable"
                             : !query_.empty()                 ? "No matches"
                             : library                         ? "No installed apps found"
-                            : section_ == 6                   ? "Everything is up to date"
+                            : section_ == kUpdates            ? "Everything is up to date"
                             : apps_.empty()                   ? "The catalog is on its way"
                                                               : "Nothing on this shelf right now";
         const char *note =
@@ -1962,7 +1957,7 @@ void Screen::draw_grid(const ui::Fonts &fonts)
             : library && !inventory_.complete
                 ? "Installed apps are unavailable until their locations can be read."
             : !query_.empty() ? "Try another app name or developer."
-            : section_ == 6   ? "Updates for apps installed by Prospero BlackBox appear here."
+            : section_ == kUpdates ? "Updates for games installed by Prospero BlackBox appear here."
             : apps_.empty()   ? "Verified apps will appear here when the catalog is ready."
                               : "Try another section.";
         // While something is on its way an arc draws itself into a full
@@ -2684,16 +2679,15 @@ void Screen::draw_page(const ui::Fonts &fonts, std::uint32_t glass)
     }
 }
 
-// The opening. The store's mark, as on its icon: three glass tiles and a gold one
-// with the diamond, landing one after another on springs, a sheen across the gold,
-// the name spacing in. When the catalog has answered, the mark flies into the top
-// bar's diamond and the home page shows through.
+// The opening. The manager's icon pops in on a spring, a sheen crosses it, the name
+// spaces in. When the catalog has answered, the icon flies into the top bar's corner
+// and the home page shows through.
 void Screen::draw_intro(const ui::Fonts &fonts)
 {
     auto &list = overlay_;
     const float t = intro_clock_, leave = tween::cubic_in_out(intro_leave_);
     const bool still = settings_.reduce_motion;
-    const Color teal = Color::rgb(0x2fd4f0), gold = kAccent, gold_deep = Color::rgb(0xc98a1b);
+    const Color teal = Color::rgb(0x2fd4f0), gold = kAccent;
     const Rect full{0, 0, kWidth, kHeight};
 
     // The room: Farlight's dark with a teal and a gold light breathing in it.
@@ -2704,73 +2698,38 @@ void Screen::draw_intro(const ui::Fonts &fonts)
     list.glow({900.0f, 420.0f, 420.0f, 320.0f}, 160, 260, gold.with_alpha(0.05f + 0.03f * breathe));
     list.pop_opacity();
 
-    // The mark: a 2 x 2 grid centred above the name, flying to the top bar as it leaves.
-    constexpr float kTile = 132.0f, kGap = 22.0f, kRadius = 30.0f;
-    const float cx = 960.0f, cy = 450.0f;
-    const float logo_x = kMargin + 13.0f, logo_y = kTopY; // the top bar's diamond
-    const float scale = tween::lerp(1.0f, 0.075f, leave);
-    const float gold_cx = cx + (kTile + kGap) * 0.5f, gold_cy = cy + (kTile + kGap) * 0.5f;
-    list.push_transform(scale, gold_cx, gold_cy, (logo_x - gold_cx) * leave,
-                        (logo_y - gold_cy) * leave);
-    const auto landed = [&](int i)
+    // The icon, centred above the name, flying to the top bar's corner as it leaves.
+    constexpr float kSize = 300.0f, kRadius = 60.0f;
+    const float cx = 960.0f, cy = 400.0f;
+    const float corner_x = kMargin + 13.0f, corner_y = kTopY; // the top bar's icon
+    const float scale = tween::lerp(1.0f, 34.0f / kSize, leave);
+    const float k = still ? tween::clamp01(t / 0.35f) : tween::clamp01(t / 0.6f);
+    if (logo_ && k > 0.0f)
     {
-        if (still)
-            return tween::clamp01(t / 0.35f);
-        return tween::stagger(t, i, 0.09f, 0.55f);
-    };
-    for (int i = 0; i < 4; ++i)
-    {
-        const float k = landed(i);
-        if (k <= 0.0f)
-            continue;
         const float pop = still ? 1.0f : tween::back_out(k);
-        const float x = cx + (i % 2 ? kGap * 0.5f : -kTile - kGap * 0.5f);
-        const float y = cy + (i / 2 ? kGap * 0.5f : -kTile - kGap * 0.5f) -
-                        36.0f * (1.0f - k) * (still ? 0.0f : 1.0f);
-        const Rect r{x, y, kTile, kTile};
         const float alpha = tween::clamp01(k * 1.6f);
+        const Rect r{cx - kSize * 0.5f, cy - kSize * 0.5f + 36.0f * (1.0f - k) * (still ? 0.0f : 1.0f),
+                     kSize, kSize};
+        list.push_transform(scale, cx, cy, (corner_x - cx) * leave, (corner_y - cy) * leave);
         list.push_transform(0.62f + 0.38f * pop, r.cx(), r.cy(), 0, 0);
-        if (i < 3)
+        list.glow(r.inset(-12.0f), kRadius + 12.0f, 80,
+                  gold.with_alpha((0.28f + 0.1f * breathe) * alpha * (1.0f - leave)));
+        list.image(logo_, r, {0, 0, 1, 1}, kWhite.with_alpha(alpha), kRadius * (1.0f - leave * 0.6f));
+        // A sheen sweeps across once it has landed, then every few seconds.
+        const float sweep = still ? -1.0f : std::fmod(t - 0.75f, 3.2f) / 0.7f;
+        if (t > 0.75f && leave <= 0.0f && sweep >= 0.0f && sweep <= 1.0f)
         {
-            // Glass: a teal rim, a faint fill, light pooling at the top. Fades as the mark leaves.
-            const float a = alpha * (1.0f - tween::smoothstep(intro_leave_ * 2.2f));
-            list.glow(r.inset(-6.0f), kRadius + 6.0f, 46, teal.with_alpha(0.32f * a));
-            list.bordered_rect(r, kRadius, teal.with_alpha(0.14f * a), 3.5f,
-                               teal.with_alpha(0.95f * a));
-            list.gradient_rect({r.x + 8.0f, r.y + 8.0f, r.w - 16.0f, r.h * 0.45f}, kRadius - 8.0f,
-                               kWhite.with_alpha(0.22f * a), kWhite.with_alpha(0.0f));
-        }
-        else
-        {
-            // Gold, turning into the top bar's diamond as it flies there.
-            const float turn = 0.7854f * leave;
-            list.glow(r.inset(-10.0f), kRadius + 10.0f, 70,
-                      gold.with_alpha((0.34f + 0.12f * breathe) * alpha));
-            if (leave > 0.0f)
-                list.rotated_rect(r, kRadius, turn, gold.with_alpha(alpha));
-            else
-            {
-                list.gradient_rect(r, kRadius, gold.with_alpha(alpha), gold_deep.with_alpha(alpha));
-                // A sheen sweeps across once it has landed, then every few seconds.
-                const float sweep = still ? -1.0f : std::fmod(t - 0.75f, 3.2f) / 0.7f;
-                if (t > 0.75f && sweep >= 0.0f && sweep <= 1.0f)
-                {
-                    list.push_clip(r.inset(2.0f));
-                    const float sx = r.x - 60.0f + (r.w + 120.0f) * tween::cubic_in_out(sweep);
-                    list.rotated_rect({sx - 14.0f, r.y - 40.0f, 28.0f, r.h + 80.0f}, 4.0f, 0.42f,
-                                      kWhite.with_alpha(0.35f * alpha));
-                    list.pop_clip();
-                }
-            }
-            const float hole = 46.0f;
-            list.rotated_rect({r.cx() - hole * 0.5f, r.cy() - hole * 0.5f, hole, hole}, 9.0f,
-                              0.7854f, Color::rgb(0x08111f).with_alpha(alpha));
+            list.push_clip(r.inset(2.0f));
+            const float sx = r.x - 60.0f + (r.w + 120.0f) * tween::cubic_in_out(sweep);
+            list.rotated_rect({sx - 18.0f, r.y - 60.0f, 36.0f, r.h + 120.0f}, 4.0f, 0.42f,
+                              kWhite.with_alpha(0.22f * alpha));
+            list.pop_clip();
         }
         list.pop_transform();
+        list.pop_transform();
     }
-    list.pop_transform();
 
-    // The name, spacing in under the mark, then where the apps come from.
+    // The name, spacing in under the icon, then what it holds.
     list.push_opacity(1.0f - tween::smoothstep(intro_leave_ * 2.0f));
     const float name = still ? 1.0f : tween::cubic_out(tween::clamp01((t - 0.45f) / 0.7f));
     if (name > 0.0f)
@@ -2778,7 +2737,8 @@ void Screen::draw_intro(const ui::Fonts &fonts)
                  kInk.with_alpha(name), gfx::Align::center, tween::lerp(26.0f, 11.0f, name));
     const float source = still ? 1.0f : tween::smoothstep((t - 0.8f) / 0.5f);
     if (source > 0.0f)
-        ui::text(list, fonts.semibold, "homebrew.page", cx, centred(716.0f, 24), 24,
+        ui::text(list, fonts.semibold, "NEED FOR SPEED  \xC2\xB7  BLACK BOX COLLECTION", cx,
+                 centred(716.0f, 24), 24,
                  gold.with_alpha(0.92f * source), gfx::Align::center, 2.0f);
     // A longer wait says what it is waiting for, with a line of light running along a track.
     const float waiting = tween::smoothstep((t - 2.2f) / 0.5f);
@@ -2792,7 +2752,7 @@ void Screen::draw_intro(const ui::Fonts &fonts)
         list.gradient_rect_h({head, track.y, 80.0f, 3.0f}, 1.5f, teal.with_alpha(0.0f),
                              teal.with_alpha(0.9f * waiting));
         list.pop_clip();
-        ui::text(list, fonts.regular, "Loading the catalog", cx, centred(834.0f, 20), 20,
+        ui::text(list, fonts.regular, "Loading the collection", cx, centred(834.0f, 20), 20,
                  kInk.with_alpha(0.5f * waiting), gfx::Align::center);
     }
     list.pop_opacity();
@@ -2829,7 +2789,7 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
     scene_.pop_transform();
 
     const auto glyphs = ui::GlyphStyle::dark();
-    const bool all = section_ == 6 && !visible_.empty() && installer_ && guard_;
+    const bool all = section_ == kUpdates && !visible_.empty() && installer_ && guard_;
     ui::Hint home[7];
     int homes = 0;
     if (!visible_.empty())
@@ -3048,7 +3008,7 @@ void Screen::open_panel(int tab)
     panel_ = true;
     development_options_ = false;
     setting_focus_ = 0;
-    panel_tab_ = std::clamp(tab, 0, 3);
+    panel_tab_ = std::clamp(tab, 0, 2);
     queue_focus_ = 0;
     if (panel_tab_ == 2)
         write_about();
@@ -3176,7 +3136,7 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
     if (input.is_pressed(Action::page_next) || input.is_pressed(Action::page_prev))
     {
         // The rooms go round, like the sections.
-        const int next = (panel_tab_ + (input.is_pressed(Action::page_next) ? 1 : 3)) % 4;
+        const int next = (panel_tab_ + (input.is_pressed(Action::page_next) ? 1 : 2)) % 3;
         open_panel(next);
         feedback.play(audio::Cue::tab, 0.96f + 0.04f * static_cast<float>(next));
         return;
@@ -3218,7 +3178,7 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
         news_view_.handle(input, feedback);
         return;
     }
-    const int kRows = development_options_ ? 5 : 8;
+    const int kRows = development_options_ ? 5 : static_cast<int>(std::size(kSettingRows));
     if (step)
     {
         const int next = setting_focus_ + step;
@@ -3233,10 +3193,8 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
                                                                                         : 0;
     if (!turn)
         return;
-    const int setting = development_options_  ? setting_focus_ + 5
-                        : setting_focus_ < 5  ? setting_focus_
-                        : setting_focus_ == 5 ? 12
-                                              : setting_focus_ + 4;
+    const int setting = development_options_ ? setting_focus_ + 5
+                                             : kSettingRows[setting_focus_];
     if (setting == 12)
     {
         settings_.debug_log = !settings_.debug_log;
@@ -3443,11 +3401,11 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
     list.push_transform(1.0f, 0, 0, 0, 24.0f * motion() * (1.0f - tween::cubic_out(t)));
 
     // The left: whose room this is, the room's name, and the four rooms.
-    constexpr const char *kTabs[] = {"Downloads", "Settings", "About", "News"};
+    constexpr const char *kTabs[] = {"Downloads", "Settings", "About"};
     ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin, 170.0f, 18, kAccent, gfx::Align::left,
              4.0f);
     ui::text(list, fonts.display, kTabs[panel_tab_], kMargin - 3.0f, 248.0f, 64, kInk);
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         const Rect entry{kMargin, 312.0f + 72.0f * static_cast<float>(i), 400.0f, 60.0f};
         const bool on = i == panel_tab_;
@@ -3670,13 +3628,10 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
             y += 112.0f;
         }
         const int first = std::max(0, setting_focus_ - 5);
-        const int count = development_options_ ? 5 : 8;
+        const int count = development_options_ ? 5 : static_cast<int>(std::size(kSettingRows));
         for (int focus = first; focus < std::min(first + 6, count); ++focus)
         {
-            const int i = development_options_ ? focus + 5
-                          : focus < 5          ? focus
-                          : focus == 5         ? 12
-                                               : focus + 4;
+            const int i = development_options_ ? focus + 5 : kSettingRows[focus];
             const Rect row{px - 16.0f, y, pw + 32.0f, 108.0f};
             if (focus == setting_focus_)
                 row_focus(row);
@@ -3737,21 +3692,16 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
     }
     else
     {
-        // About: the store's mark, its name and version, then the article.
+        // About: the manager's icon, its name and version, then the article.
         const float cx = px + 64.0f, cy = panel.y + 96.0f;
         list.glow({cx - 56.0f, cy - 56.0f, 112.0f, 112.0f}, 40, 50, kAccent.with_alpha(0.2f));
-        list.rotated_rect({cx - 40.0f, cy - 40.0f, 80.0f, 80.0f}, 16.0f, 0.7854f, kAccent);
-        list.rotated_rect({cx - 18.0f, cy - 18.0f, 36.0f, 36.0f}, 7.0f, 0.7854f, kDeep);
+        if (logo_)
+            list.image(logo_, {cx - 48.0f, cy - 48.0f, 96.0f, 96.0f}, {0, 0, 1, 1}, kWhite, 20.0f);
         ui::text(list, fonts.display, "Prospero BlackBox", px + 150.0f, panel.y + 98.0f, 52, kInk);
-        float words = ui::text(list, fonts.regular, "Apps from ", px + 152.0f, panel.y + 136.0f, 22,
-                               kInk.with_alpha(0.62f));
-        ui::text(list, fonts.semibold,
-                 active_catalog_url_ == catalog::kDefaultApi ? "homebrew.page"
-                 : active_with_official_ ? "homebrew.page and your custom catalog"
-                                         : "your custom catalog",
-                 px + 152.0f + words, panel.y + 136.0f, 22, kAccent);
-        words = ui::text(list, fonts.regular, "Brought to you by ", px + 152.0f, panel.y + 168.0f,
-                         22, kInk.with_alpha(0.62f));
+        ui::text(list, fonts.regular, "The Black Box Need for Speed games, as native PS5 titles",
+                 px + 152.0f, panel.y + 136.0f, 22, kInk.with_alpha(0.62f));
+        const float words = ui::text(list, fonts.regular, "Based on ProsperoStore by ", px + 152.0f,
+                                     panel.y + 168.0f, 22, kInk.with_alpha(0.62f));
         ui::text(list, fonts.semibold, "BlackBearReloaded", px + 152.0f + words, panel.y + 168.0f,
                  22, kInk);
         if (!self_version_.empty())

@@ -111,6 +111,11 @@ class Screen
     void set_detail(const catalog::Entry &entry);
     void set_detail_error(const std::string &id, std::string message);
     void set_icon(const std::string &id, std::uint32_t texture);
+    // The manager's own icon (sce_sys/icon0.png): the opening, the top bar, About.
+    void set_logo(std::uint32_t texture)
+    {
+        logo_ = texture;
+    }
     void set_art(const std::string &id, std::uint32_t texture);
     void set_background(const std::string &id, std::uint32_t texture);
     // The field made from the app's icon; key art drawn for the store wins over it.
@@ -271,7 +276,7 @@ class Screen
         released,
         updated
     };
-    static constexpr int kSections = 7;
+    static constexpr int kSections = 5;
     // What the card and the banner print, fitted once per catalog, not per frame.
     struct Fit
     {
@@ -413,7 +418,7 @@ class Screen
     std::uint32_t developer_qr_ = 0;
     void close_developer();
     std::string qr_id_;
-    std::uint32_t qr_texture_ = 0, coming_soon_art_ = 0;
+    std::uint32_t qr_texture_ = 0, coming_soon_art_ = 0, logo_ = 0;
     int qr_width_ = 0;
     Sort sort_ = Sort::name;
 
