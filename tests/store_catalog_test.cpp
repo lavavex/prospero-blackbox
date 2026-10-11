@@ -68,9 +68,9 @@ int main()
     assert(entries.size() == 1); // Failed refresh never replaces the last good catalog.
     Entry detail;
     const std::string full_icon =
-        R"({"schema":3,"titleid":"PPSA99000","name":"Store","kind":"app","status":"coming_soon","icon":"https://homebrew.page/icons/PPSA99000.png"})";
+        R"({"schema":3,"titleid":"PPSA99400","name":"Store","kind":"app","status":"coming_soon","icon":"https://homebrew.page/icons/PPSA99400.png"})";
     assert(parse_detail(full_icon, "PPSA99400", detail, error));
-    assert(detail.large_icon == "https://homebrew.page/icons/PPSA99000.png");
+    assert(detail.large_icon == "https://homebrew.page/icons/PPSA99400.png");
     // Safety facts: read when present, ignored when unknown, never a reason to refuse an app.
     assert(detail.sandbox.empty() && detail.build.empty() && detail.helpers == 0);
     const std::string with_safety =

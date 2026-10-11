@@ -31,7 +31,7 @@ Response fetch(const std::string &url, Purpose, std::size_t limit, std::string &
 } // namespace store::net
 int main()
 {
-    char path[] = "/tmp/prosperostore-cache-XXXXXX";
+    char path[] = "/tmp/prospero-blackbox-cache-XXXXXX";
     assert(mkdtemp(path));
     namespace fs = std::filesystem;
     const auto record = fs::path(path) / "current";

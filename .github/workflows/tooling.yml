@@ -129,7 +129,7 @@ jobs:
             echo "artifact=${GITHUB_REPOSITORY##*/}-PR$PR_NUMBER-$short" >> "$GITHUB_OUTPUT"
             echo "BUILD_LABEL=PR $PR_NUMBER, $short" >> "$GITHUB_ENV"
           else
-            echo "artifact=prosperostore-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            echo "artifact=prospero-blackbox-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
           fi
 
       # Formatting, licence headers, scripts and assets. Static analysis (clang-tidy) takes
@@ -218,7 +218,7 @@ jobs:
         run: >-
           gh run download "$GITHUB_RUN_ID"
           --repo "$GITHUB_REPOSITORY"
-          --name "prosperostore-$GITHUB_SHA"
+          --name "prospero-blackbox-$GITHUB_SHA"
           --dir release
 
       - name: Publish the pre-release
@@ -244,7 +244,7 @@ jobs:
               --verify-tag \
               --prerelease \
               --generate-notes \
-              --title "ProsperoStore ${TAG#v} (alpha)"
+              --title "Prospero BlackBox ${TAG#v} (alpha)"
             exit 0
           fi
           existing=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')

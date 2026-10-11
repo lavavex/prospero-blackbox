@@ -65,7 +65,7 @@ bool resolve(const Environment &environment, const std::string &id, const std::s
             error = "The location's drive isn't supported";
             return false;
         }
-        paths.work = drive + "/prosperostore";
+        paths.work = drive + "/prospero-blackbox";
     }
     paths.staging = paths.work + "/staging";
     paths.archive = paths.staging + "/" + id + ".zip";
@@ -203,129 +203,6 @@ bool discard(const Environment &environment, const std::string &path)
     return remove_tree(path);
 }
 
-// Eden releases before the separate game-files directory kept personal data in
-// assets/. Move only those known directories, on the same filesystem, after the
-// swap is journaled. Recovery repeats this operation: each directory rename is
-// atomic and directories already moved are absent from the source.
-constexpr const char *kEdenFolders[] = {"keys", "firmware", "roms",       "updates",
-                                        "mods", "ryujinx",  "save-import"};
-
-bool empty_directory(const std::string &path)
-{
-    if (kind(path) != Kind::directory)
-        return false;
-    DIR *directory = opendir(path.c_str());
-    if (!directory)
-        return false;
-    bool empty = true;
-    errno = 0;
-    while (const auto *entry = readdir(directory))
-        if (std::strcmp(entry->d_name, ".") != 0 && std::strcmp(entry->d_name, "..") != 0)
-        {
-            empty = false;
-            break;
-        }
-    if (errno != 0)
-        empty = false;
-    closedir(directory);
-    return empty;
-}
-
-bool eden_legacy_data(const std::string &app)
-{
-    // A missing assets folder is normal for recent releases. Unexpected paths
-    // are treated as data needing attention, rather than discarded.
-    const auto assets = app + "/assets";
-    if (kind(assets) == Kind::absent)
-        return false;
-    if (kind(assets) != Kind::directory)
-        return true;
-    for (const auto *folder : kEdenFolders)
-        if (const auto path = assets + "/" + folder;
-            kind(path) != Kind::absent && !empty_directory(path))
-            return true;
-    return false;
-}
-
-bool migrate_eden(const Environment &environment, const std::string &id, const std::string &app,
-                  bool execute, Result &result)
-{
-    if (id != "PPSA99008" || !eden_legacy_data(app))
-        return true;
-    const auto from = app + "/assets", to = environment.data + "/prosperoeden";
-    const auto refuse = [&](const std::string &detail)
-    {
-        result.error = "ProsperoEden's legacy game files need attention: " + detail;
-        return false;
-    };
-    if (kind(from) != Kind::directory || kind(environment.data) != Kind::directory ||
-        (kind(to) != Kind::absent && kind(to) != Kind::directory))
-        return refuse("the data location isn't a regular directory");
-    if (!same_filesystem(from, environment.data))
-        return refuse("move the game files from " + from + " to " + to +
-                      " before updating (the folders are on different drives)");
-    // Read only the folder selection. Never reset settings or interpret an
-    // unreadable config as permission to migrate to the default directory.
-    const auto config_dir = to + "/config", config = config_dir + "/prosperoeden.json";
-    if (kind(config_dir) != Kind::absent && kind(config_dir) != Kind::directory)
-        return refuse("the settings directory can't be read safely");
-    if (kind(config) != Kind::absent)
-    {
-        std::string body;
-        if (!read_small(config, 1u << 20, body))
-            return refuse("the settings file can't be read safely");
-        auto *document = yyjson_read(body.data(), body.size(), 0);
-        if (!document)
-            return refuse("the settings file can't be parsed");
-        auto *root = yyjson_doc_get_root(document);
-        auto *selection = yyjson_obj_get(root, "game_files");
-        const char *saved = yyjson_get_str(selection);
-        const bool allowed =
-            yyjson_is_obj(root) && (!selection || (saved && (!*saved || std::string(saved) == to)));
-        yyjson_doc_free(document);
-        if (!allowed)
-            return refuse("a custom game-files folder is selected; move the legacy files "
-                          "there before updating. Settings were left unchanged");
-    }
-    // Check every destination before moving anything. Existing nonempty
-    // folders, links and special files are never overwritten or merged.
-    for (const auto *folder : kEdenFolders)
-    {
-        const auto source = from + "/" + folder, target = to + "/" + folder;
-        if (kind(source) == Kind::absent)
-            continue;
-        if (kind(source) != Kind::directory)
-            return refuse("unexpected source: " + source);
-        if (kind(target) != Kind::absent && !empty_directory(target))
-            return refuse("destination already holds files: " + target +
-                          ". Resolve the conflict before updating");
-    }
-    if (!execute)
-        return true;
-    if (!make_directory(to) || !sync_directory(environment.data))
-        return refuse("the data folder could not be created");
-    for (const auto *folder : kEdenFolders)
-    {
-        const auto source = from + "/" + folder, target = to + "/" + folder;
-        if (kind(source) == Kind::absent)
-            continue;
-        if ((kind(target) != Kind::absent && rmdir(target.c_str()) != 0) ||
-            rename(source.c_str(), target.c_str()) != 0 || !sync_directory(from) ||
-            !sync_directory(to))
-            return refuse("migration did not finish; restart Prospero BlackBox to resume. "
-                          "Files remain in " +
-                          from + " or " + to);
-        const auto step = std::string("eden-moved-") + folder;
-        if (environment.interrupt && environment.interrupt(step.c_str()))
-        {
-            result.interrupted = true;
-            result.error = "Interrupted";
-            return false;
-        }
-    }
-    return true;
-}
-
 // An update never deletes what it replaces. People keep their own files inside an app's
 // folder (games, firmware, settings of an older version), and the new version's folder
 // has none of them. So the previous folder is moved, whole, to the store's "previous"
@@ -335,9 +212,6 @@ bool keep_previous(const Environment &environment, const Paths &paths)
 {
     if (kind(paths.backup) == Kind::absent)
         return true;
-    // Never replace an earlier backup that still holds Eden user data.
-    if (paths.keep.ends_with("/PPSA99008") && eden_legacy_data(paths.keep))
-        return false;
     if (!make_directory(paths.keeps) || !discard(environment, paths.keep) ||
         rename(paths.backup.c_str(), paths.keep.c_str()) != 0)
         return false;
@@ -541,31 +415,6 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         return fail("The install location holds something unexpected");
     else if (self)
         return fail("Prospero BlackBox isn't installed in this location");
-    if (update && id == "PPSA99008")
-    {
-        // An update made by an earlier store left the game files in the store's previous
-        // folder, where ProsperoEden never looks. They are moved out by the same rules,
-        // before this update replaces that folder.
-        const bool stranded = eden_legacy_data(paths.keep);
-        if (stranded)
-            for (const auto *folder : kEdenFolders)
-            {
-                const auto kept = paths.keep + "/assets/" + folder,
-                           current = paths.target + "/assets/" + folder;
-                // The same folder in both places: neither is merged into the other.
-                if (kind(kept) != Kind::absent && !empty_directory(kept) &&
-                    kind(current) != Kind::absent && !empty_directory(current))
-                    return fail("ProsperoEden's game files are in two places: " + kept + " and " +
-                                current + ". Keep one of them, then update again.");
-            }
-        if ((stranded && !migrate_eden(environment, id, paths.keep, false, result)) ||
-            !migrate_eden(environment, id, paths.target, false, result))
-            return fail(result.error);
-        // Each folder is one rename, and a folder already moved is skipped the next time,
-        // so an interruption here needs no journal: the next update finishes it.
-        if (stranded && !migrate_eden(environment, id, paths.keep, true, result))
-            return result.interrupted ? result : fail(result.error);
-    }
     result.operation = update ? "update" : "install";
     if (kind(request.location) != Kind::directory)
         return fail("The location isn't available");
@@ -727,9 +576,6 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         return result;
     }
     // From here the journal is kept on failure, so the next start finishes the job.
-    if (update && !migrate_eden(environment, id, paths.backup, true, result))
-        return result.interrupted ? result : fail(result.error); // Keep journal and backup.
-
     if (!write_receipt(environment, paths, id, request.location, result.version, entry.version,
                        entry.digest))
         return fail("Installed, but not recorded yet. Restart Prospero BlackBox to finish.");
@@ -929,9 +775,6 @@ Result recover(const Environment &environment)
         if (placed == Kind::directory && folder_version(paths.target, id, version) &&
             version == journal.content_version)
         {
-            if (id != environment.self &&
-                !migrate_eden(environment, id, paths.backup, true, result))
-                return result;
             // The store's own previous folder holds nothing of the user's.
             if (!record() || !(id == environment.self ? discard(environment, paths.backup)
                                                       : keep_previous(environment, paths)))

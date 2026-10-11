@@ -15,7 +15,7 @@ int main()
     store::catalog::Icons cache(root);
     store::catalog::Entry entry;
     entry.id = "PPSA99400";
-    entry.icon = "https://homebrew.page/icons/PPSA99000.png";
+    entry.icon = "https://homebrew.page/icons/PPSA99400.png";
     entry.icon_hash = "revision-one";
     const auto key = store::catalog::Icons::key(entry);
     assert(key.size() == 64 && key.find('/') == std::string::npos);

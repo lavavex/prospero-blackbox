@@ -219,7 +219,7 @@ int worker_unregister(const Connect &connect, const std::string &title, int &cod
 
 bool worker_folder(std::string_view path)
 {
-    constexpr std::string_view name = "/prosperostore";
+    constexpr std::string_view name = "/prospero-blackbox";
     // The same rules as a path inside it, which is what the folder plus a name is.
     return path.size() > name.size() && path.ends_with(name) &&
            worker_path(std::string(path) + "/x");

@@ -51,10 +51,10 @@ is not linked into any PS5 application, runtime, or package artifact.
 
 ## PS5-Lapy-JB-Daemon integration
 
-The ProsperoStore build fetches
+The Prospero BlackBox build fetches
 [mpereiraesaa's PS5-Lapy-JB-Daemon](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon)
 at commit `5b8397b9f2b5f12a7bc2f9c8745a00d1c2dd01ad`, invokes its unmodified
-`owned-helper` target for ProsperoStore's exact title and packages the
+`owned-helper` target for Prospero BlackBox's exact title and packages the
 generated helper ELF with Lapy's MIT license. The shared protocol header
 published upstream is LGPL-2.1-or-later; this repository's application-side
 wire implementation is GPL-3.0-or-later.

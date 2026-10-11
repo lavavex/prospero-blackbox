@@ -1,4 +1,4 @@
-# ProsperoStore dependencies
+# Prospero BlackBox dependencies (inherited from ProsperoStore)
 
 The app is GPL-3.0-or-later. Its pinned foundation code and assets retain their
 original notices in [UI_NOTICES.md](UI_NOTICES.md) and the root

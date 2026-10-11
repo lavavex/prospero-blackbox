@@ -1,4 +1,4 @@
-// Prospero BlackBox - Artwork remains available during refresh and bounded during stalls.
+// Prospero BlackBox - The service: the built-in catalog, settings and the installer.
 // Copyright (C) 2026 BlackBearReloaded
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "app/service.hpp"
@@ -15,31 +15,6 @@
 using namespace std::chrono_literals;
 namespace
 {
-std::atomic<bool> refresh_ready{false};
-std::atomic<unsigned> downloads{0};
-const unsigned char png[] = {
-    137, 80, 78, 71, 13, 10, 26,  10,  0,   0,   0, 13, 73, 72, 68, 82, 0,  0,  0,   1,   0,  0,  0,
-    1,   8,  6,  0,  0,  0,  31,  21,  196, 137, 0, 0,  0,  11, 73, 68, 65, 84, 120, 156, 99, 96, 0,
-    2,   0,  0,  5,  0,  1,  165, 246, 69,  64,  0, 0,  0,  0,  73, 69, 78, 68, 174, 66,  96, 130};
-std::string encoded(reinterpret_cast<const char *>(png), sizeof(png));
-store::catalog::Snapshot fixture()
-{
-    store::catalog::Snapshot result;
-    result.verified = true;
-    result.accepted = true;
-    result.manifest.sequence = 75;
-    for (unsigned i = 0; i < 16; ++i)
-    {
-        store::catalog::Entry entry;
-        entry.id = "PPSA" + std::to_string(99000 + i);
-        entry.icon = "https://homebrew.page/icons/" + entry.id + ".png";
-        entry.icon_hash = "one";
-        entry.version = "1.0.10";
-        result.versions[entry.id] = "01.000.010";
-        result.entries.push_back(entry);
-    }
-    return result;
-}
 store::Update next(store::Service &service, store::Update::Kind kind)
 {
     // The notice arrives with the catalog it follows: keep what a call didn't ask for.
@@ -64,64 +39,18 @@ store::Update next(store::Service &service, store::Update::Kind kind)
     return {};
 }
 } // namespace
-namespace store::catalog
-{
-bool Client::cached(Snapshot &out, std::string &)
-{
-    out = fixture();
-    return true;
-}
-bool Client::refresh(Snapshot &out, net::Control &control, std::string &)
-{
-    while (!refresh_ready && !control.cancelled)
-        std::this_thread::sleep_for(5ms);
-    out = fixture();
-    out.online = true;
-    return !control.cancelled;
-}
-bool Client::detail(const Snapshot &, const std::string &id, Entry &entry, net::Control &,
-                    std::string &error)
-{
-    if (id != "PPSA99400")
-    {
-        error = "offline";
-        return false;
-    }
-    entry = fixture().entries.front();
-    entry.large_icon = "https://homebrew.page/full/PPSA99000.png";
-    entry.page = "https://homebrew.page/app/PPSA99000/";
-    return true;
-}
-bool Client::news(const Snapshot &, std::vector<News> &out, net::Control &, std::string &)
-{
-    out = {{"2026-10-11-a", "2026-10-11T10:00:00Z", "Hello", "First."}};
-    return true;
-}
-} // namespace store::catalog
 namespace store::net
 {
 void Control::cancel()
 {
     cancelled = true;
 }
-Response fetch(const std::string &url, Purpose, std::size_t, std::string &body, Control &,
+Response fetch(const std::string &, Purpose, std::size_t, std::string &, Control &,
                const std::string &)
 {
-    if (url == "https://homebrew.page/api/v1/apps/PPSA99000.json")
-    {
-        // The store's own listing, one release ahead of the running build.
-        body = R"({"schema":3,"titleid":"PPSA99400","status":"available",)"
-               R"("content_version":"01.000.010","version":"1.0.10",)"
-               R"("page":"https://homebrew.page/app/PPSA99000/"})";
-        Response listed;
-        listed.status = 200;
-        return listed;
-    }
-    ++downloads;
-    body = encoded;
-    Response result;
-    result.status = 200;
-    return result;
+    Response failure;
+    failure.error = "The test has no network";
+    return failure;
 }
 Response get(const std::string &, Purpose, std::uint64_t, const Sink &, Control &,
              const std::string &)
@@ -192,7 +121,6 @@ static void check_installer()
     assert(!service.request_install(entry, location)); // No installer: nothing is queued.
     service.installer = true;
     service.installer_environment = environment;
-    refresh_ready = true;
     assert(service.start());
     const auto ask = [&](const auto &request)
     {
@@ -236,63 +164,25 @@ int main()
     char path[] = "/tmp/prospero-service-XXXXXX";
     assert(mkdtemp(path));
     const std::string root = path;
-    assert(std::filesystem::create_directory(root + "/cache"));
-    store::catalog::Icons cache(root + "/cache/icons");
-    hui::Image image;
-    assert(cache.store(fixture().entries.front(), encoded, image));
-    assert(cache.cached(fixture().entries.front(), image));
     store::Service service(root, "01.000.000");
     assert(service.start());
-    const auto cached = next(service, store::Update::Kind::catalog);
-    assert(cached.generation == 1 && !cached.snapshot.online);
-    assert(service.request_icons({"PPSA99400"}));
-    const auto icon = next(service, store::Update::Kind::icon);
-    assert(icon.generation == 1 && icon.image.width == 1 && downloads == 0);
-    refresh_ready = true;
-    const auto online = next(service, store::Update::Kind::catalog);
-    assert(online.generation == 2 && online.snapshot.online);
-    // A newer store in the catalog becomes one offer; nothing is downloaded for it.
-    const auto notice = next(service, store::Update::Kind::store_update);
-    assert(notice.message == "1.0.10");
-    // The catalog's news follows the catalog it came with.
-    const auto feed = next(service, store::Update::Kind::news);
-    assert(feed.news.size() == 1 && feed.news.front().title == "Hello");
-    std::vector<std::string> ids;
-    for (const auto &entry : fixture().entries)
-        ids.push_back(entry.id);
-    assert(service.request_icons(ids));
-    std::this_thread::sleep_for(1500ms); // Fill the eight-result queue without a render consumer.
-    std::set<std::string> received;
-    const auto deadline = std::chrono::steady_clock::now() + 5s;
-    while (received.size() != ids.size() && std::chrono::steady_clock::now() < deadline)
-    {
-        std::vector<store::Update> updates;
-        service.take(updates);
-        assert(updates.size() <= 8);
-        for (const auto &update : updates)
-            if (update.kind == store::Update::Kind::icon)
-            {
-                assert(update.generation == 2 && update.image.width == 1);
-                received.insert(update.entry.id);
-            }
-        std::this_thread::sleep_for(5ms);
-    }
-    assert(received.size() == ids.size() && downloads == 15);
-    assert(service.request_detail("PPSA99400"));
-    const auto qr = next(service, store::Update::Kind::qr);
-    assert(qr.entry.id == "PPSA99400" && qr.image.width >= 116 && downloads == 16);
-    assert(service.request_detail("PPSA99400"));
-    assert(next(service, store::Update::Kind::detail).image.width == 1 && downloads == 16);
+    // The collection is built in: six games, Most Wanted the only one to install.
+    const auto listed = next(service, store::Update::Kind::catalog);
+    const auto &games = listed.snapshot.entries;
+    assert(games.size() == 6 && !listed.snapshot.online && listed.snapshot.accepted);
+    for (const auto &game : games)
+        assert(game.status == (game.id == "PPSA99403" ? "available" : "coming_soon") &&
+               game.icon.ends_with(".png"));
+    assert(service.request_detail("PPSA99403"));
+    const auto page = next(service, store::Update::Kind::detail);
+    assert(page.entry.id == "PPSA99403" && page.entry.name == "Need for Speed: Most Wanted");
     assert(service.request_detail("PPSA99001"));
-    const auto failure = next(service, store::Update::Kind::error);
-    assert(failure.entry.id == "PPSA99001" && failure.message == "offline");
-    assert(service.request_icons(ids));
-    std::this_thread::sleep_for(1500ms);
+    const auto unknown = next(service, store::Update::Kind::error);
+    assert(unknown.entry.id == "PPSA99001" && !unknown.message.empty());
     const auto before = std::chrono::steady_clock::now();
     service.stop();
     assert(std::chrono::steady_clock::now() - before < 1s);
-    // Closing during the initial network refresh must still persist next-launch settings.
-    refresh_ready = false;
+    // Closing right after the start must still persist next-launch settings.
     store::Service closing(root);
     assert(closing.start());
     const std::string settings = "catalog_url=https://dev.example/api/v1/\nverify_signatures=0\n";

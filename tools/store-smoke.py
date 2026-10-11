@@ -98,7 +98,7 @@ manifest = {str(path.relative_to(package)): hashlib.sha256(path.read_bytes()).he
     "require_icons": args.require_icons,
     "transport_sha256": hashlib.sha256((args.ui_tools / "console-tour.py").read_bytes()).hexdigest()
 }, indent=2))
-token = "prosperostore-" + uuid.uuid4().hex
+token = "prospero-blackbox-" + uuid.uuid4().hex
 while True:
     try:
         with args.lock.open("x") as lock:

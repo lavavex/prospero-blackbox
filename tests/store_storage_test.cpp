@@ -9,7 +9,7 @@
 
 int main()
 {
-    char temporary[] = "/tmp/prosperostore-storage-XXXXXX";
+    char temporary[] = "/tmp/prospero-blackbox-storage-XXXXXX";
     assert(mkdtemp(temporary));
     namespace fs = std::filesystem;
     const fs::path root(temporary);

@@ -24,7 +24,6 @@ struct Update
         qr,
         inventory,
         notice,       // message is its title, detail its body
-        store_update, // a newer Prospero BlackBox is listed: message is its version
         setup,        // what to check in ShadowMountPlus's settings: detail, one per line
         news,         // the catalog's news feed, newest first
         job,          // a finished install, update or uninstall: entry.id, ok, message, detail
@@ -122,7 +121,6 @@ class Service
     void run();
     void run_installer();
     void publish(Update update);
-    void check_store_update();
     bool enqueue(Job job);
     // notes: what the user should check in ShadowMountPlus's settings, in plain words.
     bool load_policy(system::ScanPolicy &policy, std::vector<std::string> *notes = nullptr) const;

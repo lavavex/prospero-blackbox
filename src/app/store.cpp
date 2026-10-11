@@ -213,11 +213,6 @@ Screen::Screen() : theme_(farlight_theme())
     article_.style.padding = 4;
     article_.set_bounds({kInfoX - 4.0f, 604.0f, kInfoW + 8.0f, 322.0f});
     dialog_.style.theme = theme_;
-    notes_.style.theme = theme_;
-    notes_.style.body_size = 25;
-    notes_.style.footer = false;
-    notes_.style.padding = 44;
-    notes_.set_bounds({460.0f, 132.0f, 1000.0f, 760.0f});
     about_.style.theme = theme_;
     about_.style.body_size = 26;
     about_.style.footer = false;
@@ -250,73 +245,6 @@ void Screen::set_setup_notes(std::vector<std::string> notes)
                            : std::to_string(setup_notes_.size()) +
                                  " things to check: press Options and open About.",
                  12.0f);
-}
-
-void Screen::offer_store_update(std::string version)
-{
-    if (store_offer_ != StoreOffer::none)
-        return;
-    store_offer_version_ = std::move(version);
-    store_offer_ = StoreOffer::waiting;
-    store_offer_wait_ = 0.0f;
-}
-
-void Screen::open_store_offer(ui::Feedback &feedback)
-{
-    const auto self = std::find_if(apps_.begin(), apps_.end(),
-                                   [&](const auto &app) { return app.title_id == self_id_; });
-    const std::string notes =
-        self != apps_.end() && self->detail ? self->detail->release_notes : std::string{};
-    // The version as the console writes it (01.000.010), when the catalog gives it.
-    if (self != apps_.end() && !self->available_version.empty())
-        store_offer_version_ = self->available_version;
-    store_offer_notes_ = !notes.empty();
-    if (store_offer_notes_)
-    {
-        // The catalog's notes are plain text: lines, with list items starting "- ".
-        using Block = ui::TextBlock;
-        std::vector<Block> blocks;
-        blocks.push_back(Block::heading("What's new in " + store_offer_version_, 2));
-        std::size_t at = 0;
-        while (at <= notes.size())
-        {
-            const std::size_t end = std::min(notes.find('\n', at), notes.size());
-            std::string line = notes.substr(at, end - at);
-            at = end + 1;
-            while (!line.empty() && (line.back() == ' ' || line.back() == '\r'))
-                line.pop_back();
-            if (line.empty())
-                continue;
-            if (line.starts_with("- "))
-                blocks.push_back(Block::bullet(line.substr(2)));
-            else
-                blocks.push_back(Block::paragraph(std::move(line)));
-        }
-        notes_.set_content(std::move(blocks));
-        notes_.scroll_to(0, true);
-    }
-    ask_ = Ask::store_update;
-    std::vector<ui::DialogButton> buttons;
-    buttons.push_back({"Skip"});
-    if (store_offer_notes_)
-        buttons.push_back({"What's new"});
-    buttons.push_back({"Update now", ui::ButtonKind::primary});
-    const int update_now = static_cast<int>(buttons.size()) - 1;
-    dialog_.open({ui::StatusKind::info, "Prospero BlackBox " + store_offer_version_ + " is available",
-                  "You have " + self_version_ +
-                      ". The update is checked against the signed catalog, and Prospero BlackBox "
-                      "closes when it is installed.",
-                  std::move(buttons), update_now},
-                 feedback);
-    store_offer_ = StoreOffer::asked;
-}
-
-void Screen::start_store_update()
-{
-    // Ordered from update(), as soon as the store's own page could order it.
-    store_offer_ = StoreOffer::done;
-    store_update_wanted_ = true;
-    store_update_wait_ = 0.0f;
 }
 
 // ---- data -------------------------------------------------------------------
@@ -1323,7 +1251,7 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
 {
     time_ += dt;
     // Where this frame's input lands, before it changes anything: the home page, idle.
-    const bool at_home = !panel_ && !details_ && !dialog_.is_open() && !notes_open_ &&
+    const bool at_home = !panel_ && !details_ && !dialog_.is_open() &&
                          !intro_showing() && activity_.id.empty() && activity_.waiting.empty();
     // The intro stays at least a moment, and until the catalog has answered (six
     // seconds at most: the home page has its own loading state). Input waits for it.
@@ -1372,83 +1300,7 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
             update_all_.erase(update_all_.begin());
         }
     }
-    // The offer waits for a quiet screen and, a few seconds at most, for the release notes.
-    if (store_offer_ == StoreOffer::waiting && !intro_showing() && !dialog_.is_open() && !panel_ &&
-        !notes_open_)
-    {
-        store_offer_wait_ += dt;
-        const auto self = std::find_if(apps_.begin(), apps_.end(),
-                                       [&](const auto &app) { return app.title_id == self_id_; });
-        const bool wanted = self != apps_.end() && !self->detail && self->detail_error.empty() &&
-                            store_offer_wait_ < 8.0f;
-        if (!wanted)
-            open_store_offer(feedback);
-        else if (!store_offer_detail_asked_ && pending_detail.empty())
-        {
-            pending_detail = self_id_;
-            store_offer_detail_asked_ = true;
-        }
-    }
-    // "Update now": what Cross does on the store's own page, once its verified details
-    // are here. If that can't be, the page's own words say why.
-    if (store_update_wanted_ && pending_order.kind == Order::Kind::none)
-    {
-        store_update_wait_ += dt;
-        const auto self = std::find_if(apps_.begin(), apps_.end(),
-                                       [&](const auto &app) { return app.title_id == self_id_; });
-        const bool waiting = self != apps_.end() && !self->detail && self->detail_error.empty() &&
-                             store_update_wait_ < 10.0f;
-        if (waiting)
-        {
-            if (pending_detail.empty())
-                pending_detail = self_id_;
-        }
-        else
-        {
-            store_update_wanted_ = false;
-            const Offer state = self != apps_.end() ? offer(*self) : Offer{};
-            if (self != apps_.end() && state.armed && !state.busy &&
-                state.primary == Order::Kind::install)
-                order(*self, Order::Kind::install);
-            else
-                notify("The update couldn't start",
-                       state.reason.empty() ? "Open Prospero BlackBox's page in About to update it."
-                                            : state.reason);
-        }
-    }
-    notes_.set_active(notes_open_);
-    notes_.update(dt);
-    if (notes_open_)
-    {
-        // The notes take every input: Cross updates, Circle goes back to the question.
-        if (input.is_pressed(Action::confirm))
-        {
-            notes_open_ = false;
-            feedback.play(audio::Cue::select);
-            start_store_update();
-        }
-        else if (input.is_pressed(Action::back))
-        {
-            notes_open_ = false;
-            open_store_offer(feedback);
-        }
-        else
-            notes_.handle(input, feedback);
-    }
-    else if (dialog_.is_open() && ask_ == Ask::store_update)
-    {
-        if (dialog_.handle(input, feedback) == ui::Event::activated)
-        {
-            const int choice = dialog_.choice();
-            if (choice == (store_offer_notes_ ? 2 : 1))
-                start_store_update();
-            else if (store_offer_notes_ && choice == 1)
-                notes_open_ = true;
-            else
-                store_offer_ = StoreOffer::done;
-        }
-    }
-    else if (dialog_.is_open())
+    if (dialog_.is_open())
     {
         // The question takes every input until it is answered.
         if (dialog_.handle(input, feedback) == ui::Event::activated && dialog_.choice() == 1)
@@ -1659,7 +1511,7 @@ void Screen::draw_top_bar(const ui::Fonts &fonts)
     list.gradient_rect({0, 0, kWidth, 200.0f}, 0, kDeep.with_alpha(0.7f), kDeep.with_alpha(0.0f));
     list.rotated_rect({kMargin + 2.0f, kTopY - 11.0f, 22.0f, 22.0f}, 5.0f, 0.7854f, kAccent);
     list.rotated_rect({kMargin + 8.0f, kTopY - 5.0f, 10.0f, 10.0f}, 2.0f, 0.7854f, kDeep);
-    const float brand = ui::text(list, fonts.semibold, "PROSPEROSTORE", kMargin + 42.0f,
+    const float brand = ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin + 42.0f,
                                  centred(kTopY, 22), 22, kInk, gfx::Align::left, 5.0f);
     // Where the apps come from, said once and quietly beside the name.
     const float x = kMargin + 42.0f + brand + 20.0f;
@@ -2922,7 +2774,7 @@ void Screen::draw_intro(const ui::Fonts &fonts)
     list.push_opacity(1.0f - tween::smoothstep(intro_leave_ * 2.0f));
     const float name = still ? 1.0f : tween::cubic_out(tween::clamp01((t - 0.45f) / 0.7f));
     if (name > 0.0f)
-        ui::text(list, fonts.semibold, "PROSPEROSTORE", cx, centred(660.0f, 40), 40,
+        ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", cx, centred(660.0f, 40), 40,
                  kInk.with_alpha(name), gfx::Align::center, tween::lerp(26.0f, 11.0f, name));
     const float source = still ? 1.0f : tween::smoothstep((t - 0.8f) / 0.5f);
     if (source > 0.0f)
@@ -3023,17 +2875,6 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
     draw_job_card(fonts, glass);
     draw_panel(fonts, glass);
     ui::Canvas canvas{overlay_, fonts, glass, time_};
-    if (notes_open_)
-    {
-        // The release notes, over everything but the question they came from.
-        overlay_.rounded_rect({0.0f, 0.0f, 1920.0f, 1080.0f}, 0,
-                              gfx::Color{0.0f, 0.0f, 0.0f, 0.95f});
-        notes_.draw(canvas);
-        const ui::Hint reading[] = {{ui::Button::cross, "Update now"},
-                                    {ui::Button::dpad, "Scroll"},
-                                    {ui::Button::circle, "Back"}};
-        ui::draw_hints(overlay_, fonts, glyphs, reading, 3, kRight, true);
-    }
     dialog_.draw(canvas);
     toasts_.draw(canvas);
     if (close_hold_ > kCloseDelay)
@@ -3603,7 +3444,7 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
 
     // The left: whose room this is, the room's name, and the four rooms.
     constexpr const char *kTabs[] = {"Downloads", "Settings", "About", "News"};
-    ui::text(list, fonts.semibold, "PROSPEROSTORE", kMargin, 170.0f, 18, kAccent, gfx::Align::left,
+    ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin, 170.0f, 18, kAccent, gfx::Align::left,
              4.0f);
     ui::text(list, fonts.display, kTabs[panel_tab_], kMargin - 3.0f, 248.0f, 64, kInk);
     for (int i = 0; i < 4; ++i)

@@ -65,7 +65,7 @@ struct Environment
     std::function<int(const std::string &path)> remove;
     // A download written by another process. False: write it here instead.
     std::function<bool(const std::string &path, Writer &writer)> save;
-    // Tests only. Work folder instead of <drive>/prosperostore, and a hook
+    // Tests only. Work folder instead of <drive>/prospero-blackbox, and a hook
     // that returns true to stop dead at a named step, as a power cut would.
     std::string work;
     std::function<bool(const char *step)> interrupt;
@@ -89,7 +89,7 @@ struct Result
     std::string error;
     std::string note; // For the log: where the time went.
     // An update: where the previous version's folder was kept, with whatever the user
-    // had put inside it (<drive>/prosperostore/previous/<TITLEID>, until the next update).
+    // had put inside it (<drive>/prospero-blackbox/previous/<TITLEID>, until the next update).
     std::string kept_at;
 };
 // At every instant <location>/<TITLEID> is the complete old version, the

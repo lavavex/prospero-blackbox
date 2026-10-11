@@ -82,7 +82,7 @@ void append(const std::string &line)
 
 std::string probe_write(const char *folder)
 {
-    const std::string path = std::string(folder) + "/.prosperostore-probe";
+    const std::string path = std::string(folder) + "/.prospero-blackbox-probe";
     const int descriptor = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (descriptor < 0)
         return std::string("no (") + std::strerror(errno) + ")";
@@ -227,8 +227,8 @@ void trace_console(const char *when)
     }
     // A fresh folder: can the store use what it just made?
     {
-        const char *fresh = "/data/.prosperostore-probe-dir";
-        const char *inner = "/data/.prosperostore-probe-dir/file";
+        const char *fresh = "/data/.prospero-blackbox-probe-dir";
+        const char *inner = "/data/.prospero-blackbox-probe-dir/file";
         const int made = mkdir(fresh, 0777);
         const int made_errno = made == 0 ? 0 : errno;
         const int fd = open(inner, O_WRONLY | O_CREAT | O_TRUNC, 0666);

@@ -12,7 +12,7 @@ int main()
     std::string error;
     assert(scan_policy("", "", policy, error));
     assert(policy.roots.size() == 34 && policy.depth == 1);
-    assert(work_path_unscanned(policy, "/mnt/ext1/prosperostore/staging/PPSA99001"));
+    assert(work_path_unscanned(policy, "/mnt/ext1/prospero-blackbox/staging/PPSA99001"));
     assert(!work_path_unscanned(policy, "/mnt/ext1/PPSA99001"));
     assert(scan_policy("SCANPATH = /mnt/ext1/homebrew/ ; note\nscanpath=/data/homebrew\n"
                        "recursive_scan=YES\nscan_depth=1\n",
@@ -26,7 +26,7 @@ int main()
     assert(scan_policy("", "/\n/data\n/mnt/usb0\n/data/custom/PPSA99002\n", policy, error));
     assert(policy.manual.size() == 4);
     assert(work_path_unscanned(policy, "/data/prospero-blackbox/staging/PPSA99002"));
-    assert(work_path_unscanned(policy, "/mnt/usb0/prosperostore/staging/PPSA99002"));
+    assert(work_path_unscanned(policy, "/mnt/usb0/prospero-blackbox/staging/PPSA99002"));
     assert(!work_path_unscanned(policy, "/data/custom/PPSA99002/nested"));
     assert(scan_policy("scanpath=/data/prospero-blackbox\nscan_depth=2", "", policy, error));
     assert(!work_path_unscanned(policy, "/data/prospero-blackbox/staging/PPSA99002"));
@@ -51,7 +51,7 @@ int main()
                        error));
     assert(policy.roots.size() == 5 && policy.roots[2] == "/mnt/ext1/data/homebrew" &&
            policy.ignored.empty() && policy.manual.size() == 3);
-    assert(work_path_unscanned(policy, "/mnt/ext1/prosperostore/staging/PPSA99109"));
+    assert(work_path_unscanned(policy, "/mnt/ext1/prospero-blackbox/staging/PPSA99109"));
     // Custom scan paths and none readable: the built-in folders are used, and it is said.
     assert(scan_policy("scanpath=data/games", "", policy, error) && policy.fell_back &&
            policy.ignored.size() == 1 && policy.roots.size() == 34);

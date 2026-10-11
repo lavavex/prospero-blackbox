@@ -21,8 +21,8 @@ class BuildLabelTests(unittest.TestCase):
         self.assertIn("PR_HEAD: ${{ github.event.pull_request.head.sha }}", workflow)
         self.assertIn("name: ${{ steps.label.outputs.artifact }}", workflow)
         # The release job still finds a tag's build under its commit.
-        self.assertIn('echo "artifact=prosperostore-$GITHUB_SHA" >> "$GITHUB_OUTPUT"', workflow)
-        self.assertIn('--name "prosperostore-$GITHUB_SHA"', workflow)
+        self.assertIn('echo "artifact=prospero-blackbox-$GITHUB_SHA" >> "$GITHUB_OUTPUT"', workflow)
+        self.assertIn('--name "prospero-blackbox-$GITHUB_SHA"', workflow)
         # A contributor's code is never built with write access or secrets.
         self.assertNotIn("pull_request_target:", workflow)
 

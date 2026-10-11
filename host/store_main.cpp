@@ -821,7 +821,7 @@ int main(int argc, char **argv)
             }
             else if (mode == "notice")
                 screen.notify("Update available: 01.000.010",
-                              "A newer ProsperoStore is listed on homebrew.page.");
+                              "A newer Prospero BlackBox is available.");
             else if (mode == "scrolled" || mode == "coming-soon")
             {
                 hui::InputFrame move;

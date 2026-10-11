@@ -626,193 +626,6 @@ void check_transactions(const fs::path &base)
 }
 
 // Legacy Eden data must remain discoverable across Store's whole-folder update.
-void check_eden_migration(const fs::path &base)
-{
-    const std::string id = "PPSA99008";
-    const auto request = [&](Fixture &f, const std::string &version)
-    {
-        auto r = f.request(version);
-        f.artifact = zip(app(version, id));
-        r.entry.id = id;
-        r.entry.digest = catalog::sha256(f.artifact);
-        r.entry.size = f.artifact.size();
-        return r;
-    };
-    const auto seed = [&](Fixture &f)
-    {
-        assert(f.apply(request(f, "01.000.080")).ok);
-        const auto assets = f.location / id / "assets";
-        for (const auto *folder :
-             {"keys", "firmware", "roms", "updates", "mods", "ryujinx", "save-import"})
-        {
-            fs::create_directories(assets / folder);
-            put(assets / folder / "personal.bin", std::string(folder) + " data");
-        }
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        fs::create_directories(data / "config");
-        fs::create_directories(data / "user");
-        put(data / "user/save.bin", "keep my save");
-        put(data / "config/prosperoeden.json",
-            "{\"game_files\":\"" + data.string() + "\",\"audio\":{\"volume\":42}}");
-        // Eden may have already created empty default folders before updating.
-        fs::create_directories(data / "roms");
-    };
-    const auto check_data = [&](const Fixture &f)
-    {
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        for (const auto *folder :
-             {"keys", "firmware", "roms", "updates", "mods", "ryujinx", "save-import"})
-            assert(get(data / folder / "personal.bin") == std::string(folder) + " data");
-        assert(get(data / "user/save.bin") == "keep my save");
-        assert(get(data / "config/prosperoeden.json").find("42") != std::string::npos);
-    };
-    {
-        Fixture f(base, "eden-migrate");
-        seed(f);
-        const auto config =
-            get(fs::path(f.environment.data) / "prosperoeden/config/prosperoeden.json");
-        const auto result = f.apply(request(f, "01.000.100"));
-        assert(result.ok && f.settled());
-        check_data(f);
-        assert(get(fs::path(f.environment.data) / "prosperoeden/config/prosperoeden.json") ==
-               config);
-        assert(!fs::exists(f.work / "previous" / id / "assets/roms"));
-        // Future updates do not touch migrated data or save files.
-        assert(f.apply(request(f, "01.000.110")).ok);
-        check_data(f);
-    }
-    for (const std::string issue : {"conflict", "custom", "bad-config", "link", "older-backup"})
-    {
-        Fixture f(base, "eden-refuse-" + issue);
-        seed(f);
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        if (issue == "conflict")
-            put(data / "roms/existing.nsp", "do not replace");
-        else if (issue == "custom")
-            put(data / "config/prosperoeden.json", "{\"game_files\":\"/mnt/usb0/my-games\"}");
-        else if (issue == "bad-config")
-            put(data / "config/prosperoeden.json", "broken JSON");
-        else if (issue == "link")
-        {
-            fs::create_directories(f.root / "outside");
-            fs::create_directory_symlink(f.root / "outside", data / "keys");
-        }
-        else
-        {
-            fs::create_directories(f.work / "previous" / id / "assets/roms");
-            put(f.work / "previous" / id / "assets/roms/only-copy.nsp", "older user data");
-        }
-        const auto old_app = tree(f.location / id), old_data = tree(data);
-        const auto result = f.apply(request(f, "01.000.100"));
-        assert(!result.ok && !result.error.empty() && f.settled());
-        assert(tree(f.location / id) == old_app && tree(data) == old_data);
-        if (issue == "older-backup")
-            assert(get(f.work / "previous" / id / "assets/roms/only-copy.nsp") ==
-                   "older user data");
-    }
-    // Game files an earlier store's update left in its previous folder are moved out by
-    // the same rules, alone or beside the ones still in the app's folder.
-    for (const bool both : {false, true})
-    {
-        Fixture f(base, both ? "eden-stranded-both" : "eden-stranded");
-        if (both)
-            seed(f);
-        else
-            assert(f.apply(request(f, "01.000.080")).ok);
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        if (both)
-        {
-            // The app's folder keeps everything but its games; those are the stranded ones.
-            fs::remove_all(f.location / id / "assets/roms");
-        }
-        fs::create_directories(f.work / "previous" / id / "assets/roms");
-        put(f.work / "previous" / id / "assets/roms/only-copy.nsp", "older user data");
-        const auto result = f.apply(request(f, "01.000.100"));
-        assert(result.ok && f.settled());
-        assert(get(data / "roms/only-copy.nsp") == "older user data");
-        assert(!fs::exists(f.work / "previous" / id / "assets/roms"));
-        if (both)
-        {
-            assert(get(data / "keys/personal.bin") == "keys data");
-            assert(get(data / "user/save.bin") == "keep my save");
-        }
-        // The next update finds nothing left to move.
-        assert(f.apply(request(f, "01.000.110")).ok);
-        assert(get(data / "roms/only-copy.nsp") == "older user data");
-    }
-    // Stopped between two of the stranded folders: nothing is lost, and the update that
-    // is asked for again finishes the move.
-    {
-        Fixture f(base, "eden-stranded-cut");
-        assert(f.apply(request(f, "01.000.080")).ok);
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        for (const auto *folder : {"keys", "roms"})
-        {
-            fs::create_directories(f.work / "previous" / id / "assets" / folder);
-            put(f.work / "previous" / id / "assets" / folder / "personal.bin", "kept");
-        }
-        f.environment.interrupt = [](const char *step)
-        { return std::string(step) == "eden-moved-keys"; };
-        const auto interrupted = f.apply(request(f, "01.000.100"));
-        assert(interrupted.interrupted && !interrupted.ok);
-        assert(get(data / "keys/personal.bin") == "kept");
-        assert(get(f.work / "previous" / id / "assets/roms/personal.bin") == "kept");
-        f.environment.interrupt = nullptr;
-        assert(install::recover(f.environment).ok);
-        assert(f.apply(request(f, "01.000.100")).ok && f.settled());
-        assert(get(data / "keys/personal.bin") == "kept" &&
-               get(data / "roms/personal.bin") == "kept");
-    }
-    // A different filesystem must not leave an activated app with unmigrated data.
-    if (fs::is_directory("/dev/shm"))
-    {
-        Fixture f(base, "eden-cross-drive");
-        const auto other = fs::path("/dev/shm") / ("store-eden-" + std::to_string(getpid()));
-        fs::create_directories(other);
-        f.environment.data = other.string();
-        seed(f);
-        const auto old_app = tree(f.location / id);
-        const auto result = f.apply(request(f, "01.000.100"));
-        assert(!result.ok && result.error.find("different drives") != std::string::npos);
-        assert(tree(f.location / id) == old_app && f.settled());
-        fs::remove_all(other);
-    }
-    // A power cut between any two renames resumes under the existing swap journal.
-    for (const std::string cut : {"placed", "eden-moved-keys", "eden-moved-firmware",
-                                  "eden-moved-roms", "eden-moved-updates", "eden-moved-mods",
-                                  "eden-moved-ryujinx", "eden-moved-save-import", "recorded"})
-    {
-        Fixture f(base, "eden-cut-" + cut);
-        seed(f);
-        f.environment.interrupt = [&](const char *step) { return cut == step; };
-        const auto interrupted = f.apply(request(f, "01.000.100"));
-        assert(interrupted.interrupted && !interrupted.ok);
-        f.environment.interrupt = nullptr;
-        const auto recovered = install::recover(f.environment);
-        assert(recovered.ok && f.settled());
-        check_data(f);
-        assert(install::recover(f.environment).ok);
-        check_data(f);
-    }
-    // A conflict appearing after activation stops recovery with the backup intact.
-    {
-        Fixture f(base, "eden-recovery-conflict");
-        seed(f);
-        f.environment.interrupt = [](const char *step) { return std::string(step) == "placed"; };
-        assert(f.apply(request(f, "01.000.100")).interrupted);
-        f.environment.interrupt = nullptr;
-        const auto data = fs::path(f.environment.data) / "prosperoeden";
-        put(data / "roms/new.nsp", "new data");
-        assert(!install::recover(f.environment).ok);
-        assert(get(data / "roms/new.nsp") == "new data");
-        assert(get(f.work / "backup" / id / "assets/roms/personal.bin") == "roms data");
-        assert(fs::exists(f.state / "journal.json"));
-        fs::rename(data / "roms/new.nsp", f.root / "new.nsp");
-        assert(install::recover(f.environment).ok);
-        check_data(f);
-    }
-}
-
 // Stops dead at every step of every operation, as a power cut would, and
 // checks the folder is whole before and after recovery.
 void check_interruptions(const fs::path &base)
@@ -1029,16 +842,16 @@ void check_worker(const fs::path &base, const std::string &program)
 {
     using install::worker_path;
     assert(worker_path("/data/prospero-blackbox/staging/PPSA99500"));
-    assert(worker_path("/mnt/usb0/prosperostore/trash/PPSA99500"));
+    assert(worker_path("/mnt/usb0/prospero-blackbox/trash/PPSA99500"));
     assert(!worker_path("/data/prospero-blackbox"));          // The work folder itself.
     assert(!worker_path("/data/homebrew/PPSA99500"));     // An installed app.
-    assert(!worker_path("data/prosperostore/staging/x")); // Not absolute.
+    assert(!worker_path("data/prospero-blackbox/staging/x")); // Not absolute.
     assert(!worker_path("/data/prospero-blackbox/../etc"));
     assert(!worker_path("/data/prospero-blackbox/./x"));
     assert(!worker_path("/data/prospero-blackbox//x"));
     assert(!worker_path("/data/prospero-blackbox/x/"));
     assert(!worker_path("/data/prospero-blackbox/a\nb"));
-    assert(!worker_path("/data/myprosperostore/x"));
+    assert(!worker_path("/data/myprospero-blackbox/x"));
     assert(!worker_path(""));
 
     const auto v1 = expected_tree(app("01.000.001")), v2 = expected_tree(app("01.000.002"));
@@ -1232,7 +1045,6 @@ int main(int argc, char **argv)
     check_archives(root);
     check_running(root);
     check_transactions(root);
-    check_eden_migration(root);
     check_self_update(root);
     check_interruptions(root);
     if (argc > 1)

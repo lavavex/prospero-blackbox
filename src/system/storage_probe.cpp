@@ -116,7 +116,7 @@ StorageProbe probe_storage(const std::string &root)
     if (block_size && blocks <= std::numeric_limits<std::uint64_t>::max() / block_size)
         result.available = blocks * block_size;
     static std::atomic<unsigned> serial{0};
-    const auto first = root + "/.prosperostore-probe-" + std::to_string(getpid()) + "-" +
+    const auto first = root + "/.prospero-blackbox-probe-" + std::to_string(getpid()) + "-" +
                        std::to_string(serial.fetch_add(1));
     const auto second = first + "-renamed";
     struct stat before

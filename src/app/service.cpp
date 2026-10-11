@@ -656,7 +656,7 @@ void Service::run()
             continue;
         const auto probe = system::probe_storage(path);
         const bool work_safe =
-            system::work_path_unscanned(scan_policy, drive + "/prosperostore/staging/PPSA99400");
+            system::work_path_unscanned(scan_policy, drive + "/prospero-blackbox/staging/PPSA99400");
         hui::sys::log(
             "[STORE] storage path=%s fs=%s available=%llu rename=%d work-safe=%d error=%s",
             path.c_str(), probe.filesystem.c_str(),
@@ -738,6 +738,7 @@ void Service::run()
             // The built-in catalog already holds everything a game's page shows.
             Update result;
             result.entry.id = id;
+            result.message = "Not part of the collection";
             for (auto &entry : catalog::blackbox_snapshot(system::app_folder()).entries)
                 if (entry.id == id)
                 {
@@ -749,26 +750,6 @@ void Service::run()
         }
         hui::sys::sleep_us(100000);
     }
-}
-
-// Once per launch, after the catalog: is a newer Prospero BlackBox listed? Any
-// failure means "unknown", and unknown shows nothing.
-void Service::check_store_update()
-{
-    Update notice;
-    notice.kind = Update::Kind::store_update;
-    {
-        std::lock_guard lock(mutex_);
-        const auto version = versions_.find("PPSA99400");
-        if (version == versions_.end() || !catalog::update_available(version_, version->second))
-            return;
-        const auto app = std::find_if(entries_.begin(), entries_.end(),
-                                      [](const auto &entry) { return entry.id == "PPSA99400"; });
-        if (app == entries_.end())
-            return;
-        notice.message = app->version;
-    }
-    publish(std::move(notice));
 }
 
 void *Service::icon_entry(void *self)
