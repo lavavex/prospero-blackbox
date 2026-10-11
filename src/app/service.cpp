@@ -20,6 +20,9 @@
 #endif
 #include "install/files.hpp"
 #include "catalog/icons.hpp"
+#include "catalog/blackbox.hpp"
+#include "system/app_folder.hpp"
+#include "core/image.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <set>
@@ -632,21 +635,6 @@ void Service::run()
         publish(std::move(failure));
         return;
     }
-    // "Official plus custom": the official catalog is the one everything below is about,
-    // signed and checked as ever; the custom one is loaded beside it and only adds apps.
-    const bool additive = with_official && catalog_url != catalog::kDefaultApi;
-    const std::string cache_folder = root_.empty() ? "" : root_ + "/cache";
-    catalog::Client client(cache_folder, additive ? std::string(catalog::kDefaultApi) : catalog_url,
-                           additive ? true : verify_signatures);
-    catalog::Client extra_client(cache_folder, catalog_url, verify_signatures);
-    catalog::Snapshot extra;
-    std::string extra_error;
-    std::vector<std::string> clashes;
-    const auto shown = [&](const catalog::Snapshot &official)
-    {
-        clashes.clear();
-        return additive ? catalog::with_extra(official, extra, &clashes) : official;
-    };
     system::ScanPolicy scan_policy;
     std::vector<std::string> setup_notes;
     const bool can_scan = load_policy(scan_policy, &setup_notes);
@@ -676,106 +664,15 @@ void Service::run()
             probe.error.c_str());
     }
 #endif
-    catalog::Snapshot snapshot;
-    std::string error;
-    const bool had_cache = client.cached(snapshot, error);
-    if (additive)
-        (void)extra_client.cached(extra, extra_error);
-#ifdef STORE_DEBUG_TRACE
-    diag::trace("catalog cache in %s: %s%s%s", root_.empty() ? "(no store folder)" : root_.c_str(),
-                had_cache ? "found" : "none", error.empty() ? "" : ", ", error.c_str());
-#endif
-    if (had_cache)
-    {
-        Update cached;
-        cached.kind = Update::Kind::catalog;
-        cached.snapshot = shown(snapshot);
-        cached.message = snapshot.verified ? "Offline catalog • Checking for updates"
-                                           : "Offline catalog • Signatures not checked";
-        publish(std::move(cached));
-    }
-    bool refreshed = false;
-    for (unsigned attempt = 0; attempt < 4 && !control_.cancelled.load(); ++attempt)
-    {
-        if (client.refresh(snapshot, control_, error))
-        {
-            refreshed = true;
-            break;
-        }
-        hui::sys::log("[STORE] catalog attempt=%u error=%s", attempt + 1, error.c_str());
-#ifdef STORE_DEBUG_TRACE
-        diag::trace("catalog attempt %u of 4: %s", attempt + 1, error.c_str());
-#endif
-        if (attempt < 3)
-            for (unsigned tick = 0; tick < (10U << attempt) && !control_.cancelled.load(); ++tick)
-                hui::sys::sleep_us(100000);
-    }
-    // The custom catalog beside it: two tries, and the official one is shown either way.
-    bool extra_refreshed = false;
-    for (unsigned attempt = 0; additive && attempt < 2 && !control_.cancelled.load(); ++attempt)
-    {
-        if ((extra_refreshed = extra_client.refresh(extra, control_, extra_error)))
-            break;
-        hui::sys::log("[STORE] custom catalog attempt=%u error=%s", attempt + 1,
-                      extra_error.c_str());
-#ifdef STORE_DEBUG_TRACE
-        diag::trace("custom catalog attempt %u of 2: %s", attempt + 1, extra_error.c_str());
-#endif
-    }
+    // The catalog is built in: the Black Box games, nothing downloaded or verified.
     if (!control_.cancelled.load())
     {
         Update result;
-        result.kind = snapshot.accepted ? Update::Kind::catalog : Update::Kind::error;
-        result.snapshot = shown(snapshot);
-        result.message = refreshed ? (snapshot.verified ? "Catalog verified • Up to date"
-                                                        : "Signatures not checked • Up to date")
-                                   : "Offline • " + error;
-        if (!refreshed && snapshot.accepted && !snapshot.verified)
-            result.message = "Signatures not checked • " + result.message;
-        hui::sys::log("[STORE] catalog verified=%d online=%d sequence=%llu apps=%zu",
-                      snapshot.verified, refreshed,
-                      static_cast<unsigned long long>(snapshot.manifest.sequence),
-                      snapshot.entries.size());
-        if (additive && snapshot.accepted)
-            result.message += extra.accepted
-                                  ? (extra.verified ? " • Custom catalog added"
-                                                    : " • Custom catalog added, not checked")
-                                  : " • Custom catalog unavailable";
+        result.kind = Update::Kind::catalog;
+        result.snapshot = catalog::blackbox_snapshot(system::app_folder());
+        result.message = "Need for Speed: Black Box collection";
+        hui::sys::log("[STORE] catalog built-in games=%zu", result.snapshot.entries.size());
         publish(std::move(result));
-        if (additive && !control_.cancelled.load() && (!extra.accepted || !clashes.empty()))
-        {
-            // Said once: why the custom catalog, or some of it, isn't on the shelves.
-            Update notice;
-            notice.kind = Update::Kind::notice;
-            if (!extra.accepted)
-            {
-                notice.message = "Custom catalog not loaded";
-                notice.detail = extra_error.empty() ? "It could not be read." : extra_error;
-            }
-            else
-            {
-                notice.message =
-                    std::to_string(clashes.size()) +
-                    (clashes.size() == 1 ? " custom app hidden" : " custom apps hidden");
-                notice.detail = "homebrew.page lists the same title ID, and its app is the one "
-                                "shown: " +
-                                clashes.front() + (clashes.size() > 1 ? " and others." : ".");
-            }
-            publish(std::move(notice));
-        }
-    }
-    if (refreshed && check_updates && !control_.cancelled.load())
-        check_store_update();
-    if (refreshed && snapshot.accepted && !control_.cancelled.load())
-    {
-        // The catalog's news; a catalog without any says nothing.
-        Update feed;
-        feed.kind = Update::Kind::news;
-        std::string failure;
-        if (client.news(snapshot, feed.news, control_, failure) && !feed.news.empty())
-            publish(std::move(feed));
-        else if (!failure.empty())
-            hui::sys::log("[STORE] news: %s", failure.c_str());
     }
     if (!control_.cancelled.load())
     {
@@ -838,44 +735,17 @@ void Service::run()
         }
         if (!id.empty())
         {
+            // The built-in catalog already holds everything a game's page shows.
             Update result;
-            // An app the official catalog doesn't list is the custom catalog's to describe.
-            const bool from_extra =
-                additive && std::none_of(snapshot.entries.begin(), snapshot.entries.end(),
-                                         [&](const auto &entry) { return entry.id == id; });
-            if (from_extra ? extra_client.detail(extra, id, result.entry, control_, result.message)
-                           : client.detail(snapshot, id, result.entry, control_, result.message))
-            {
-                result.entry.extra = from_extra;
-                result.kind = Update::Kind::detail;
-                if (!result.entry.large_icon.empty())
+            result.entry.id = id;
+            for (auto &entry : catalog::blackbox_snapshot(system::app_folder()).entries)
+                if (entry.id == id)
                 {
-                    auto artwork_entry = result.entry;
-                    artwork_entry.icon = artwork_entry.large_icon;
-                    catalog::Icons artwork(root_.empty() ? "" : root_ + "/cache/icons");
-                    if (!artwork.cached(artwork_entry, result.image) && snapshot.online)
-                    {
-                        std::string encoded;
-                        const auto response = net::fetch(artwork_entry.icon, net::Purpose::catalog,
-                                                         2u << 20, encoded, control_);
-                        if (response.ok())
-                            artwork.store(artwork_entry, encoded, result.image);
-                    }
+                    result.entry = std::move(entry);
+                    result.kind = Update::Kind::detail;
+                    break;
                 }
-            }
-            else
-                result.entry.id = id;
-            const bool verified_detail = result.kind == Update::Kind::detail;
-            const auto page = result.entry.page;
             publish(std::move(result));
-            if (verified_detail)
-            {
-                Update qr;
-                qr.kind = Update::Kind::qr;
-                qr.entry.id = id;
-                if (catalog::api_url(page) && hui::encode_qr(page, qr.image))
-                    publish(std::move(qr));
-            }
         }
         hui::sys::sleep_us(100000);
     }
@@ -938,6 +808,32 @@ void Service::load_icons()
         {
             failed_icons.clear();
             failure_generation = generation;
+        }
+        if (catalog::local_icon(entry.icon))
+        {
+            const auto moment = hui::sys::monotonic_us();
+            const auto stamp = entry.id + "#" + std::to_string(generation);
+            if (const auto last = delivered.find(stamp);
+                last != delivered.end() && moment - last->second < 1500000)
+                continue;
+            Update result;
+            result.kind = Update::Kind::icon;
+            result.entry.id = entry.id;
+            result.generation = generation;
+            std::string encoded;
+            if (!failed_icons.contains(entry.id) &&
+                hui::save::read_file(entry.icon, &encoded, 2u << 20) &&
+                hui::decode_png(encoded, result.image))
+            {
+                std::uint32_t vivid = 0;
+                result.ambient = make_ambient(result.image, vivid);
+                result.accent = vivid ? vivid : average_colour(result.image);
+                delivered[stamp] = moment;
+                publish(std::move(result));
+            }
+            else
+                failed_icons.insert(entry.id);
+            continue;
         }
         const auto key = catalog::Icons::key(entry);
         const auto moment = hui::sys::monotonic_us();
