@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "app/store.hpp"
+#include "catalog/blackbox.hpp"
 #include "core/save_file.hpp"
 #include "install/transaction.hpp"
 #include "system/locations.hpp"
@@ -30,12 +31,14 @@ const Color kWhite = Color::rgb(0xffffff);
 const Color kBlack = Color::rgb(0x000000);
 const Color kClear = Color::rgb(0x000000, 0.0f);
 const Color kInk = Color::rgb(0xf4efe6);      // warm white: all text
-const Color kDeep = Color::rgb(0x0e0f24);     // Farlight: its dark,
-const Color kMid = Color::rgb(0x42358f);      // ... its mid tone
-const Color kAccent = Color::rgb(0xffd166);   // ... and its light: calls to action
-const Color kOnAccent = Color::rgb(0x241a05); // text on the accent
+// The theme: the focused game's colours (catalog::Palette), eased in each frame by
+// Screen::follow_theme. Not constants, but read everywhere like them.
+Color kDeep = Color::rgb(catalog::kManagerPalette.deep);          // its dark,
+Color kMid = Color::rgb(catalog::kManagerPalette.mid);            // ... its mid tone
+Color kAccent = Color::rgb(catalog::kManagerPalette.accent);      // ... its light: calls to action
+Color kOnAccent = Color::rgb(catalog::kManagerPalette.on_accent); // text on the accent
 const Color kCoal = Color::rgb(0x0e0f12);
-const Color kPanel = gfx::mix(Color::rgb(0x202228), kDeep, 0.5f);
+Color kPanel = gfx::mix(Color::rgb(0x202228), kDeep, 0.5f);
 const Color kOwned = Color::rgb(0x8fdab2); // "this is installed"
 
 constexpr float kWidth = gfx::kVirtualWidth;
@@ -90,8 +93,8 @@ constexpr float kCloseHold = 1.2f;
 constexpr const char *kSectionNames[] = {"Discover", "Games", "In progress", "Installed",
                                          "Updates"};
 // The settings shown, as rows of the settings table: install location, sounds,
-// vibration, reduce motion, debug log.
-constexpr int kSettingRows[] = {0, 2, 3, 4, 12};
+// vibration, reduce motion, theme, debug log.
+constexpr int kSettingRows[] = {0, 2, 3, 4, 13, 12};
 // The sections by number (kSectionNames).
 enum Section
 {
@@ -213,7 +216,59 @@ ui::Theme farlight_theme()
     theme.success = kOwned;
     return theme;
 }
+
+// The themes the Theme setting goes through: following the focus, then each game's.
+std::vector<std::string> theme_choices()
+{
+    std::vector<std::string> choices{""};
+    for (const auto &game : catalog::blackbox_games())
+        choices.emplace_back(game.id);
+    return choices;
+}
+
+std::string theme_name(const std::string &id)
+{
+    for (const auto &game : catalog::blackbox_games())
+        if (id == game.id)
+            return game.name;
+    return "Follows the focus";
+}
 } // namespace
+
+// The colours move toward the game in focus (or the one the Theme setting keeps),
+// over a fraction of a second; every themed component takes the result.
+void Screen::follow_theme(float dt)
+{
+    std::string id = settings_.theme;
+    if (id.empty())
+    {
+        if (const App *app = details_ ? page_app() : focused())
+            id = app->title_id;
+        else
+            id = theme_id_;
+    }
+    theme_id_ = id;
+    const auto &palette = catalog::blackbox_palette(id);
+    const float k = settings_.reduce_motion ? 1.0f : std::min(1.0f, dt * 5.0f);
+    const auto ease = [&](Color &colour, std::uint32_t target)
+    {
+        const Color to = Color::rgb(target);
+        colour = gfx::mix(colour, to, k);
+        return std::abs(colour.r - to.r) + std::abs(colour.g - to.g) + std::abs(colour.b - to.b);
+    };
+    const float left = ease(kDeep, palette.deep) + ease(kMid, palette.mid) +
+                       ease(kAccent, palette.accent) + ease(kOnAccent, palette.on_accent);
+    if (left < 0.002f && theme_settled_)
+        return;
+    theme_settled_ = left < 0.002f;
+    kPanel = gfx::mix(Color::rgb(0x202228), kDeep, 0.5f);
+    theme_ = farlight_theme();
+    article_.style.theme = theme_;
+    dialog_.style.theme = theme_;
+    about_.style.theme = theme_;
+    toasts_.style.theme = theme_;
+    news_view_.style.theme = theme_;
+}
 
 Screen::Screen() : theme_(farlight_theme())
 {
@@ -1224,6 +1279,7 @@ void Screen::close_developer()
 void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
 {
     time_ += dt;
+    follow_theme(dt);
     // Where this frame's input lands, before it changes anything: the home page, idle.
     const bool at_home = !panel_ && !details_ && !dialog_.is_open() &&
                          !intro_showing() && activity_.id.empty() && activity_.waiting.empty();
@@ -2864,7 +2920,7 @@ std::string format_settings(const Settings &settings)
            "\nverify_signatures=" + (settings.verify_signatures ? "1" : "0") +
            "\nuse_official=" + (settings.use_official ? "1" : "0") +
            "\nuse_custom=" + (settings.use_custom ? "1" : "0") +
-           "\nnews_seen=" + settings.news_seen + "\n";
+           "\nnews_seen=" + settings.news_seen + "\ntheme=" + settings.theme + "\n";
 }
 
 Settings parse_settings(std::string_view text)
@@ -2889,6 +2945,12 @@ Settings parse_settings(std::string_view text)
             settings.vibration = value != "0";
         else if (key == "motion")
             settings.reduce_motion = value == "reduced";
+        else if (key == "theme")
+        {
+            const auto choices = theme_choices();
+            if (std::find(choices.begin(), choices.end(), value) != choices.end())
+                settings.theme = value;
+        }
         else if (key == "debug")
             settings.debug_log = value == "1";
         else if (key == "catalog_url")
@@ -3166,7 +3228,15 @@ void Screen::update_panel(const InputFrame &input, ui::Feedback &feedback)
         return;
     const int setting = development_options_ ? setting_focus_ + 5
                                              : kSettingRows[setting_focus_];
-    if (setting == 12)
+    if (setting == 13)
+    {
+        const auto choices = theme_choices();
+        const auto current = std::find(choices.begin(), choices.end(), settings_.theme);
+        const auto count = static_cast<int>(choices.size());
+        const int index = current == choices.end() ? 0 : static_cast<int>(current - choices.begin());
+        settings_.theme = choices[static_cast<std::size_t>((index + turn + count) % count)];
+    }
+    else if (setting == 12)
     {
         settings_.debug_log = !settings_.debug_log;
         if (settings_.debug_log)
@@ -3400,11 +3470,11 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
                  kAccent, kOnAccent, 1.0f, kAllLayers);
         }
     }
-    ui::draw_button(list, fonts, ui::GlyphStyle::dark(), ui::Button::l1, kMargin, 628.0f, 26);
+    ui::draw_button(list, fonts, ui::GlyphStyle::dark(), ui::Button::l1, kMargin, 564.0f, 26);
     ui::draw_button(list, fonts, ui::GlyphStyle::dark(), ui::Button::r1,
-                    kMargin + ui::button_width(ui::Button::l1, 26) + 8.0f, 628.0f, 26);
+                    kMargin + ui::button_width(ui::Button::l1, 26) + 8.0f, 564.0f, 26);
     ui::text(list, fonts.regular, "Switch rooms",
-             kMargin + 2.0f * ui::button_width(ui::Button::l1, 26) + 24.0f, centred(628.0f, 20), 20,
+             kMargin + 2.0f * ui::button_width(ui::Button::l1, 26) + 24.0f, centred(564.0f, 20), 20,
              kInk.with_alpha(0.5f));
 
     // The right: one glass panel with the room's content.
@@ -3554,7 +3624,7 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
         {
             int sign;
             const char *label, *note;
-            int kind; // 0 value, 1 switch, 2 chip
+            int kind; // 0 value, 1 switch, 2 chip, 3 address, 4 choice
             std::string value;
             bool on;
         } rows[] = {
@@ -3588,6 +3658,8 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
              false},
             {4, "Debug log", "Records every step for a report: see About, or debug-trace.txt.", 1,
              "", settings_.debug_log},
+            {8, "Theme", "Each game's colours. Left and right choose.", 4,
+             theme_name(settings_.theme), true},
         };
         float y = panel.y + 32.0f;
         if (development_options_)
@@ -3638,6 +3710,20 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
                 list.line(right - tw - 54.0f, row.cy() - 4.0f, right - tw - 62.0f, row.cy() - 12.0f,
                           2.5f, arrows);
             }
+            else if (rows[i].kind == 4)
+            {
+                // The choice, between arrows: left and right go through them.
+                const float tw =
+                    ui::text(list, fonts.semibold, rows[i].value, right - 40.0f,
+                             centred(row.cy(), 24), 24, kAccent, gfx::Align::right);
+                const Color arrows = kInk.with_alpha(0.8f);
+                list.line(right - 14.0f, row.cy() - 8.0f, right - 6.0f, row.cy(), 2.5f, arrows);
+                list.line(right - 14.0f, row.cy() + 8.0f, right - 6.0f, row.cy(), 2.5f, arrows);
+                list.line(right - tw - 54.0f, row.cy() - 8.0f, right - tw - 62.0f, row.cy(), 2.5f,
+                          arrows);
+                list.line(right - tw - 54.0f, row.cy() + 8.0f, right - tw - 62.0f, row.cy(), 2.5f,
+                          arrows);
+            }
             else
                 pill(list, fonts, rows[i].value,
                      right - fonts.semibold.measure(rows[i].value, 40.0f * 0.58f) - 36.0f, row.cy(),
@@ -3646,8 +3732,6 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
             y += 106.0f;
         }
         ui::text(list, fonts.regular, "Changes are saved as you make them.", kMargin, 640.0f, 20,
-                 kInk.with_alpha(0.5f));
-        ui::text(list, fonts.regular, "Catalog changes apply next launch.", kMargin, 674.0f, 20,
                  kInk.with_alpha(0.5f));
         ui::text(list, fonts.regular,
                  std::to_string(setting_focus_ + 1) + " / " + std::to_string(count), kMargin,

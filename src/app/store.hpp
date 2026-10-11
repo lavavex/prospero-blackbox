@@ -86,6 +86,9 @@ struct Settings
     }
     bool verify_signatures = true;
     std::string news_seen; // the newest news item that was read
+    // Whose colours the interface wears: empty follows the game in focus, a title ID
+    // keeps that game's.
+    std::string theme;
 };
 std::string format_settings(const Settings &settings);
 Settings parse_settings(std::string_view text);
@@ -351,6 +354,9 @@ class Screen
                          float content);
 
     hui::ui::Theme theme_;
+    std::string theme_id_;       // whose colours the interface is wearing or easing toward
+    bool theme_settled_ = false; // arrived: nothing to recompute until the target changes
+    void follow_theme(float dt);
     hui::ui::TextView article_;
     hui::ui::ToastStack toasts_;
     hui::ui::Dialog dialog_;

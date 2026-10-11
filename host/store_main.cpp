@@ -483,7 +483,21 @@ int main(int argc, char **argv)
                 for (int frame = 0; frame < frames; ++frame)
                     screen.update({}, 1.0f / 60.0f, feedback);
             };
-            if (mode == "stage")
+            if (mode.starts_with("theme-"))
+            {
+                // theme-<n>: n steps right (or left, negative) along the collection, then the
+                // colours settle on that game's.
+                hui::InputFrame left;
+                left.nav = hui::Direction::left;
+                const int steps = std::atoi(mode.c_str() + 6);
+                for (int i = 0; i < std::abs(steps); ++i)
+                {
+                    screen.update(steps < 0 ? left : right, 1.0f / 60.0f, feedback);
+                    settle(12);
+                }
+                settle(90);
+            }
+            else if (mode == "stage")
             {
                 // The featured app on the stage, the focus on its button.
                 screen.update(nav_up, 1.0f / 60.0f, feedback);
