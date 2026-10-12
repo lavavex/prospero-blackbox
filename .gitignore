@@ -29,3 +29,7 @@ dist/
 /sce_sys/snd0.at9
 /assets/games/
 /assets/logo.png
+
+# What a dev build carries to install on its own (nfs-blackbox-ps5: tools/make-bundle.py):
+# repo-made sources and the bare prefix, never committed.
+/assets/bundle/
