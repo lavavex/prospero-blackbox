@@ -147,6 +147,11 @@ clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" 
     "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/core/save_file.cpp" \
     "${objects[@]}" "${miniz[@]}" -o "$build/game-sources-test"
 ASAN_OPTIONS=detect_leaks=$leaks UBSAN_OPTIONS=halt_on_error=1 "$build/game-sources-test"
+clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
+    "$root/tests/store_prefix_test.cpp" "$root/src/library/prefix.cpp" "$root/src/library/install_plan.cpp" \
+    "$root/src/library/game_profile.cpp" "$root/src/library/tree.cpp" "$root/src/core/save_file.cpp" \
+    "${objects[@]}" "${miniz[@]}" -o "$build/prefix-test"
+ASAN_OPTIONS=detect_leaks=$leaks UBSAN_OPTIONS=halt_on_error=1 "$build/prefix-test"
 # The reference decoder on the same made-up patch: the files it writes must be the expected ones.
 rm -rf "$build/rtpatch-synthetic/out"
 python3 "$root/tools/rtpatch.py" "$build/rtpatch-synthetic/patch.exe" "$build/rtpatch-synthetic/old" \
@@ -167,7 +172,7 @@ clang -std=c11 "${flags[@]}" -Wall -Wextra -Werror -c "$root/src/system/update_c
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     "$root/tests/store_service_test.cpp" "$root/src/app/service.cpp" \
     "$root/src/system/inventory.cpp" "$root/src/system/locations.cpp" \
-    "$root/src/core/qr.cpp" "$root/src/catalog/blackbox.cpp" "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/library/upgrade.cpp" "$root/src/library/rtpatch.cpp" "$root/src/library/game_sources.cpp" "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" "$root/src/system/app_folder.cpp" \
+    "$root/src/core/qr.cpp" "$root/src/catalog/blackbox.cpp" "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/library/upgrade.cpp" "$root/src/library/rtpatch.cpp" "$root/src/library/game_sources.cpp" "$root/src/library/prefix.cpp" "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" "$root/src/system/app_folder.cpp" \
     "$root/src/catalog/icons.cpp" "$root/src/catalog/catalog.cpp" \
     "$root/src/core/image.cpp" "$root/src/core/save_file.cpp" "$root/host/platform_host.cpp" \
     "$root/src/install/archive.cpp" "$root/src/install/files.cpp" \
