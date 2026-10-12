@@ -26,6 +26,7 @@
 #include "core/image.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <ctime>
 #include <set>
 #include <cerrno>
 #include <fcntl.h>
@@ -259,6 +260,72 @@ bool Service::request_import(const catalog::Entry &entry)
     return enqueue({Job::Kind::import_base, entry, {}});
 }
 
+bool Service::request_game(const catalog::Entry &entry, bool remove)
+{
+    return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, {}});
+}
+
+bool Service::game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
+                        const library::Manifest *&manifest, library::InstallOptions &options,
+                        std::string &error) const
+{
+    manifest = nullptr;
+    for (const auto &game : catalog::blackbox_games())
+        if (entry.id == game.id && game.available)
+            manifest = library::manifest_for(game.folder);
+    if (!manifest || root_.empty() || plans.empty())
+    {
+        error = "This game can't be installed yet";
+        return false;
+    }
+    if (!library::load_plan(plans + "/" + manifest->folder + ".json", plan, error))
+        return false;
+    options = {};
+    options.now = std::time(nullptr);
+    options.app_version = version_;
+    if (!game_prefix.empty() && game_prefix != plan.prefix)
+    {
+        options.prefix = game_prefix;
+        options.profile_id = game_prefix;
+        options.profile_name = plan.profile.name + " (" + game_prefix + ")";
+    }
+    return true;
+}
+
+// The installer's worker: a collection game installed (or repaired) from its plan, or
+// removed, with the job's progress.
+bool Service::game_job(const catalog::Entry &entry, bool remove, std::string &error)
+{
+    library::InstallPlan plan;
+    const library::Manifest *manifest = nullptr;
+    library::InstallOptions options;
+    if (!game_plan(entry, plan, manifest, options, error))
+        return false;
+    const library::InstallPaths paths{root_, win_root};
+    bases_stale_ = true;
+    if (remove)
+    {
+        progress_.phase = static_cast<int>(install::Phase::removing);
+        return library::uninstall_game(plan, paths, options, error);
+    }
+    return library::install_game(
+        plan, *manifest, paths, options,
+        [&](const library::InstallStatus &status)
+        {
+            using install::Phase;
+            // The page shows phases: the steps that move bytes show how far they are.
+            const auto phase = status.step.starts_with("Checking") ? Phase::verifying
+                               : status.step == "Copying the base copy" ||
+                                       status.step == "Adding the mods"
+                                   ? Phase::copying
+                                   : Phase::activating;
+            progress_.phase = static_cast<int>(phase);
+            progress_.total = status.total;
+            progress_.done = status.done;
+        },
+        job_control_.cancelled, error);
+}
+
 // Where each game's base copy is and what it is: published when it changes (a copy put
 // in place over FTP, a USB drive plugged in or out).
 void Service::check_bases()
@@ -272,10 +339,26 @@ void Service::check_bases()
         if (!manifest || !game.available)
             continue;
         auto found = library::locate(root_, roots, *manifest);
+        bool installed = false;
+        {
+            library::InstallPlan plan;
+            const library::Manifest *unused = nullptr;
+            library::InstallOptions options;
+            std::string error;
+            catalog::Entry entry;
+            entry.id = game.id;
+            installed = game_plan(entry, plan, unused, options, error) &&
+                        access(library::record_path(library::effective_plan(plan, options),
+                                                    {root_, win_root})
+                                   .c_str(),
+                               F_OK) == 0;
+        }
         const auto known = bases_.find(game.id);
         if (known != bases_.end() && known->second.state == found.state &&
-            known->second.path == found.path && known->second.detail == found.detail)
+            known->second.path == found.path && known->second.detail == found.detail &&
+            installed_[game.id] == installed)
             continue;
+        installed_[game.id] = installed;
         hui::sys::log("[STORE] base %s state=%d usb=%d path=%s version=%s", game.id,
                       static_cast<int>(found.state), found.on_usb, found.path.c_str(),
                       found.version.c_str());
@@ -284,6 +367,7 @@ void Service::check_bases()
         update.kind = Update::Kind::base;
         update.entry.id = game.id;
         update.base = std::move(found);
+        update.game_installed = installed;
         publish(std::move(update));
     }
 }
@@ -614,6 +698,12 @@ void Service::run_installer()
             result.operation = "import";
             result.ok = import_job(job.entry, result.error);
         }
+        else if (job.kind == Job::Kind::install_game || job.kind == Job::Kind::uninstall_game)
+        {
+            const bool remove = job.kind == Job::Kind::uninstall_game;
+            result.operation = remove ? "game-uninstall" : "game-install";
+            result.ok = game_job(job.entry, remove, result.error);
+        }
 #ifdef STORE_FILE_WORKER
         else if (job.entry.id == environment.self)
         {
@@ -658,6 +748,7 @@ void Service::run_installer()
             done.restart = result.restart;
             done.message = name + (result.operation == "uninstall" ? " uninstalled"
                                    : result.operation == "import"  ? " copied to the console"
+                                   : result.operation == "game-uninstall" ? " uninstalled"
                                    : result.operation == "adopt"   ? " is now managed"
                                    : result.operation == "update"  ? " updated"
                                                                    : " installed");
@@ -669,6 +760,10 @@ void Service::run_installer()
                                          : "Its saved data stays. Its home-screen tile goes "
                                            "after a restart.")
                 : result.operation == "import" ? "Kept in base-games for installs. The USB drive can go."
+                : result.operation == "game-install"
+                    ? "It is in prospero-win's game list now. Its own Home-screen app comes later."
+                : result.operation == "game-uninstall"
+                    ? "Its saves stay in the prefix, and so does the base copy."
                 : result.operation == "adopt" ? "Prospero BlackBox will offer its updates from now on."
                 : result.operation == "update"
                     ? "The new version is in place. Give the console a few minutes "

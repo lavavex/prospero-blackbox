@@ -485,7 +485,25 @@ int main(int argc, char **argv)
                 for (int frame = 0; frame < frames; ++frame)
                     screen.update({}, 1.0f / 60.0f, feedback);
             };
-            if (mode.starts_with("theme-"))
+            if (mode.starts_with("mw-"))
+            {
+                // Most Wanted's page in one of its install states: mw-ready, mw-old (a 1.2
+                // base copy), mw-installed, mw-busy (prospero-win running).
+                store::library::BaseGame base;
+                base.state = mode == "mw-old" ? store::library::State::needs_patch
+                                              : store::library::State::ready;
+                base.version = mode == "mw-old" ? "1.2" : "1.3";
+                base.path = "/data/prospero-blackbox/base-games/NFSMW";
+                base.detail = "Version " + base.version + ".";
+                screen.set_installer(true, true, "", "/data/homebrew");
+                screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99995"}
+                                                     : std::vector<std::string>{},
+                                   true);
+                screen.set_base("PPSA99403", base, mode == "mw-installed");
+                assert(screen.open_app("PPSA99403"));
+                settle(90);
+            }
+            else if (mode.starts_with("theme-"))
             {
                 // theme-<n>: n steps right (or left, negative) along the collection, then the
                 // colours settle on that game's.

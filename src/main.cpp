@@ -290,6 +290,10 @@ int main()
         service.verify_signatures = custom ? chosen.verify_signatures : true;
         service.with_official = custom && chosen.use_official;
     }
+    // The games' install plans ship in the app; installs go into the chosen prefix
+    // (a test one unless the settings say otherwise).
+    service.plans = app_root + "/assets/plans";
+    service.game_prefix = screen.settings().game_prefix;
 #ifdef STORE_INSTALLER
     service.installer = elevated;
     const char *installer_reason = "This console didn't grant permission to write, so nothing "
@@ -529,7 +533,7 @@ int main()
             else if (update.kind == store::Update::Kind::locations)
                 screen.set_locations(std::move(update.locations));
             else if (update.kind == store::Update::Kind::base)
-                screen.set_base(update.entry.id, std::move(update.base));
+                screen.set_base(update.entry.id, std::move(update.base), update.game_installed);
             else if (update.kind == store::Update::Kind::icon)
             {
                 const auto listed = hashes.find(update.entry.id);
@@ -616,6 +620,11 @@ int main()
                                       ? service.request_adopt(order.entry, order.location)
                                   : order.kind == store::Order::Kind::import_base
                                       ? service.request_import(order.entry)
+                                  : order.kind == store::Order::Kind::install_game ||
+                                          order.kind == store::Order::Kind::uninstall_game
+                                      ? service.request_game(
+                                            order.entry,
+                                            order.kind == store::Order::Kind::uninstall_game)
                                   : order.kind == store::Order::Kind::uninstall
                                       ? service.request_uninstall(order.id, order.location)
                                       : service.cancel_job(order.id);

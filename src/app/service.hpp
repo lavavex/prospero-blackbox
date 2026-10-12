@@ -4,6 +4,7 @@
 #pragma once
 #include "catalog/catalog.hpp"
 #include "library/base_game.hpp"
+#include "library/game_install.hpp"
 #include "core/image.hpp"
 #include "install/transaction.hpp"
 #include "system/inventory.hpp"
@@ -47,6 +48,7 @@ struct Update
     bool close = false;   // the update helper has the go-ahead: the store must close now
     std::vector<std::pair<std::string, std::uint64_t>> locations; // path, free bytes
     library::BaseGame base;
+    bool game_installed = false; // base: the game's install record is there
 };
 // What the installer is doing, for the frame that draws it.
 struct JobView
@@ -91,6 +93,14 @@ class Service
     bool request_adopt(const catalog::Entry &entry, const std::string &location);
     // Copies a game's base copy from a USB drive into base-games (entry.id names the game).
     bool request_import(const catalog::Entry &entry);
+    // Installs (or repairs) a collection game into its prefix from its plan, or removes it.
+    bool request_game(const catalog::Entry &entry, bool remove);
+    // Set before start(): where the games' install plans are (<plans>/<folder>.json),
+    // prospero-win's data, and the prefix games go into ("" for each plan's own; a test
+    // prefix keeps a test install apart from the live one, its profile named after it).
+    std::string plans;
+    std::string win_root = "/data/prospero-win";
+    std::string game_prefix;
     // The settings file, written by a worker: never on the frame.
     bool save_settings(std::string text);
     // Where settings are kept; empty means the store folder's settings.txt. Set before
@@ -115,7 +125,9 @@ class Service
             install,
             uninstall,
             adopt,
-            import_base
+            import_base,
+            install_game,
+            uninstall_game
         } kind = Kind::install;
         catalog::Entry entry;
         std::string location;
@@ -163,5 +175,11 @@ class Service
     std::atomic<bool> bases_stale_{true};
     void check_bases();
     bool import_job(const catalog::Entry &entry, std::string &error);
+    bool game_job(const catalog::Entry &entry, bool remove, std::string &error);
+    // The game's plan and the options this manager installs it with; false without one.
+    bool game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
+                   const library::Manifest *&manifest, library::InstallOptions &options,
+                   std::string &error) const;
+    std::map<std::string, bool> installed_;
 };
 } // namespace store

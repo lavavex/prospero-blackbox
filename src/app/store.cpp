@@ -606,13 +606,14 @@ void Screen::set_detail(const catalog::Entry &entry)
         refresh_detail();
 }
 
-void Screen::set_base(const std::string &id, library::BaseGame base)
+void Screen::set_base(const std::string &id, library::BaseGame base, bool installed)
 {
     for (auto &app : apps_)
         if (app.title_id == id)
         {
             app.base = std::move(base);
             app.base_known = true;
+            app.game_installed = installed;
         }
 }
 
@@ -2040,6 +2041,9 @@ void Screen::draw_grid(const ui::Fonts &fonts)
 void Screen::order(const App &app, Order::Kind kind)
 {
     pending_order = {};
+    // A collection game's uninstall (the hold under Repair) removes it from its prefix.
+    if (kind == Order::Kind::uninstall && app.base_known)
+        kind = Order::Kind::uninstall_game;
     pending_order.kind = kind;
     pending_order.id = app.title_id;
     if (!app.installed.empty())
@@ -2323,9 +2327,35 @@ Screen::Offer Screen::offer(const App &app) const
         }
         else if (usable)
         {
-            out.headline = "Base game ready";
-            out.tone = 2;
-            out.reason = "Installing comes in the next version of Prospero BlackBox.";
+            // prospero-win's own app and the games' apps share the prefix: the game writes
+            // its registry back when it exits, so nothing changes while one runs.
+            const bool wine_running =
+                std::any_of(running_.begin(), running_.end(), [](const std::string &id)
+                            { return id == "PPSA99995" || id == "PPSA99996" ||
+                                     (id.starts_with("PPSA994") && id != "PPSA99400"); });
+            const bool current = base.state == State::ready;
+            out.primary = Order::Kind::install_game;
+            out.label = app.game_installed ? "Repair" : "Install";
+            out.uninstall = app.game_installed;
+            out.headline = app.game_installed ? "Installed" : current ? "Ready to install"
+                                                                      : "Needs version 1.3";
+            out.tone = app.game_installed ? 2 : 1;
+            if (!installer_)
+                out.reason = installer_reason_;
+            else if (!current)
+                out.reason = "This copy is " + base.version + ". Patch it to 1.3 with EA's "
+                             "patch, or copy a 1.3 install.";
+            else if (wine_running)
+                out.reason = "Close prospero-win and the games first: a game saves its "
+                             "settings as it closes.";
+            else
+            {
+                out.armed = true;
+                out.reason = app.game_installed
+                                 ? "Builds the game again from the base copy and its mods. Saves "
+                                   "stay."
+                                 : "Adds the mods and settings. Every file is checked first.";
+            }
         }
         else
         {
@@ -2559,6 +2589,9 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
                 where += "  \xC2\xB7  " + size_text(free) + " free";
         if (!app.installed.empty())
             where = app.installed.front().path;
+        if (state.primary == Order::Kind::install_game)
+            where = std::string(app.game_installed ? "In" : "Installs into") + " the Wine prefix " +
+                    (settings_.game_prefix.empty() ? "nfs-blackbox" : settings_.game_prefix);
         if (state.primary != Order::Kind::none)
             ui::text(list, fonts.regular, fonts.regular.font->fit(where, 18, w), cx, box.y + 396.0f,
                      18, kInk.with_alpha(0.46f), gfx::Align::center);
@@ -2970,7 +3003,8 @@ std::string format_settings(const Settings &settings)
            "\nverify_signatures=" + (settings.verify_signatures ? "1" : "0") +
            "\nuse_official=" + (settings.use_official ? "1" : "0") +
            "\nuse_custom=" + (settings.use_custom ? "1" : "0") +
-           "\nnews_seen=" + settings.news_seen + "\ntheme=" + settings.theme + "\n";
+           "\nnews_seen=" + settings.news_seen + "\ntheme=" + settings.theme +
+           "\ngame_prefix=" + settings.game_prefix + "\n";
 }
 
 Settings parse_settings(std::string_view text)
@@ -3003,6 +3037,12 @@ Settings parse_settings(std::string_view text)
         }
         else if (key == "debug")
             settings.debug_log = value == "1";
+        else if (key == "game_prefix" &&
+                 std::all_of(value.begin(), value.end(), [](char c)
+                             { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+                                      c == '-' || c == '_'; }) &&
+                 value.size() <= 48 && (value.empty() || value[0] != '-'))
+            settings.game_prefix = value;
         else if (key == "catalog_url")
             catalog::normalize_api(value, settings.catalog_url);
         else if (key == "verify_signatures")

@@ -50,6 +50,7 @@ struct App
     // The game's base copy, once the service has looked (base_known).
     library::BaseGame base = {};
     bool base_known = false;
+    bool game_installed = false; // installed into its prefix by Prospero BlackBox
 };
 
 // What the page asks the installer to do. The frame loop hands it to the
@@ -63,6 +64,8 @@ struct Order
         uninstall,
         adopt, // take over an app that was installed by hand
         import_base, // copy the game's base copy from USB into base-games
+        install_game,   // a collection game: install or repair it in its prefix
+        uninstall_game, // a collection game: remove it from its prefix
         cancel
     } kind = Kind::none;
     catalog::Entry entry; // install: the app's verified detail record
@@ -94,6 +97,10 @@ struct Settings
     // Whose colours the interface wears: empty follows the game in focus, a title ID
     // keeps that game's.
     std::string theme;
+    // The Wine prefix games are installed into. A test prefix (the default until the
+    // owner moves the live install over) keeps them apart from nfs-blackbox; empty
+    // installs into each game's own (nfs-blackbox).
+    std::string game_prefix = "pb-mw";
 };
 std::string format_settings(const Settings &settings);
 Settings parse_settings(std::string_view text);
@@ -118,7 +125,7 @@ class Screen
     void set_inventory(system::Inventory inventory);
     void set_detail(const catalog::Entry &entry);
     void set_detail_error(const std::string &id, std::string message);
-    void set_base(const std::string &id, library::BaseGame base);
+    void set_base(const std::string &id, library::BaseGame base, bool installed);
     void set_icon(const std::string &id, std::uint32_t texture);
     // The manager's emblem for the opening, the top bar and About: cut out (assets/logo.png,
     // drawn as it is) or the Home-screen icon (a tile, drawn with rounded corners).
