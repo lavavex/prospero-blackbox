@@ -219,6 +219,7 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
         read.fail("sources must be an object");
     std::size_t index = 0, count = 0;
     yyjson_val *key = nullptr, *item = nullptr;
+    if (yyjson_is_obj(sources)) // yyjson's object loop can't take null
     yyjson_obj_foreach(sources, index, count, key, item)
     {
         Source source;
@@ -268,6 +269,7 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
             read.fail(where + ": values must be an object");
         std::size_t inner = 0, inner_count = 0;
         yyjson_val *name = nullptr, *value = nullptr;
+        if (yyjson_is_obj(values)) // a missing one is already reported
         yyjson_obj_foreach(values, inner, inner_count, name, value)
         {
             if (!yyjson_is_str(value))
@@ -296,6 +298,7 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
     auto *expect = yyjson_obj_get(root, "expect");
     if (expect && !yyjson_is_obj(expect))
         read.fail("expect must be an object");
+    if (yyjson_is_obj(expect))
     yyjson_obj_foreach(expect, index, count, key, item)
     {
         std::string path(yyjson_get_str(key), yyjson_get_len(key));
@@ -325,7 +328,7 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
         p.prefix = plan.prefix;
         p.width = static_cast<unsigned>(read.number(profile, "width", true, where));
         p.height = static_cast<unsigned>(read.number(profile, "height", true, where));
-        if (auto *runtime = yyjson_obj_get(profile, "runtime"))
+        if (auto *runtime = yyjson_obj_get(profile, "runtime"); yyjson_is_obj(runtime))
         {
             std::size_t inner = 0, inner_count = 0;
             yyjson_val *name = nullptr, *value = nullptr;
