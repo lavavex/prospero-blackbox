@@ -4,7 +4,7 @@
 #include "library/base_game.hpp"
 #include "library/install_plan.hpp"
 #include "third_party/miniz/miniz.h"
-#include "third_party/picosha2/picosha2.h"
+#include "library/sha256_hex.hpp"
 #include "third_party/yyjson/yyjson.h"
 #include <cerrno>
 #include <cstring>
@@ -61,7 +61,7 @@ bool sha256_of(const std::string &path, std::string &hex, const std::atomic<bool
     if (count != 0 || cancel.load())
         return false;
     hasher.finish();
-    hex = picosha2::get_hash_hex_string(hasher);
+    hex = sha256_hex(hasher);
     return true;
 }
 
@@ -145,7 +145,7 @@ bool rebuild(int old, std::uint64_t old_size, const std::string &ops, int out, s
         }
     }
     hasher.finish();
-    hex = picosha2::get_hash_hex_string(hasher);
+    hex = sha256_hex(hasher);
     return true;
 }
 } // namespace

@@ -7,7 +7,7 @@
 #include "library/upgrade.hpp"
 #include "library/wine_registry.hpp"
 #include "third_party/miniz/miniz.h"
-#include "third_party/picosha2/picosha2.h"
+#include "library/sha256_hex.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -93,7 +93,7 @@ bool sha256_of(const std::string &path, std::string &hex, const std::atomic<bool
     if (count != 0 || cancel.load())
         return false;
     hasher.finish();
-    hex = picosha2::get_hash_hex_string(hasher);
+    hex = sha256_hex(hasher);
     return true;
 }
 
