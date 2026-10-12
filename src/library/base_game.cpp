@@ -1,6 +1,7 @@
 // Prospero BlackBox - The user's clean copy of a game: found, checked, imported.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "library/base_game.hpp"
+#include "library/tree.hpp"
 #include "third_party/miniz/miniz.h"
 #include <cerrno>
 #include <cstring>
@@ -93,79 +94,6 @@ std::string join(const std::vector<std::string> &items)
     return text;
 }
 
-// What other computers leave beside the files they copy: macOS's resource forks and
-// folder settings, Windows's thumbnails. Never part of a game; never copied.
-bool litter(const std::string &name)
-{
-    return name.starts_with("._") || name == ".DS_Store" || name == ".Spotlight-V100" ||
-           name == ".fseventsd" || name == ".Trashes" || name == "Thumbs.db" ||
-           name == "desktop.ini";
-}
-
-// Every regular file under a folder, with sizes; false at a link or special file.
-bool walk(const std::string &root, const std::string &relative,
-          std::vector<std::pair<std::string, std::uint64_t>> &files, std::vector<std::string> &dirs,
-          std::string &error)
-{
-    const std::string folder = relative.empty() ? root : root + "/" + relative;
-    DIR *directory = opendir(folder.c_str());
-    if (!directory)
-    {
-        error = "Can't read " + folder + ": " + std::strerror(errno);
-        return false;
-    }
-    std::vector<std::string> names;
-    while (const dirent *entry = readdir(directory))
-        if (std::strcmp(entry->d_name, ".") != 0 && std::strcmp(entry->d_name, "..") != 0 &&
-            !litter(entry->d_name))
-            names.emplace_back(entry->d_name);
-    closedir(directory);
-    for (const auto &name : names)
-    {
-        const std::string inner = relative.empty() ? name : relative + "/" + name;
-        struct stat info{};
-        if (lstat((root + "/" + inner).c_str(), &info) != 0)
-        {
-            error = "Can't read " + inner;
-            return false;
-        }
-        if (S_ISDIR(info.st_mode))
-        {
-            dirs.push_back(inner);
-            if (!walk(root, inner, files, dirs, error))
-                return false;
-        }
-        else if (S_ISREG(info.st_mode))
-            files.emplace_back(inner, static_cast<std::uint64_t>(info.st_size));
-        else
-        {
-            error = inner + " is a link or a special file; copy the game's real files";
-            return false;
-        }
-    }
-    return true;
-}
-
-bool remove_all(const std::string &path)
-{
-    struct stat info{};
-    if (lstat(path.c_str(), &info) != 0)
-        return errno == ENOENT;
-    if (!S_ISDIR(info.st_mode))
-        return unlink(path.c_str()) == 0;
-    DIR *directory = opendir(path.c_str());
-    if (!directory)
-        return false;
-    std::vector<std::string> names;
-    while (const dirent *entry = readdir(directory))
-        if (std::strcmp(entry->d_name, ".") != 0 && std::strcmp(entry->d_name, "..") != 0)
-            names.emplace_back(entry->d_name);
-    closedir(directory);
-    bool ok = true;
-    for (const auto &name : names)
-        ok = remove_all(path + "/" + name) && ok;
-    return rmdir(path.c_str()) == 0 && ok;
-}
 } // namespace
 
 const Manifest *manifest_for(const std::string &folder)
@@ -292,84 +220,23 @@ bool import_base(const std::string &from, const std::string &data_root, const Ma
         error = target + " already exists";
         return false;
     }
-    std::vector<std::pair<std::string, std::uint64_t>> files;
-    std::vector<std::string> dirs;
-    if (!walk(from, "", files, dirs, error))
+    if (mkdir(games.c_str(), 0777) != 0 && errno != EEXIST)
+    {
+        error = "Can't make " + games + ": " + std::strerror(errno);
         return false;
-    ImportProgress state;
-    for (const auto &file : files)
-        state.total += file.second;
+    }
     // A copy left by an earlier attempt is started again.
-    if (!remove_all(work) || (mkdir(games.c_str(), 0777) != 0 && errno != EEXIST) ||
-        mkdir(work.c_str(), 0777) != 0)
-    {
-        error = "Can't make " + work + ": " + std::strerror(errno);
+    if (!copy_tree(from, work, progress, cancel, error))
         return false;
-    }
-    const auto fail = [&](std::string why)
-    {
-        error = std::move(why);
-        remove_all(work);
-        return false;
-    };
-    for (const auto &dir : dirs)
-        if (mkdir((work + "/" + dir).c_str(), 0777) != 0)
-            return fail("Can't make " + dir + ": " + std::strerror(errno));
-    std::vector<char> buffer(4u << 20);
-    for (const auto &[name, size] : files)
-    {
-        state.file = name;
-        progress(state);
-        const int in = open((from + "/" + name).c_str(), O_RDONLY | O_NOFOLLOW);
-        const int out = in < 0 ? -1
-                               : open((work + "/" + name).c_str(),
-                                      O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0666);
-        if (in < 0 || out < 0)
-        {
-            if (in >= 0)
-                close(in);
-            return fail("Can't copy " + name + ": " + std::strerror(errno));
-        }
-        std::uint64_t copied = 0;
-        bool ok = true;
-        while (ok)
-        {
-            if (cancel.load())
-            {
-                close(in);
-                close(out);
-                return fail("Cancelled");
-            }
-            const ssize_t count = read(in, buffer.data(), buffer.size());
-            if (count <= 0)
-            {
-                ok = count == 0;
-                break;
-            }
-            for (ssize_t written = 0; ok && written < count;)
-            {
-                const ssize_t step = write(out, buffer.data() + written,
-                                           static_cast<size_t>(count - written));
-                ok = step > 0;
-                written += ok ? step : 0;
-            }
-            copied += static_cast<std::uint64_t>(count);
-            state.done += static_cast<std::uint64_t>(count);
-            progress(state);
-        }
-        ok = ok && fsync(out) == 0;
-        close(in);
-        if (close(out) != 0 || !ok || copied != size)
-            return fail("Copying " + name + " failed: " + std::strerror(errno ? errno : EIO));
-    }
     // Checked as a whole before it takes the place of the base copy.
     const auto copy = inspect(work, manifest);
     if (copy.state != State::ready && copy.state != State::needs_patch)
-        return fail("The copy didn't check out: " + copy.detail);
-    if (rename(work.c_str(), target.c_str()) != 0)
-        return fail("Can't move the copy into place: " + std::string(std::strerror(errno)));
-    state.file.clear();
-    progress(state);
-    return true;
+        error = "The copy didn't check out: " + copy.detail;
+    else if (rename(work.c_str(), target.c_str()) != 0)
+        error = "Can't move the copy into place: " + std::string(std::strerror(errno));
+    else
+        return true;
+    remove_all(work);
+    return false;
 }
 } // namespace store::library

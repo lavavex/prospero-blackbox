@@ -1,6 +1,7 @@
 // Prospero BlackBox - The user's clean copy of a game: found, checked, imported.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
+#include "library/tree.hpp"
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -67,11 +68,7 @@ BaseGame locate(const std::string &data_root, std::span<const std::string> usb_r
 // Where USB and extended drives are mounted on the console.
 std::vector<std::string> usb_roots();
 
-struct ImportProgress
-{
-    std::uint64_t done = 0, total = 0; // bytes
-    std::string file;                  // the file being copied
-};
+using ImportProgress = CopyProgress;
 
 // Copies a whole folder to base-games/<folder>: into <folder>.importing first, then
 // renamed into place, so base-games never holds half a copy. Links and special files
