@@ -21,7 +21,8 @@ enum class Phase : int
     verifying,
     unpacking,
     activating,
-    removing
+    removing,
+    copying // a base game, into base-games
 };
 struct Progress
 {

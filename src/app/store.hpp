@@ -6,6 +6,7 @@
 
 #include "gfx/renderer.hpp"
 #include "catalog/catalog.hpp"
+#include "library/base_game.hpp"
 #include "system/inventory.hpp"
 #include "ui/components/dialog.hpp"
 #include "ui/components/hold_button.hpp"
@@ -46,6 +47,9 @@ struct App
     hui::gfx::Color accent = hui::gfx::Color::rgb(0x42358f);
     std::uint64_t size = 0;
     std::string added = {}; // when the catalog first listed it
+    // The game's base copy, once the service has looked (base_known).
+    library::BaseGame base = {};
+    bool base_known = false;
 };
 
 // What the page asks the installer to do. The frame loop hands it to the
@@ -58,6 +62,7 @@ struct Order
         install, // or update: the engine decides from what is on disk
         uninstall,
         adopt, // take over an app that was installed by hand
+        import_base, // copy the game's base copy from USB into base-games
         cancel
     } kind = Kind::none;
     catalog::Entry entry; // install: the app's verified detail record
@@ -113,6 +118,7 @@ class Screen
     void set_inventory(system::Inventory inventory);
     void set_detail(const catalog::Entry &entry);
     void set_detail_error(const std::string &id, std::string message);
+    void set_base(const std::string &id, library::BaseGame base);
     void set_icon(const std::string &id, std::uint32_t texture);
     // The manager's emblem for the opening, the top bar and About: cut out (assets/logo.png,
     // drawn as it is) or the Home-screen icon (a tile, drawn with rounded corners).

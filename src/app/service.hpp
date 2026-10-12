@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 #include "catalog/catalog.hpp"
+#include "library/base_game.hpp"
 #include "core/image.hpp"
 #include "install/transaction.hpp"
 #include "system/inventory.hpp"
@@ -28,6 +29,7 @@ struct Update
         news,         // the catalog's news feed, newest first
         job,          // a finished install, update or uninstall: entry.id, ok, message, detail
         locations,    // where apps can be installed on this console
+        base,         // a game's base copy: entry.id, base
         error
     } kind = Kind::error;
     std::string detail;
@@ -44,6 +46,7 @@ struct Update
     bool restart = false; // the store updated itself: restart to finish
     bool close = false;   // the update helper has the go-ahead: the store must close now
     std::vector<std::pair<std::string, std::uint64_t>> locations; // path, free bytes
+    library::BaseGame base;
 };
 // What the installer is doing, for the frame that draws it.
 struct JobView
@@ -86,6 +89,8 @@ class Service
     bool request_uninstall(const std::string &id, const std::string &location);
     // Takes over an app installed by hand (a receipt is written, nothing else).
     bool request_adopt(const catalog::Entry &entry, const std::string &location);
+    // Copies a game's base copy from a USB drive into base-games (entry.id names the game).
+    bool request_import(const catalog::Entry &entry);
     // The settings file, written by a worker: never on the frame.
     bool save_settings(std::string text);
     // Where settings are kept; empty means the store folder's settings.txt. Set before
@@ -109,7 +114,8 @@ class Service
         {
             install,
             uninstall,
-            adopt
+            adopt,
+            import_base
         } kind = Kind::install;
         catalog::Entry entry;
         std::string location;
@@ -151,5 +157,11 @@ class Service
     std::string frame_report_;
     std::string settings_;
     bool settings_pending_ = false;
+    // The base copies last published, by title ID; checked again every few seconds, and at
+    // once after an import.
+    std::map<std::string, library::BaseGame> bases_;
+    std::atomic<bool> bases_stale_{true};
+    void check_bases();
+    bool import_job(const catalog::Entry &entry, std::string &error);
 };
 } // namespace store

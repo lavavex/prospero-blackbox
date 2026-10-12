@@ -528,6 +528,8 @@ int main()
             }
             else if (update.kind == store::Update::Kind::locations)
                 screen.set_locations(std::move(update.locations));
+            else if (update.kind == store::Update::Kind::base)
+                screen.set_base(update.entry.id, std::move(update.base));
             else if (update.kind == store::Update::Kind::icon)
             {
                 const auto listed = hashes.find(update.entry.id);
@@ -612,6 +614,8 @@ int main()
                                       ? service.request_install(order.entry, order.location)
                                   : order.kind == store::Order::Kind::adopt
                                       ? service.request_adopt(order.entry, order.location)
+                                  : order.kind == store::Order::Kind::import_base
+                                      ? service.request_import(order.entry)
                                   : order.kind == store::Order::Kind::uninstall
                                       ? service.request_uninstall(order.id, order.location)
                                       : service.cancel_job(order.id);

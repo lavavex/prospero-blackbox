@@ -606,6 +606,16 @@ void Screen::set_detail(const catalog::Entry &entry)
         refresh_detail();
 }
 
+void Screen::set_base(const std::string &id, library::BaseGame base)
+{
+    for (auto &app : apps_)
+        if (app.title_id == id)
+        {
+            app.base = std::move(base);
+            app.base_known = true;
+        }
+}
+
 void Screen::set_detail_error(const std::string &id, std::string message)
 {
     for (auto &app : apps_)
@@ -1509,9 +1519,11 @@ const App *Screen::busy_app(float &progress, const char *&phase) const
                     : now == Phase::verifying ? "Verifying"
                     : now == Phase::unpacking ? "Unpacking"
                     : now == Phase::removing  ? "Removing"
+                    : now == Phase::copying   ? "Copying"
                                               : "Installing";
             const bool measured =
-                (now == Phase::downloading || now == Phase::unpacking) && activity_.total > 0;
+                (now == Phase::downloading || now == Phase::unpacking || now == Phase::copying) &&
+                activity_.total > 0;
             progress = measured ? tween::clamp01(static_cast<float>(activity_.done) /
                                                  static_cast<float>(activity_.total))
                                 : -1.0f;
@@ -2197,9 +2209,11 @@ Screen::Offer Screen::offer(const App &app) const
                        : phase == Phase::unpacking  ? "Unpacking"
                        : phase == Phase::activating ? "Finishing"
                        : phase == Phase::removing   ? "Removing"
+                       : phase == Phase::copying    ? "Copying to the console"
                                                     : "Waiting";
-        const bool measured =
-            (phase == Phase::downloading || phase == Phase::unpacking) && activity_.total > 0;
+        const bool measured = (phase == Phase::downloading || phase == Phase::unpacking ||
+                               phase == Phase::copying) &&
+                              activity_.total > 0;
         if (measured)
         {
             out.progress = tween::clamp01(static_cast<float>(activity_.done) /
@@ -2288,6 +2302,39 @@ Screen::Offer Screen::offer(const App &app) const
         }
         else
             out.reason = installed->reason;
+    }
+    else if (app.base_known && !soon)
+    {
+        // A collection game: what its base copy is, and the one thing to do about it.
+        using library::State;
+        const auto &base = app.base;
+        const bool usable = base.state == State::ready || base.state == State::needs_patch;
+        out.note = base.detail;
+        if (usable && base.on_usb)
+        {
+            out.headline = "On a USB drive";
+            out.label = "Copy to the console";
+            out.primary = Order::Kind::import_base;
+            out.armed = installer_;
+            out.tone = 1;
+            out.reason = installer_ ? "Copied to base-games, where it is kept for installs. The "
+                                      "USB copy is left as it is."
+                                    : installer_reason_;
+        }
+        else if (usable)
+        {
+            out.headline = "Base game ready";
+            out.tone = 2;
+            out.reason = "Installing comes in the next version of Prospero BlackBox.";
+        }
+        else
+        {
+            out.headline = base.state == State::absent ? "Base game needed" : "Base game can't be used";
+            out.reason = base.state == State::absent
+                             ? "A clean install of the PC game, 1.2 or 1.3. Mods are added for you."
+                             : base.path;
+        }
+        return out;
     }
     else if (soon)
     {

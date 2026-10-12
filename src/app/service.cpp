@@ -21,6 +21,7 @@
 #include "install/files.hpp"
 #include "catalog/icons.hpp"
 #include "catalog/blackbox.hpp"
+#include <chrono>
 #include "system/app_folder.hpp"
 #include "core/image.hpp"
 #include <algorithm>
@@ -251,6 +252,72 @@ bool Service::request_install(const catalog::Entry &entry, const std::string &lo
 bool Service::request_adopt(const catalog::Entry &entry, const std::string &location)
 {
     return enqueue({Job::Kind::adopt, entry, location});
+}
+
+bool Service::request_import(const catalog::Entry &entry)
+{
+    return enqueue({Job::Kind::import_base, entry, {}});
+}
+
+// Where each game's base copy is and what it is: published when it changes (a copy put
+// in place over FTP, a USB drive plugged in or out).
+void Service::check_bases()
+{
+    if (root_.empty())
+        return;
+    const auto roots = library::usb_roots();
+    for (const auto &game : catalog::blackbox_games())
+    {
+        const auto *manifest = library::manifest_for(game.folder);
+        if (!manifest || !game.available)
+            continue;
+        auto found = library::locate(root_, roots, *manifest);
+        const auto known = bases_.find(game.id);
+        if (known != bases_.end() && known->second.state == found.state &&
+            known->second.path == found.path && known->second.detail == found.detail)
+            continue;
+        hui::sys::log("[STORE] base %s state=%d usb=%d path=%s version=%s", game.id,
+                      static_cast<int>(found.state), found.on_usb, found.path.c_str(),
+                      found.version.c_str());
+        bases_[game.id] = found;
+        Update update;
+        update.kind = Update::Kind::base;
+        update.entry.id = game.id;
+        update.base = std::move(found);
+        publish(std::move(update));
+    }
+}
+
+// The installer's worker: the USB copy into base-games, with the job's progress.
+bool Service::import_job(const catalog::Entry &entry, std::string &error)
+{
+    const library::Manifest *manifest = nullptr;
+    for (const auto &game : catalog::blackbox_games())
+        if (entry.id == game.id)
+            manifest = library::manifest_for(game.folder);
+    if (!manifest || root_.empty())
+    {
+        error = "This game has no base copy to import";
+        return false;
+    }
+    const auto found = library::locate(root_, library::usb_roots(), *manifest);
+    if (!found.on_usb ||
+        (found.state != library::State::ready && found.state != library::State::needs_patch))
+    {
+        error = found.on_usb ? found.detail : "No copy on a USB drive to import";
+        return false;
+    }
+    progress_.phase = static_cast<int>(install::Phase::copying);
+    const bool ok = library::import_base(
+        found.path, root_, *manifest,
+        [&](const library::ImportProgress &step)
+        {
+            progress_.total = step.total;
+            progress_.done = step.done;
+        },
+        job_control_.cancelled, error);
+    bases_stale_ = true;
+    return ok;
 }
 
 bool Service::enqueue(Job job)
@@ -542,6 +609,11 @@ void Service::run_installer()
             result = install::uninstall(environment, job.entry.id, job.location, progress_);
         else if (job.kind == Job::Kind::adopt)
             result = install::adopt(environment, job.entry.id, job.location);
+        else if (job.kind == Job::Kind::import_base)
+        {
+            result.operation = "import";
+            result.ok = import_job(job.entry, result.error);
+        }
 #ifdef STORE_FILE_WORKER
         else if (job.entry.id == environment.self)
         {
@@ -585,6 +657,7 @@ void Service::run_installer()
         {
             done.restart = result.restart;
             done.message = name + (result.operation == "uninstall" ? " uninstalled"
+                                   : result.operation == "import"  ? " copied to the console"
                                    : result.operation == "adopt"   ? " is now managed"
                                    : result.operation == "update"  ? " updated"
                                                                    : " installed");
@@ -595,6 +668,7 @@ void Service::run_installer()
                     ? (unregistered == 0 ? "It is off the home screen. Its saved data stays."
                                          : "Its saved data stays. Its home-screen tile goes "
                                            "after a restart.")
+                : result.operation == "import" ? "Kept in base-games for installs. The USB drive can go."
                 : result.operation == "adopt" ? "Prospero BlackBox will offer its updates from now on."
                 : result.operation == "update"
                     ? "The new version is in place. Give the console a few minutes "
@@ -687,6 +761,7 @@ void Service::run()
             hui::sys::log("[STORE] inventory error=%s", installed.installed.errors[i].c_str());
         publish(std::move(installed));
     }
+    auto bases_checked = std::chrono::steady_clock::time_point{};
     while (!control_.cancelled.load())
     {
         std::string id;
@@ -739,6 +814,12 @@ void Service::run()
                     break;
                 }
             publish(std::move(result));
+        }
+        if (const auto now = std::chrono::steady_clock::now();
+            bases_stale_.exchange(false) || now - bases_checked >= std::chrono::seconds(5))
+        {
+            bases_checked = now;
+            check_bases();
         }
         hui::sys::sleep_us(100000);
     }
