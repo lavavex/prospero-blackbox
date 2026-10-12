@@ -6,6 +6,7 @@
 #include <cassert>
 #include <filesystem>
 #include <cstdlib>
+#include <unistd.h>
 
 int main()
 {

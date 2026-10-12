@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <set>
 #include <thread>
+#include <unistd.h>
 
 using namespace std::chrono_literals;
 namespace
@@ -68,7 +69,7 @@ static void check_installer()
     namespace fs = std::filesystem;
     char path[] = "/tmp/prospero-installer-XXXXXX";
     assert(mkdtemp(path));
-    const fs::path root(path);
+    const fs::path root = fs::canonical(path); // macOS's /tmp is a symlink
     fs::create_directories(root / "apps");
     const std::string id = "PPSA99500", location = (root / "apps").string();
     // The smallest valid app archive.
@@ -163,7 +164,7 @@ int main()
 {
     char path[] = "/tmp/prospero-service-XXXXXX";
     assert(mkdtemp(path));
-    const std::string root = path;
+    const std::string root = std::filesystem::canonical(path).string(); // macOS's /tmp is a symlink
     store::Service service(root, "01.000.000");
     assert(service.start());
     // The collection is built in: six games, Most Wanted the only one to install.

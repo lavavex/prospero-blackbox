@@ -26,7 +26,8 @@ int main()
 {
     char temporary[] = "/tmp/prospero-inventory-XXXXXX";
     assert(mkdtemp(temporary));
-    const fs::path root(temporary), apps = root / "apps", receipts = root / "receipts";
+    // Its real path: the scan refuses symlinks, and macOS's /tmp is one.
+    const fs::path root = fs::canonical(temporary), apps = root / "apps", receipts = root / "receipts";
     fs::create_directory(receipts);
     title(apps / "PPSA99010", "PPSA99010");
     title(apps / "PPSA99020", "PPSA99020");

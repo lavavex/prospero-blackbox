@@ -24,6 +24,16 @@ void put(const fs::path &path, const std::string &body)
     std::ofstream(path, std::ios::binary) << body;
 }
 
+// Whether folder holds an entry spelled exactly name: on a file system that ignores case
+// (macOS's), fs::exists would find "data" when asked for "DATA".
+bool spelled(const fs::path &folder, const std::string &name)
+{
+    for (const auto &entry : fs::directory_iterator(folder))
+        if (entry.path().filename() == name)
+            return true;
+    return false;
+}
+
 std::string read(const fs::path &path)
 {
     std::string text;
@@ -272,7 +282,7 @@ int main()
     assert(std::find(steps.begin(), steps.end(), "Upgrading to 2.0") != steps.end());
     assert(read(installed / "data" / "data.bin") == current && read(installed / "data" / "extra.bin") == "cdefXY" &&
            read(installed / "Support" / "new" / "readme.txt") == "new in 2.0" &&
-           !fs::exists(installed / "data" / "gone.txt") && !fs::exists(installed / "DATA"));
+           !fs::exists(installed / "data" / "gone.txt") && !spelled(installed, "DATA"));
     assert(read(data / "installs" / "shared" / "GAME.json").find("\"base_release\": \"1.0\"") !=
            std::string::npos);
     assert(read(base / "data" / "data.bin") == older); // the base copy is never changed

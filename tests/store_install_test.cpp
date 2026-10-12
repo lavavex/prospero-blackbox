@@ -1040,7 +1040,7 @@ int main(int argc, char **argv)
 {
     char temporary[] = "/tmp/prospero-install-XXXXXX";
     assert(mkdtemp(temporary));
-    const fs::path root(temporary);
+    const fs::path root = fs::canonical(temporary); // macOS's /tmp is a symlink
     check_records();
     check_archives(root);
     check_running(root);

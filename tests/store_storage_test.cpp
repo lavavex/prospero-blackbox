@@ -12,7 +12,8 @@ int main()
     char temporary[] = "/tmp/prospero-blackbox-storage-XXXXXX";
     assert(mkdtemp(temporary));
     namespace fs = std::filesystem;
-    const fs::path root(temporary);
+    // Its real path: the probe refuses symlinks, and macOS's /tmp is one.
+    const fs::path root = fs::canonical(temporary);
     fs::create_directory(root / "title");
     std::ofstream(root / "title" / "keep.txt") << "unchanged";
     const auto result = store::system::probe_storage(root.string());
