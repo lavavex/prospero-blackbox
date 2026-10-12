@@ -94,14 +94,17 @@ int main()
     const std::atomic<bool> go{false};
     std::string error;
 
-    // MW's own plan, as shipped, reads and checks out.
+    // MW's own plan, as shipped (the base tier: vanilla 1.3 and the quality-of-life mods),
+    // reads and checks out.
     InstallPlan mw;
     assert(load_plan(STORE_ASSETS "/plans/NFSMW.json", mw, error));
     assert(mw.game == "NFSMW" && mw.release == "1.3" && mw.prefix == "nfs-blackbox" &&
            mw.profile.id == "nfs-most-wanted-2005" && mw.profile.width == 3840 &&
            mw.source("speed-exe") && mw.source("speed-exe")->size == 6029312 &&
-           mw.pending.empty() && mw.game_files.size() > 100 && mw.system_files.size() == 3 &&
-           mw.patches.size() == 2 && mw.expect.size() == 8 && mw.machine.size() == 4);
+           mw.pending.empty() && mw.game_files.size() == 10 && mw.system_files.empty() &&
+           mw.patches.size() == 2 && mw.expect.size() == 5 && mw.machine.size() == 4 &&
+           mw.upgrades.size() == 1 && mw.upgrades[0].from == "1.2" && !mw.upgrades[0].rtpatch &&
+           mw.source(mw.upgrades[0].source));
     // The DRM-free exe gets the frame-limiter and large-address-aware bytes.
     assert(mw.patches[0].offset == 0x242ED2 && mw.patches[0].from == "\xe8\x29\xa0\x00\x00"s &&
            mw.patches[0].to == std::string(5, '\x90') && mw.patches[1].offset == 0x11E &&
