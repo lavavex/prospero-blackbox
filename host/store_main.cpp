@@ -497,7 +497,7 @@ int main(int argc, char **argv)
                 base.detail = mode == "mw-old" ? "Version 1.2: upgraded to 1.3 as it installs."
                                                : "Version " + base.version + ".";
                 screen.set_installer(true, true, "", "/data/homebrew");
-                screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99995"}
+                screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99996"}
                                                      : std::vector<std::string>{},
                                    true);
                 screen.set_base("PPSA99403", base, mode == "mw-installed");

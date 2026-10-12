@@ -2327,11 +2327,11 @@ Screen::Offer Screen::offer(const App &app) const
         }
         else if (usable)
         {
-            // prospero-win's own app and the games' apps share the prefix: the game writes
-            // its registry back when it exits, so nothing changes while one runs.
+            // The games' apps share the prefix: the game writes its registry back when it
+            // exits, so nothing changes while one runs.
             const bool wine_running =
                 std::any_of(running_.begin(), running_.end(), [](const std::string &id)
-                            { return id == "PPSA99995" || id == "PPSA99996" ||
+                            { return id == "PPSA99996" ||
                                      (id.starts_with("PPSA994") && id != "PPSA99400"); });
             // A copy a release behind is brought up to date by its upgrade file as it installs.
             out.primary = Order::Kind::install_game;
