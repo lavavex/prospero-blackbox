@@ -44,6 +44,13 @@ ranlib=$(command -v llvm-ranlib-18 || command -v llvm-ranlib || command -v ranli
 }
 
 mkdir -p "$cache"
+# make -j runs this from several targets at once: one at a time, or they fetch over each
+# other. (mkdir is atomic everywhere; macOS has no flock.)
+lock="$cache/.setup.lock"
+until mkdir "$lock" 2>/dev/null; do
+    sleep 0.2
+done
+trap 'rmdir "$lock"' EXIT
 if ! $skip_sdk && [[ ! -x "$sdk/bin/prospero-lld" ]]; then
     archive="$cache/ps5-payload-sdk.zip"
     temporary="$archive.download"
@@ -58,8 +65,10 @@ if ! $skip_sdk && [[ ! -x "$sdk/bin/prospero-lld" || ! -d "$sdk/target/include" 
 fi
 
 zlib_library=$(find "$zlib_root" -type f -name libz.a -print -quit 2>/dev/null || true)
+# zlib is for the host tools (tooling/native), so it is built for the host.
+zlib_build="$zlib_version $(uname -s) $(uname -m)"
 if [[ -z $zlib_library || ! -f $zlib_root/usr/include/zlib.h ||
-    ! -f $zlib_stamp || $(<"$zlib_stamp") != "$zlib_version" ]]; then
+    ! -f $zlib_stamp || $(<"$zlib_stamp") != "$zlib_build" ]]; then
     echo "==> [deps] Building pinned zlib $zlib_version from source" >&2
     mkdir -p "$zlib_directory"
     if [[ -f $zlib_archive ]] &&
@@ -79,10 +88,11 @@ if [[ -z $zlib_library || ! -f $zlib_root/usr/include/zlib.h ||
     (
         cd "$zlib_source"
         CC="$compiler" AR="$archiver" RANLIB="$ranlib" ./configure --static --prefix=/usr
-        make -j "$jobs" CC="$compiler" AR="$archiver" RANLIB="$ranlib"
+        # ARFLAGS: on a macOS host, configure picks flags for Apple's libtool, not ar.
+        make -j "$jobs" CC="$compiler" AR="$archiver" ARFLAGS=rc RANLIB="$ranlib"
         make DESTDIR="$zlib_root" install
     ) >"$zlib_directory/build.log"
-    printf '%s\n' "$zlib_version" >"$zlib_stamp"
+    printf '%s\n' "$zlib_build" >"$zlib_stamp"
     zlib_library=$(find "$zlib_root" -type f -name libz.a -print -quit 2>/dev/null || true)
 fi
 if [[ -z $zlib_library ]]; then

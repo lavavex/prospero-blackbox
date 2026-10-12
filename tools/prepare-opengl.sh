@@ -32,7 +32,9 @@ mkdir -p "$cache"
 ln -sfn -- "$prefix" "$cache/current"
 
 compiler=$(command -v "${PS5_CLANG:-clang-18}")
-builtins="$("$compiler" --print-resource-dir)/lib/linux/libclang_rt.builtins-x86_64.a"
+# The compiler's own builtins, or (where it has none for x86-64, as on macOS) ones built
+# from compiler-rt's source.
+builtins=$(bash "$root/tools/build-builtins.sh")
 for library in "$sdk/target/lib/libunwind.a" "$sdk/target/lib/libc++abi.a" \
     "$sdk/target/lib/libc++.a" "$builtins"; do
     [[ -s $library ]] || { echo "missing link input: $library" >&2; exit 2; }
