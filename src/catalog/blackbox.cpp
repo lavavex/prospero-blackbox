@@ -14,8 +14,8 @@ constexpr Game kGames[] = {
      "Free roam through Bayview with deeper tuning and the Underground crew.", false,
      {0x0a0d0a, 0x4b2a7a, 0x9be22d, 0x0e1a02}}, // black, purple, acid green
     {"PPSA99403", "NFSMW", "Most Wanted", "2005-11-15", "nfs-most-wanted-2005",
-     "Climb the Blacklist in Rockport with the cops on your tail. Installed with the Xbox 360 "
-     "visual pack and its recommended mods, at 4K.",
+     "Climb the Blacklist in Rockport with the cops on your tail. Installed as 1.3 with "
+     "widescreen, DualSense and keyboard fixes, at 4K.",
      true, {0x101010, 0x3a3a34, 0xf6a800, 0x1c1400}}, // charcoal, Most Wanted amber
     {"PPSA99404", "NFSC", "Carbon", "2006-10-31", "nfs-carbon",
      "Canyon duels and crews in Palmont City.", false,

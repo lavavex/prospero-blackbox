@@ -99,7 +99,7 @@ int main()
     InstallPlan mw;
     assert(load_plan(STORE_ASSETS "/plans/NFSMW.json", mw, error));
     assert(mw.game == "NFSMW" && mw.release == "1.3" && mw.prefix == "nfs-blackbox" &&
-           mw.profile.id == "nfs-most-wanted-2005" && mw.profile.width == 3840 &&
+           mw.profile.id == "pb-nfsmw" && mw.profile.width == 3840 &&
            mw.source("speed-exe") && mw.source("speed-exe")->size == 6029312 &&
            mw.pending.empty() && mw.game_files.size() == 10 && mw.system_files.empty() &&
            mw.patches.size() == 2 && mw.expect.size() == 5 && mw.machine.size() == 4 &&
