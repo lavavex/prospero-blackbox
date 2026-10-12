@@ -4,7 +4,8 @@
 # The art uses EA's Need for Speed emblem, so it is never committed (see
 # .gitignore). It is taken from the workspace's local art folder at build time:
 #   PB_ICON        512x512 PNG   (default: ../art/prospero-blackbox-icon0.png)
-#   PB_BACKGROUND  3840x2160 PNG (default: ../art/prospero-blackbox-bg.png)
+#   PB_BACKGROUND  3840x2160 PNG (default: ../art/prospero-blackbox-bg.png); or, beside it,
+#                  the converted prospero-blackbox-bg.dds (BC7), used as pic0 and pic1
 #   PB_ART         the games' icons (default: ../art/<game>.png)
 #   PS5_ASSETS_TOOL the BC7 converter (default: ../PS5_Vulkan/tools/prepare-assets.sh)
 # Without them the app is built with a plain stand-in icon and no background (the
@@ -56,6 +57,14 @@ PY2
 fi
 cp "$icon" "$out/icon0.png"
 if [[ ! -f $background || ! -f $tool ]]; then
+    # The background already converted (BC7 DDS, the same file for pic0 and pic1).
+    converted=${background%.png}.dds
+    if [[ -f $converted ]]; then
+        cp "$converted" "$out/pic0.dds"
+        cp "$converted" "$out/pic1.dds"
+        echo "==> [art] icon0.png, pic0.dds, pic1.dds from the local art folder (converted background)"
+        exit 0
+    fi
     echo "==> [art] icon only (no background at $background or no converter at $tool)" >&2
     exit 0
 fi
