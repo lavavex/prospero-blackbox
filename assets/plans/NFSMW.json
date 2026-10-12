@@ -1,0 +1,2080 @@
+{
+ "schema": 1,
+ "game": "NFSMW",
+ "title": "Need for Speed: Most Wanted (2005)",
+ "release": "1.3",
+ "prefix": "nfs-blackbox",
+ "_about": [
+  "Most Wanted as the console had it on 2026-10-11: the 1.3 base copy, the DRM-free exe with the",
+  "frame-limiter and large-address-aware patches, the ASI loader, XtendedInput, the Widescreen Fix, the",
+  "Xbox 360 Stuff Pack 4.2 (no glass shader: it smears interior glass under DXVK), HD Content Support,",
+  "HUD Adapter, Front-End Shadows, HD Reflections, Xbox 360 Converted Movies, DSOAL, our two ASIs,",
+  "DXVK 3.1.1 lean and native D3DX. Every file is pinned by SHA-256 and taken from",
+  "mods-cache/<sha256>[.ext]; the edited files are checked against the console's own (expect)."
+ ],
+ "sources": {
+  "speed-exe": {
+   "name": "speed.exe 1.3, DRM-free (the *!ReLOADeD!* build, md5 c0516b485065fabdd69579816b5df763): put it in mods-cache by hand",
+   "sha256": "80774c2e5d619b4f120b48d4462896fd504c263399d203a238769cffde1d253c",
+   "size": 6029312
+  },
+  "asi-loader": {
+   "name": "Ultimate ASI Loader 9.7.4 (ThirteenAG)",
+   "sha256": "952cebfc30d525afc2bdbaca954329d405ded3aa688a83027354dae14dfd5c5f",
+   "size": 3910913,
+   "url": "https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases/download/v9.7.4/Ultimate-ASI-Loader.zip"
+  },
+  "xtendedinput": {
+   "name": "NFS-XtendedInput 1.22 for Most Wanted (xan1242)",
+   "sha256": "a78fbf5a2ba672557b23d7633175f391563a264c064762b2b50df88fb1a57fd0",
+   "size": 1520654,
+   "url": "https://github.com/xan1242/NFS-XtendedInput/releases/download/1.22/Release-MW-Pack.zip"
+  },
+  "widescreenfix": {
+   "name": "Most Wanted Widescreen Fix, build of 2026-09-12 (ThirteenAG)",
+   "sha256": "7be912197ac19134d5a64dfe61225e4ef85d612c4f64b96045727c3bf6735df4",
+   "size": 8911715,
+   "url": "https://github.com/ThirteenAG/WidescreenFixesPack/releases/download/nfsmw/NFSMostWanted.WidescreenFix.zip"
+  },
+  "x360/FRONTEND/PLATFORMS/CAR_LOT.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/PLATFORMS/CAR_LOT.BIN",
+   "sha256": "5588a60b44d8b5fdb5ea64fa212648c26c6671c61caf6bd1bd62d7e941bdd41d",
+   "size": 27175072,
+   "drive": "1sTzGRCr0L6mU1YkLEbqSx5DKt4t6avop"
+  },
+  "x360/FRONTEND/PLATFORMS/CAREER_SAFEHOUSE.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/PLATFORMS/CAREER_SAFEHOUSE.BIN",
+   "sha256": "e1de5ed2295ad4744d8bf3b2709356285cc04258343d106d5b66d109a6224a04",
+   "size": 30793152,
+   "drive": "1GQYOYn0XkOX1ml45Af62b-qIHmrtcQxR"
+  },
+  "x360/FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP.BIN",
+   "sha256": "6a9b061b4725341f3b1bd648bd4a742bd046308714892572f8418d5265725381",
+   "size": 23209088,
+   "drive": "1uWAMbcbk_2nvuViuHgYI-RkjmONrFdt2"
+  },
+  "x360/FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP_BACKROOM.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP_BACKROOM.BIN",
+   "sha256": "179a54f9a95af0cad4f9621276c32f8aee0210add723808ea816c418f2275446",
+   "size": 23181360,
+   "drive": "1F2RfqwFdqb5K__NV1oqW1-PGdT-8miBD"
+  },
+  "x360/FRONTEND/PLATFORMS/PlatformCrib.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/PLATFORMS/PlatformCrib.BIN",
+   "sha256": "368cdb853599ec93ea3e15325e78ed27cfcd7569e59b2d57041b7ef1e788b0ab",
+   "size": 32331104,
+   "drive": "1UgXsxXB7WLpbPK85NuTO5iB8hUHtna_L"
+  },
+  "x360/FRONTEND/FrontB.lzc": {
+   "name": "Xbox 360 Stuff Pack 4.2: FRONTEND/FrontB.lzc",
+   "sha256": "893306a6292faee5360c691ba598e1c564c3bc5a138ca7376d8b5cb390ee1c3c",
+   "size": 13895352,
+   "drive": "1SYX7sWSd8QpPpluDg_PG-MPbOtID5jCP"
+  },
+  "x360/FX/COMPILED/car.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/car.fx.o",
+   "sha256": "8f4f7ead4b758fe5d1508faf6c30fc98ac95393dc44aed953e9f0f42bdab8c4d",
+   "size": 37244,
+   "drive": "1cbTmf3uTwhidgTvWit_h5qlJ46oFopw-"
+  },
+  "x360/FX/COMPILED/carnormalmap.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/carnormalmap.fx.o",
+   "sha256": "3ee88c716aea66e6c4043b42916ca52e5c8fbd9911320bd443ebf4c89e13b764",
+   "size": 33900,
+   "drive": "1FHuSAulCOIBIykBMUKEEV714JL0D_WuH"
+  },
+  "x360/FX/COMPILED/debugPoly.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/debugPoly.fx.o",
+   "sha256": "266e11361d566e7da0180f44ee79fe33e8dd7da8359f6e95c88b83e7b6e8ad64",
+   "size": 6308,
+   "drive": "1yKBEuA6xRrcLBeO7D9JmzZsqN_aXD4A5"
+  },
+  "x360/FX/COMPILED/grass.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/grass.fx.o",
+   "sha256": "15b2948441d07ced7d58fd16229b654ba48d361088089e2deb68f8450583eb26",
+   "size": 117040,
+   "drive": "1qm5-6ohdYWBX4sZehT3OWAOkWsPUBTlk"
+  },
+  "x360/FX/COMPILED/hdr.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/hdr.fx.o",
+   "sha256": "3bd86ef4c60a0fec44d48c1cbdc8c8be396736b83b75362e13dd0aadeb44373f",
+   "size": 23084,
+   "drive": "1Ko3DjyPfJF00Eu0HOmyDBIu_7S_gwFwb"
+  },
+  "x360/FX/COMPILED/particles.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/particles.fx.o",
+   "sha256": "38dc9ac67749ae4ead91c054a079afbd0941470527a70c548822fecf0557e1a4",
+   "size": 19844,
+   "drive": "1x7R_g6fNP11eLW1YcNxx5qmnEo06MD-b"
+  },
+  "x360/FX/COMPILED/shadowscreenfilter.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/shadowscreenfilter.fx.o",
+   "sha256": "f4400ced679f56a07101b8aefbd5177873696d4721509d1ae9a095a5084cc0f3",
+   "size": 688,
+   "drive": "1scz67OLPxxfCM5j5xmq-JJtNVOwIo9wU"
+  },
+  "x360/FX/COMPILED/shadowvolume.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/shadowvolume.fx.o",
+   "sha256": "2468d6746b777cde99b267b5fbbede8518f487bcdfc24a41e53efe7502f8e057",
+   "size": 6648,
+   "drive": "1kiaa9lYyR1wD86p5-2pF2su6W12biERh"
+  },
+  "x360/FX/COMPILED/sky.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/sky.fx.o",
+   "sha256": "ce9fbc32e9403cbff6fa52d81a761877fbb3e7610845d6530b5e6fbc91789a0f",
+   "size": 15728,
+   "drive": "1kh0rL0ePBO7VMUkV6JIVN5fFd8ZDqMUZ"
+  },
+  "x360/FX/COMPILED/standard.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/standard.fx.o",
+   "sha256": "a287f0ab377359487dc244d0d01c7de0114a693ce664fb842d512927475bdcd8",
+   "size": 10368,
+   "drive": "1meThfnGrg4UwqGgeVZ7FPMUBAknOlUGd"
+  },
+  "x360/FX/COMPILED/trees.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/trees.fx.o",
+   "sha256": "9c54798a18cd7d8557dee30981df63bac01a7ea8cf5f75930515705669c189c2",
+   "size": 19160,
+   "drive": "1SFHCoee0t_SbrzmovbsPVMRJ38lb9PW-"
+  },
+  "x360/FX/COMPILED/visualtreatment.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/visualtreatment.fx.o",
+   "sha256": "dcbf8fa0d6f8ad5e3f2df602fc5ba812346bec1d4b4c66ec4d5d0eddfb182bb2",
+   "size": 12600,
+   "drive": "1Akmk0euvtUl3tnkvT-wvlh_OMhZSjO4X"
+  },
+  "x360/FX/COMPILED/waterseashader.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/waterseashader.fx.o",
+   "sha256": "1de277d831aebcccac6df8d68460f8a83246898a5ef97053feffedf50ed59391",
+   "size": 14856,
+   "drive": "1YmF4ya7PUPfObMAA541B4pFBIHnMAuuC"
+  },
+  "x360/FX/COMPILED/world.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/world.fx.o",
+   "sha256": "8b1ebc2cefbc7becd47063b23ecab092730c03375a42cfc051eba6536dcf03ad",
+   "size": 25468,
+   "drive": "1DSleqOEix1PzuBeEuTGrp0mbjvKpPVQU"
+  },
+  "x360/FX/COMPILED/worldbone.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/worldbone.fx.o",
+   "sha256": "f947e965796639cc971d3487a87d6e7a163c74f4e37348ef898635f8872c5a3d",
+   "size": 31136,
+   "drive": "1wMkKuZJJpEflCWWLQj2OE-z7cQIgustV"
+  },
+  "x360/FX/COMPILED/worldnormalmap.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/worldnormalmap.fx.o",
+   "sha256": "225bf81d038e9ff530e2ce9ed14700cd5a443f374f51372615abac6194f9fc12",
+   "size": 37684,
+   "drive": "1fqJCLJdkOE7_RwAALTfhCUndtroq6w-M"
+  },
+  "x360/FX/COMPILED/worldreflect.fx.o": {
+   "name": "Xbox 360 Stuff Pack 4.2: FX/COMPILED/worldreflect.fx.o",
+   "sha256": "b590d6bd15e59e848bbfc3fc4986a185f16629292d8d409cfa641b9489d8bce1",
+   "size": 55216,
+   "drive": "1_Sa21Q_TOhit_l4NZaG7n9D4VE_Lw-ol"
+  },
+  "x360/GLOBAL/attributes.bin": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/attributes.bin",
+   "sha256": "ba5284400e60174c5fdca0d3dca711ca76060a0509a6e9635bd69ed00fc5e533",
+   "size": 649832,
+   "drive": "1KJizBIvYeUU6juEwI-_U3CHukIF7k4aT"
+  },
+  "x360/GLOBAL/DYNTEX.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/DYNTEX.BIN",
+   "sha256": "23eeec1923ab00ad555da6c78bd51884f59f32be23b1dc0cd743de6c024333f2",
+   "size": 8570880,
+   "drive": "14hrN8U1QXNz3X-GruJdqgLdRKB0AMDdP"
+  },
+  "x360/GLOBAL/GlobalB.lzc": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/GlobalB.lzc",
+   "sha256": "46c800716026c9bda47b7e63fc301ba5b76ff6298728331e6ac11fcb4f67d70a",
+   "size": 10339800,
+   "drive": "1o9FCcY2VRLVpQikbPDuyIz1b1h5BpY4n"
+  },
+  "x360/GLOBAL/GlobalMemoryFile.bin": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/GlobalMemoryFile.bin",
+   "sha256": "da2df598dca42b3090df0d2abfc35b97dedf9030262c1a272d1100c9eee60e5f",
+   "size": 366,
+   "drive": "1UFafFhedt7t6SZFR9qiqp_gnlYHl93ce"
+  },
+  "x360/GLOBAL/HUDTEXRACE.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/HUDTEXRACE.BIN",
+   "sha256": "fc334f5079678e5f9243249c07e4587bc3f9555faf4747bfd8b2a88fb955b4a9",
+   "size": 157312,
+   "drive": "1rRFf2zMf029yztiEAbTb7EMC5tUJPMZ3"
+  },
+  "x360/GLOBAL/HUDTEXTURESPHOTOFINISH.BIN": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/HUDTEXTURESPHOTOFINISH.BIN",
+   "sha256": "c7bace62a48103e47f1eaac572bc0fd2673b5da7930aa60e6c874f758a548f52",
+   "size": 1986176,
+   "drive": "1IXmEGywVLCHPpb_RV7ed9m-akrI2j8n2"
+  },
+  "x360/GLOBAL/InGameA.bun": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/InGameA.bun",
+   "sha256": "e4f4f889023d478acc308e408f908986ac0479c8cff4a1f2dd154364b1e29a04",
+   "size": 6469376,
+   "drive": "190uTWoHO4fJ0POzYjC_OBP1P-f6r95eS"
+  },
+  "x360/GLOBAL/InGameB.lzc": {
+   "name": "Xbox 360 Stuff Pack 4.2: GLOBAL/InGameB.lzc",
+   "sha256": "b54d27f5325587071579f3189b47f85557e981fa7a9a0312da85705888cd236b",
+   "size": 2507864,
+   "drive": "18wyNuoD0tw0uWYaBTSvXb1zjlO_ZPbTW"
+  },
+  "x360/scripts/NFSMW_XenonEffects.asi": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/NFSMW_XenonEffects.asi",
+   "sha256": "5dcad612125be0f13426644b044a2a18874fc2d84726c033e97975e262256692",
+   "size": 72192,
+   "drive": "1EEEDUWDSZZB_Qpk15FcFnj_rrd87eZBX"
+  },
+  "x360/scripts/NFSMW_XenonEffects.ini": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/NFSMW_XenonEffects.ini",
+   "sha256": "140cb48f22406fb3acce35756d959824bb1b9561b8d0a71aebd2a0d6c646b1e0",
+   "size": 2124,
+   "drive": "1E7h7uIpquaACn0W6PXGypot2f8_Ajcwi"
+  },
+  "x360/scripts/TexWizard.asi": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/TexWizard.asi",
+   "sha256": "116e96e5e6f43941324bff8b420d9bfcfcf6a96d09e116d8c075bf4ff6f9151d",
+   "size": 323072,
+   "drive": "1H3lDFjnRtUcCcKXLB5-F0Rs5ATD4eEHx"
+  },
+  "x360/scripts/TexWizard.json": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/TexWizard.json",
+   "sha256": "e3b0985e8df65891acc5d76a660760067691f7681be916dfc643d54a41dd5f9a",
+   "size": 55,
+   "drive": "1KwdA8G8YhZe2Vjf5pQXeEzGgT18JVyNL"
+  },
+  "x360/scripts/X360Stuff.asi": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/X360Stuff.asi",
+   "sha256": "70171ad75d5ccdf6032bed161fbcdad6a0799b2f7c717af6d977e3571dd185bf",
+   "size": 402944,
+   "drive": "1Ct93KwBpxcEEefeiq2xAPqkj7GRSq-Z1"
+  },
+  "x360/scripts/X360Stuff.ini": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/X360Stuff.ini",
+   "sha256": "2aacf8ed772084335d0dad2a6b7a3d69db84526fc87b268a9285e849f63b85ab",
+   "size": 7264,
+   "drive": "1RwCoiODyQFf806Ul2WrcxzscUspciMMa"
+  },
+  "x360/scripts/XenonEffects.tpk": {
+   "name": "Xbox 360 Stuff Pack 4.2: scripts/XenonEffects.tpk",
+   "sha256": "b7d3fe2ebdc520a650b0972eb71cf7ba0de27a6789a32501f5f8aee311008328",
+   "size": 353152,
+   "drive": "1n_ijoO1_7Qxulc92DyvYPZR_lwJDGGHR"
+  },
+  "x360/SOUND/ENGINE/GIN_350Z_01d_shrt2.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_350Z_01d_shrt2.gin",
+   "sha256": "bdffcc0476bc08d4a9a0ae5c20e9145d615b2d8dac825732bc53224ef70c0616",
+   "size": 84513,
+   "drive": "1fzxSfwmPil01kwyBNk2L__dwQx713Vs5"
+  },
+  "x360/SOUND/ENGINE/GIN_350Z_Jason_shrt2.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_350Z_Jason_shrt2.gin",
+   "sha256": "bb2192d4adcfa7aa8b2c76e201637aff961b89825172a67e23d4ee58441815d5",
+   "size": 89175,
+   "drive": "1yUnZtUukjQAngXmw54asaNObeSFwUE0k"
+  },
+  "x360/SOUND/ENGINE/GIN_Audi_S4.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Audi_S4.gin",
+   "sha256": "ca6b93835e0f4cd22a010d85dc1db56f6686436862061b4f620fc1b135bf14f9",
+   "size": 152089,
+   "drive": "1dqd3gSBBtBgDngN12kcluWJJ4PXkZ47R"
+  },
+  "x360/SOUND/ENGINE/GIN_Audi_S4_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Audi_S4_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1G4D9mXZheIpBsPmmpwnjKup5zcOeWVPP"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_328i_e46_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_328i_e46_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "11_TSw-woOwhYGhhIVPhY8IKBGltKsErn"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_450i_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_450i_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1tGXz3VlsOozIPDQJLeiMnCQ6JlgI9pdN"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_LagSeca.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_LagSeca.gin",
+   "sha256": "14583ebafe43f9119fb725d6f9b0a8fbd0044ccd34159a6a39d3fdac2bde82d4",
+   "size": 169512,
+   "drive": "15gBzD5t7GCWohb3R3IigfmgBDuHJtFdQ"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_LagSeca_V2.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_LagSeca_V2.gin",
+   "sha256": "d7da8f537e88523df6b37bd5fc02d5d1c31b6552557a74c106be0e51b4eb8f88",
+   "size": 377933,
+   "drive": "1QUSOK0PFaxmzZWJy-H0gT9HbfRei_DnU"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_race.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_race.gin",
+   "sha256": "c089e00a94e4b9b566075200b0ba525c218bcbd0e206addf0b1c84284ebf1b6b",
+   "size": 142405,
+   "drive": "1j0d81X2tUl_hv_nm_uXauBmyTutX5Jjo"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_race_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_race_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1ViKzBM6opulQdMnSKSmKucTSZjjElCWl"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_Silver.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_Silver.gin",
+   "sha256": "866a7268e3e13666150128c7d7e3a43c8845b8eaeac7da731de9865644d93886",
+   "size": 92752,
+   "drive": "1SRLgJMjsA_T8PwQczDg0MVFNVjMX038p"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_Silver_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_Silver_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1W71hhJuOLeOer_4o5dSApxeXc2Uc55RZ"
+  },
+  "x360/SOUND/ENGINE/GIN_BMW_M3_white_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_BMW_M3_white_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1QCS1THa2uZEIByOtwR-5V42Ob_3k16uc"
+  },
+  "x360/SOUND/ENGINE/GIN_Bronco_Comp.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Bronco_Comp.gin",
+   "sha256": "5e99f509151fc277f441978517f178931b8d673d73175cc78520d2c30f18ec9b",
+   "size": 103931,
+   "drive": "1_mV1PdtOmlGYUVvbikCQROdbOCkMWQW-"
+  },
+  "x360/SOUND/ENGINE/GIN_Bronco_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Bronco_DCL.gin",
+   "sha256": "fd67d90de041763326fb5aa1591968e16aaefc283482f597678a211a1a68b245",
+   "size": 6221,
+   "drive": "1lExyNeDKzNjY_8_RmPKt1u34wSDYPtLQ"
+  },
+  "x360/SOUND/ENGINE/GIN_Cavel_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Cavel_DCL.gin",
+   "sha256": "6189921e0a87f90a97287bb7b37cfc8048a250c60b7586e7b54620f6035651b2",
+   "size": 50277,
+   "drive": "1LCFIxEBJLDTZ1fe32bTRVD68zKkueUOh"
+  },
+  "x360/SOUND/ENGINE/GIN_Cavel_v1_Base.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Cavel_v1_Base.gin",
+   "sha256": "742841694b5e03ee11e59e6af05c7ce3092274c827643beec2f4c1f9561bf19b",
+   "size": 95038,
+   "drive": "1Do1zKCapSUBogmZbMdD9YdLOFiHyTUNn"
+  },
+  "x360/SOUND/ENGINE/GIN_Cavel_v1_Lev1.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Cavel_v1_Lev1.gin",
+   "sha256": "8323b78c5dc03047db7f00aed53e581f03bfa77ba365f71ad1192501aece2149",
+   "size": 100625,
+   "drive": "1bKUGdZ3rbFG18ghIsS1PyfzgL72vzo7B"
+  },
+  "x360/SOUND/ENGINE/GIN_Corv_z06_dyn.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Corv_z06_dyn.gin",
+   "sha256": "05d2572dc1ea0992a40a873c74cdc3d4a1e5cfecdc8a7735a17b860946c1c218",
+   "size": 144090,
+   "drive": "1d8fuoERGZO2QMXKW1k-pong-Pvg94rKw"
+  },
+  "x360/SOUND/ENGINE/GIN_Corvette_Z06.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Corvette_Z06.gin",
+   "sha256": "fe9b30f0e37cf58add5af2e5f43b68c78eea2af517de65b04f0325c7d2c9a161",
+   "size": 133963,
+   "drive": "1fw8wtpXmowzAGdfRp1Yn9CsaFikLr3e-"
+  },
+  "x360/SOUND/ENGINE/GIN_Corvette_Z06_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Corvette_Z06_DCL.gin",
+   "sha256": "c8a5714fc4e112fb0c2e780c4c00e01e395ad0fb0e41b191f3ba36126ff859c1",
+   "size": 159233,
+   "drive": "1uZ2ystSqM10--bKXsiSdNVAaCWVUwYxd"
+  },
+  "x360/SOUND/ENGINE/GIN_DB9.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_DB9.gin",
+   "sha256": "dcd222b328a5b6fb156f8b130e7395488f19fd0c9bd2b6ad28a8db34ada5e85a",
+   "size": 145508,
+   "drive": "11SSwbJ8ue5uBph0S1eg6cxyLP35cPK5G"
+  },
+  "x360/SOUND/ENGINE/GIN_DB9_upgrd.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_DB9_upgrd.gin",
+   "sha256": "dc06b0a7095ba7c2553a6cef76ab15d87e77f4f3e80d5d955e3cbdeea0c21e3b",
+   "size": 164495,
+   "drive": "1N4L7etaw6tpinhfKombqUVO-c5feZ0Xf"
+  },
+  "x360/SOUND/ENGINE/GIN_DB9_upgrd_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_DB9_upgrd_DCL.gin",
+   "sha256": "6f2fb43bc0f7d1a192be3cd154d5e6561ddb0de90b73277e2b020d73ce26e39a",
+   "size": 167300,
+   "drive": "15Gm4QFWmG_q_2pGqWh2tAdxpT4-UqnAA"
+  },
+  "x360/SOUND/ENGINE/GIN_Diablo.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Diablo.gin",
+   "sha256": "02d9da69316f1f31866c30dc353236bdf2532f22ce95962dafce03bb11b2f9f2",
+   "size": 163346,
+   "drive": "1ubHFYqY2o7J23i62QtS2l8E62PYqkhe7"
+  },
+  "x360/SOUND/ENGINE/GIN_Eclip2000_v1_CD.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Eclip2000_v1_CD.gin",
+   "sha256": "7422d3336f172623d66981c7544d5e562283427861636a7c8215321f854d33c0",
+   "size": 93095,
+   "drive": "1bD1G0zS_y8NcsFT0XvqsB4VPZ5fkJCDj"
+  },
+  "x360/SOUND/ENGINE/GIN_Eclipse_2000_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Eclipse_2000_DCL.gin",
+   "sha256": "9d70add71514c779c5561d2f94b562a265841aae12393661b8bf474758670855",
+   "size": 17767,
+   "drive": "11Xt9iMtRqqJnWHOf0YNwwMv0L8NfYbKs"
+  },
+  "x360/SOUND/ENGINE/GIN_Eclipse_5Zigen.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Eclipse_5Zigen.gin",
+   "sha256": "4a9c33180e0006f0afeea77c1eaea0f2dc4f6dd2ef8e2457e74e1afa40312f6a",
+   "size": 90679,
+   "drive": "1yQFrTfeEqjhISshhagXzFsN6aEfCcJjD"
+  },
+  "x360/SOUND/ENGINE/GIN_Ford_Focus2_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Ford_Focus2_DCL.gin",
+   "sha256": "8d41f04cce5c9a09f2e4bd27c7f1537458a133801a93a8b0e8cce93b29d9c95f",
+   "size": 31048,
+   "drive": "1i_F-uSP4EOBIIr9XiS4svSOPZe8K01D5"
+  },
+  "x360/SOUND/ENGINE/GIN_FordFocus_comp2.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_FordFocus_comp2.gin",
+   "sha256": "30f6403801020e8386b0f798d07ddd12ebdaf47fdd03987537b15bce55a44574",
+   "size": 88322,
+   "drive": "12wPJNNZ2ULt2fjFniD2i5m_8zUKXFQUM"
+  },
+  "x360/SOUND/ENGINE/GIN_FordFocus_Road.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_FordFocus_Road.gin",
+   "sha256": "7fc8439b45b2ae7fecb9274239ff242b8566656b2e74f635eff2088e54748a6e",
+   "size": 91068,
+   "drive": "1lvr6yHTOqdGpZpR7ln5khx18fD8DQUZO"
+  },
+  "x360/SOUND/ENGINE/GIN_Gallardo_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Gallardo_DCL.gin",
+   "sha256": "96e9953902eba1b849d1ae72ba22096bcf64ef8ef70b410bf6e30aa48dd37c8d",
+   "size": 91213,
+   "drive": "1r39CJ-W3oKhUeJsrcW9YlRlOozCBR7Dc"
+  },
+  "x360/SOUND/ENGINE/GIN_GTi_Pull_01b_shrt.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_GTi_Pull_01b_shrt.gin",
+   "sha256": "9b53c81e28a99d365e50a7e631cbac5f86937128c5fc128d5f2b68c05ff38a50",
+   "size": 83080,
+   "drive": "1eW4oJCDcDtq1IPgz6n18VCBSJhtYWUzA"
+  },
+  "x360/SOUND/ENGINE/GIN_GTO_65_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_GTO_65_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1zai-iaas6wMXW68aZyGOwrPpf7dXTcyA"
+  },
+  "x360/SOUND/ENGINE/GIN_Honda_Prelude.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Honda_Prelude.gin",
+   "sha256": "8c84d538c8f8ffd77aa8b1a3255eb90035f12b404375c6b278e75180928b54eb",
+   "size": 87956,
+   "drive": "16aekDoQeUvvvnF61iGlQ9b4udbrLrBuM"
+  },
+  "x360/SOUND/ENGINE/GIN_Honda_Prelude_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Honda_Prelude_DCL.gin",
+   "sha256": "9c39cb099de72d8fb5ebd9d5e50aa0e1a50a6d19d099ee5aad837bc3c02ac805",
+   "size": 40016,
+   "drive": "129FiZ0kdqa40furV7ZqaLz5VyLXcJSNl"
+  },
+  "x360/SOUND/ENGINE/GIN_Honda_S2000_5zigen_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Honda_S2000_5zigen_DCL.gin",
+   "sha256": "401e24cfdd80cde19a7801f38154450fd9f1ba9c08b2e5ffe4a59b263c9d9df0",
+   "size": 25996,
+   "drive": "1UrvMOuSFgLHRnxaJLJTuHO8KyP_In-Ny"
+  },
+  "x360/SOUND/ENGINE/GIN_Honda_S2000_Spugen_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Honda_S2000_Spugen_DCL.gin",
+   "sha256": "d713d9e0464e2d90fd5e623b8cfb71394afd2ea28718a817eb8d0f6d9c3c89dd",
+   "size": 50063,
+   "drive": "1MsXbU79AxIBRD9cFlpNT9u4kvkfWvpqE"
+  },
+  "x360/SOUND/ENGINE/GIN_HondaS2000_Church.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_HondaS2000_Church.gin",
+   "sha256": "3c9499d38c6dfc9ba7ef1506544d0cd0e814ebd7e79b5f621f61c0aaebc985a5",
+   "size": 78582,
+   "drive": "1cPonjnxSdN-gFim-fRsVBXSIpw6GQWMF"
+  },
+  "x360/SOUND/ENGINE/GIN_Infinit_G35_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Infinit_G35_DCL.gin",
+   "sha256": "9a2ee6722502e9d3451414d656d6de1d16a0e56b35b72602d7396983cfd3a3bf",
+   "size": 58193,
+   "drive": "1rHOnSJ-7uGHI7osBMAuxgssux15Xihq6"
+  },
+  "x360/SOUND/ENGINE/GIN_ITR_Pull_01cc_shrt.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_ITR_Pull_01cc_shrt.gin",
+   "sha256": "947fc0bf13938b7f366580b55ea5e9d109cb239440dab3683176d18fb3546f70",
+   "size": 103942,
+   "drive": "1crEgByj99oATBxHiyt93zBekFDo9lsNc"
+  },
+  "x360/SOUND/ENGINE/GIN_Lotus_Elise.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Lotus_Elise.gin",
+   "sha256": "a08a885b27b41d8f68f7228f3d0790a23f62b48a09fd7bc9dc311f7fe5cc9725",
+   "size": 192612,
+   "drive": "1R0n6kSr0C5mY5B2luWNx6CcpxoFvkggy"
+  },
+  "x360/SOUND/ENGINE/GIN_Mazda_RX7.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mazda_RX7.gin",
+   "sha256": "006fb962ceb99f756411d1a5002abd94bd67fe547632610cb1173ee40c3c1a2a",
+   "size": 56884,
+   "drive": "1gNbkbDbCzcE7mi4xRfxIn8UZHJ3luquf"
+  },
+  "x360/SOUND/ENGINE/GIN_Mazda_RX8_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mazda_RX8_DCL.gin",
+   "sha256": "1c7916226fe2d3645ba160395dadcd22f87104754890937fdf832a9a67aac897",
+   "size": 22408,
+   "drive": "1kHwrB-4_EH53ZjO608DBSI27PJq8Zxoc"
+  },
+  "x360/SOUND/ENGINE/GIN_MBZ_SL65.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_MBZ_SL65.gin",
+   "sha256": "84a88ce979888181a64a3941a62ec8f50f6a0933e81725eea2d90ca65a1ff951",
+   "size": 135744,
+   "drive": "1x_vHyTbQTNOlET4xEQ6yimPu4E7J8kHf"
+  },
+  "x360/SOUND/ENGINE/GIN_Mits_5zigen_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mits_5zigen_DCL.gin",
+   "sha256": "48eefebba99161ad2cbedc4f5eda788efed06651b2ad73d46760ed5067a7f247",
+   "size": 25233,
+   "drive": "1dMPTeypR6sx3PjbEPGxWNmWDLM4Asgu3"
+  },
+  "x360/SOUND/ENGINE/GIN_MitsEclipse_2000.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_MitsEclipse_2000.gin",
+   "sha256": "7948fecf7a9387af50bcd2cd99a0fee2c28b3605fe6dafcc35a8db7742a60b67",
+   "size": 98182,
+   "drive": "1f5O4nv5-VYC_vR8P4hQb3ii1t9AzJWyR"
+  },
+  "x360/SOUND/ENGINE/GIN_Murcielago.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Murcielago.gin",
+   "sha256": "fdd36e024c5dd07f9f233ab9a05cf09d5b485c6dee67a4c5966a86578315735a",
+   "size": 154551,
+   "drive": "1gwoc8KRMtUrWXevqRx-OB3rBIWCI9CAe"
+  },
+  "x360/SOUND/ENGINE/GIN_Murcielago_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Murcielago_DCL.gin",
+   "sha256": "a7bf6802aaf792ce97205b0bcf81e6e1b6474cd1686fc870969f13b56faa5f0c",
+   "size": 69304,
+   "drive": "11NtJvyXrF1auuumxTGeEidSEXZ6HnYvg"
+  },
+  "x360/SOUND/ENGINE/GIN_Mustang_Drag.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mustang_Drag.gin",
+   "sha256": "947f16acf3516813c471003fe94dd3ea760df9dac7354a52be73a12e26d6ed7d",
+   "size": 95224,
+   "drive": "1ULIcCT1XyJAItBnJk4mYLSbCo_5O8fVd"
+  },
+  "x360/SOUND/ENGINE/GIN_Mustang_Drag_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mustang_Drag_DCL.gin",
+   "sha256": "89a0955bbaa9e49edef0bcece48d089fc619d0780847bdc0924e909ef5450ad7",
+   "size": 62781,
+   "drive": "1pYQLN8pY2C8acG-Ut_RpNOZKBmcFvs7V"
+  },
+  "x360/SOUND/ENGINE/GIN_Mustang_GT_A.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mustang_GT_A.gin",
+   "sha256": "4564cf586a4eccd4e333da01bedfbd87bb0c96e9bfdb6a38c07ae64eab285863",
+   "size": 364116,
+   "drive": "1w0nKVC4eNZNX0E7AL_unMObS5WYWpzoh"
+  },
+  "x360/SOUND/ENGINE/GIN_Mustang_GT_A_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mustang_GT_A_DCL.gin",
+   "sha256": "db499a224ef31d2b6b55e7b938abad7b9c715cf0bc651982047d8c3fca79d5ca",
+   "size": 248709,
+   "drive": "1pMRDRNCsFOS-xyo5gkClSzZn856CD1lN"
+  },
+  "x360/SOUND/ENGINE/GIN_Mustang_Nscr_COMP.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Mustang_Nscr_COMP.gin",
+   "sha256": "a0774621e30a92d6d0e84fb9e227897261b8e99d5421b28404c9aceddb8d294f",
+   "size": 96433,
+   "drive": "1fq8udqt7ChWdQ8N-EpZsnXLXgRGp_LVJ"
+  },
+  "x360/SOUND/ENGINE/GIN_MustSal_Ramp_V2_CD.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_MustSal_Ramp_V2_CD.gin",
+   "sha256": "e3ee019e70c5b1ba5f1129f4c4446ed2f9bdd91f5882388ddf008d5c5cb2d6cc",
+   "size": 96722,
+   "drive": "1qdJlBoLQZh9rt57Ti2soAjI-vyKC-lBf"
+  },
+  "x360/SOUND/ENGINE/GIN_Nascar_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Nascar_DCL.gin",
+   "sha256": "d411853ba442062506fb0d8e43d06540a894bfa33d4ff7d76f6dccb28644ca56",
+   "size": 47918,
+   "drive": "1mbOw6bC9obKvpJEen4JGxqUmzi84ptti"
+  },
+  "x360/SOUND/ENGINE/GIN_Nissan_Skyline.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Nissan_Skyline.gin",
+   "sha256": "fe8242385ce441a8edf0cc03e292c07619534f5ba6d420fb8b69da0beb707439",
+   "size": 87504,
+   "drive": "1OMtPRApcKXO9Zzj5h5hlPipdhb0QllP_"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_911_RSR_orange.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_911_RSR_orange.gin",
+   "sha256": "92ed23f3c2b40d922f21b27791c3745575dbbf2c9fc79682a266c3259bd24784",
+   "size": 153136,
+   "drive": "1xkj57fc1CTqSO6Nq7y_rzmbcrdzUVDNM"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_911_RSR_orange_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_911_RSR_orange_DCL.gin",
+   "sha256": "825cd38bbac263391ad5873c9bbd28ed1ab995f4ada192e662787575100d4c88",
+   "size": 185617,
+   "drive": "12_J7mH5hrYIO2Ch2ZM1RRg-u5rVGIPR3"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_928.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_928.gin",
+   "sha256": "3cd96df6259c6975edfc89d5fb0973b5f75458da4c19058c1e23793a218e21b5",
+   "size": 135552,
+   "drive": "1gwkk9Nt15aw6Hbb0E1TK29jxtawhnLc0"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_928_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_928_DCL.gin",
+   "sha256": "ce125821460885684fa2b05bf9274933c131f17aa7c9f5e5452a98f5f0078511",
+   "size": 151672,
+   "drive": "1qHBj8r7zywpBVGCfyCRurcNhnfQwyysm"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_928_V8.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_928_V8.gin",
+   "sha256": "95bb286cf11ed8ce2256c0ce8e9daa7c3afd06dd28b1465cffe8f4701c88da24",
+   "size": 133055,
+   "drive": "1Lj-4tMPRoMqH6fh4QieYPsd3HFzj5BQ_"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_Carrera_GT_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_Carrera_GT_DCL.gin",
+   "sha256": "96e9953902eba1b849d1ae72ba22096bcf64ef8ef70b410bf6e30aa48dd37c8d",
+   "size": 91213,
+   "drive": "1DFwnWx_GpSOd8LcuY_vYm4mvyCAXmi--"
+  },
+  "x360/SOUND/ENGINE/GIN_POR_DP6.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_POR_DP6.gin",
+   "sha256": "24a365370c0f2a0998985ca9250abff32465355ba0e1ec49f8e73df05edb181a",
+   "size": 158635,
+   "drive": "17r4grdTNVE8tGjl6adCRvo3AVjCw7v7S"
+  },
+  "x360/SOUND/ENGINE/GIN_Protege_Ramp_Lev2_CD.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Protege_Ramp_Lev2_CD.gin",
+   "sha256": "38410bd648239deae5b058084582a14391e0bdef6569e6db0e7da7d88f22e2c9",
+   "size": 91139,
+   "drive": "1xFw_Fc0BkJZOcQwzjYI5hNOOFBlfTPql"
+  },
+  "x360/SOUND/ENGINE/GIN_Protege_Ramp_V2_CD.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Protege_Ramp_V2_CD.gin",
+   "sha256": "ff6335fea3b75d82981354b88393bf96586c69a1aab71646bc863c9b177dc0f2",
+   "size": 93776,
+   "drive": "1CvCsHitKkfRwEGy9eMNdUEimaHSMmMv2"
+  },
+  "x360/SOUND/ENGINE/GIN_RX8_Ramp_v1_CD.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_RX8_Ramp_v1_CD.gin",
+   "sha256": "525aadccdedb3e43843eb29bfe9214f169eea7e7c08b78e51b61c20bf4be085c",
+   "size": 95679,
+   "drive": "1--waK_RWI9lREgrSXKIXQfeBDBYL__rX"
+  },
+  "x360/SOUND/ENGINE/GIN_S2000_Church_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_S2000_Church_DCL.gin",
+   "sha256": "393fdd4995a88ae0225416c1cb2dd8c99baa87bac72ba4feece960aaaca84f7d",
+   "size": 22383,
+   "drive": "1vU7wd3I70JSrTstzb6wCDIonoZc7xQUd"
+  },
+  "x360/SOUND/ENGINE/GIN_Toyota_GTS.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Toyota_GTS.gin",
+   "sha256": "997b0be4866a170397ca8d3c1b81d3b31ed7969ef48f4f4959ffde2a3384675f",
+   "size": 92530,
+   "drive": "1f-JZPkUF-5dWRbr9YCWq_GojwLc5W50q"
+  },
+  "x360/SOUND/ENGINE/GIN_Toyota_GTS_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Toyota_GTS_DCL.gin",
+   "sha256": "5cc60a04bcc8af9b304253f58ebfafc43da0c3ebd6b73cb5269b2fa623888dbf",
+   "size": 29648,
+   "drive": "1KWSAyoaj7-qyzATSYyzONVbKGjwJxqtm"
+  },
+  "x360/SOUND/ENGINE/GIN_TRCK_Accel.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_TRCK_Accel.gin",
+   "sha256": "56176190b075e4157130575bc5caf240f3cd339819e427d7a69716ef2932db7b",
+   "size": 136034,
+   "drive": "1xJf4OXeO6oCN_k_bEc2xwc2x8Kp6AzV8"
+  },
+  "x360/SOUND/ENGINE/GIN_TRCK_Decel.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_TRCK_Decel.gin",
+   "sha256": "afb1c489465446cb3501c7762ea45f100cf336bdb5b3b5dd13cdc2b47640cdc9",
+   "size": 175794,
+   "drive": "1QO-4InJ0RSNiUAaN39cF22LiGbofStdu"
+  },
+  "x360/SOUND/ENGINE/GIN_TVR_Tuscan.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_TVR_Tuscan.gin",
+   "sha256": "298a28aef252d31e08490ce32a252201b9cf2a7d6af5c6445134c0ffc7214019",
+   "size": 113925,
+   "drive": "1Fgig6MO9HGYDcsOUtXjuXtEa1tlKl8MC"
+  },
+  "x360/SOUND/ENGINE/GIN_Viper_A.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Viper_A.gin",
+   "sha256": "893cb96e562e7254151e73fe75d5dc7b2cf1b1491c978673f5d9caf8e8deabd6",
+   "size": 152976,
+   "drive": "1pfBFALWEfqHzrVOPYFyS1jvtTW87nY_l"
+  },
+  "x360/SOUND/ENGINE/GIN_Viper_A_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Viper_A_DCL.gin",
+   "sha256": "078323debb9d43ba84e440213c0b9181e69d6e6c722cd184a25b50847df9d609",
+   "size": 153227,
+   "drive": "1xunZQks-gS9qmT6VfuMPC9L_-Cxsu2Jd"
+  },
+  "x360/SOUND/ENGINE/GIN_Viper_B.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Viper_B.gin",
+   "sha256": "24505b69301704dca5ea59497995aa5340c3f2278084d9c32e615cab442e108d",
+   "size": 142384,
+   "drive": "1yprQzxjauDh5hko9gii1_0HeVhNR_atx"
+  },
+  "x360/SOUND/ENGINE/GIN_Viper_B_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_Viper_B_DCL.gin",
+   "sha256": "fef09821e8e3c624a6e31effa371083c7f353c9f461eb2fada4672f42309ca78",
+   "size": 86712,
+   "drive": "1p_PlZCJcacWp2OIs_9KqoojXLy7kjfQh"
+  },
+  "x360/SOUND/ENGINE/GIN_VR6_Jetta_M3.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_VR6_Jetta_M3.gin",
+   "sha256": "ff98c09cf68c52cb2cea9a0088b432be5912f17c546ac64806f91d2135ce2830",
+   "size": 106125,
+   "drive": "18p7sFMYc4O9zp8OwC26J1LNqrsaMexWl"
+  },
+  "x360/SOUND/ENGINE/GIN_VR6_Jetta_M4.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_VR6_Jetta_M4.gin",
+   "sha256": "636859c186bcc409df25d38d1faa2bdfd1fb1553c3ec41fb4aa6719b2c2a4da7",
+   "size": 102490,
+   "drive": "1W9WC6i4n4KCJ7J_mDdR9joTYKXGI0hGf"
+  },
+  "x360/SOUND/ENGINE/GIN_VW_Cab_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_VW_Cab_DCL.gin",
+   "sha256": "3e103c5e0bdff0b9a54382083341bcb41fcfcf21c4c9d8075c9d3eeff4c0dd64",
+   "size": 8430,
+   "drive": "1Uj4Po1fLMbPNnOoMFsGS9lthy3yII5UL"
+  },
+  "x360/SOUND/ENGINE/GIN_VW_Cabriolet.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_VW_Cabriolet.gin",
+   "sha256": "7878ce8db84c3476e250b0817557d431a7151ef86efdbce6639d2932f381b51f",
+   "size": 82369,
+   "drive": "18km5HPEJ7FMrUyedKBgNKQoAezHKuChv"
+  },
+  "x360/SOUND/ENGINE/GIN_VW_Scirocco.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_VW_Scirocco.gin",
+   "sha256": "3a75881da2d316a3fa07614e6bee38f84ef086d1c385893b297472895b277841",
+   "size": 97763,
+   "drive": "1Nl7rAeIu_9zeYcDdjWpaHTrdgZ6jH_iq"
+  },
+  "x360/SOUND/ENGINE/GIN_WRX2F2F_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_WRX2F2F_DCL.gin",
+   "sha256": "0fe53502dcce5c87ad22f446744466c69aad9932861ef0629445d365f29b8524",
+   "size": 66508,
+   "drive": "1yxXNO2bwuuSjil9E-gJK2txg_m5MzIbC"
+  },
+  "x360/SOUND/ENGINE/GIN_WRX_2F2F.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_WRX_2F2F.gin",
+   "sha256": "9eeedde594731ffe428bba528eb4f0126ae9255dc245df72834da1a7ce38e02e",
+   "size": 68032,
+   "drive": "1ntK7KEqUWRttrtvC83WELH4FhINmZHMa"
+  },
+  "x360/SOUND/ENGINE/GIN_WRX_STi_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_WRX_STi_DCL.gin",
+   "sha256": "bd8076815fff23c73a3e8edcbdad1df206948b658d8da75c846e7f154ffc9224",
+   "size": 54105,
+   "drive": "1wJd2rU2R53QM1QVWOBc8cjE-1dcay0Hw"
+  },
+  "x360/SOUND/ENGINE/GIN_WRX_Street_DCL.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_WRX_Street_DCL.gin",
+   "sha256": "ef6d0388a1c4498a279700964a77de778bae218c2f725bfb0dc4c9342ba965ce",
+   "size": 39808,
+   "drive": "1rs-hvldbSiOKa_DmWdXHoH8kggLZ2Oi6"
+  },
+  "x360/SOUND/ENGINE/GIN_WRXSTi_Pull_09.gin": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/ENGINE/GIN_WRXSTi_Pull_09.gin",
+   "sha256": "b1d83695caa16b459e62342f5528e0405c39a564114d73975d6a569848534a53",
+   "size": 77183,
+   "drive": "10HWtxVM16XOojqkJOhxqIx9OYsRV4Me0"
+  },
+  "x360/SOUND/PFDATA/MW_Music.mpf": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/PFDATA/MW_Music.mpf",
+   "sha256": "6db1c144753c05b451a8cbcb3ed8d5dcf16132e8d7b77970302100bcc2e69998",
+   "size": 136148,
+   "drive": "1Jc9GfDKDaKvOzl3Q2vB5aevAwafz_-Ax"
+  },
+  "x360/SOUND/PFDATA/MW_Music.mus": {
+   "name": "Xbox 360 Stuff Pack 4.2: SOUND/PFDATA/MW_Music.mus",
+   "sha256": "ec3dc118582d33f6d71a2f78adf1d6739e16929ac1451f467bdead9c8ca64647",
+   "size": 653261696,
+   "drive": "12b-wNjjCEaFVEVbs4OhmLsZiWOvIPQIX"
+  },
+  "x360/TRACKS/TexWizardX360/meta.json": {
+   "name": "Xbox 360 Stuff Pack 4.2: TRACKS/TexWizardX360/meta.json",
+   "sha256": "d116851b372dd1d275ee1f701d8e005a14b63dc38344da7a6accf85e741042f7",
+   "size": 27338,
+   "drive": "1mMDlEq67np9zvf6GHHQPIrbI8I7vnCiS"
+  },
+  "x360/TRACKS/TexWizardX360/textures.bin": {
+   "name": "Xbox 360 Stuff Pack 4.2: TRACKS/TexWizardX360/textures.bin",
+   "sha256": "778d8419c81c9afa5e6e698d246ec623eb688f8433df8bffec4aed270d3fd51d",
+   "size": 117720704,
+   "drive": "1JTwFMNJK-0xv1tvYCFFTet8Jw-FXw82e"
+  },
+  "x360/TRACKS/STREAML2RA.BUN": {
+   "name": "Xbox 360 Stuff Pack 4.2: TRACKS/STREAML2RA.BUN",
+   "sha256": "17929677ee21330d0141ca704d32befa0648111ca4d0f192627c1636bb431e31",
+   "size": 532663556,
+   "drive": "1klmffTLIvceVscNX4TPydqcBYYSjfx1X"
+  },
+  "hd-content-support": {
+   "name": "NFS HD Content Support (Aero_)",
+   "sha256": "60c900a8f01b12ab79625194833a83feb64c1caee07b8177c8d356ae587d5197",
+   "size": 527322,
+   "url": "https://nfsmods.xyz/uploads/mods/2151/4c35cb-NFS%20HD%20Content%20Support.zip"
+  },
+  "hud-adapter": {
+   "name": "NFSMW HUD Adapter 1.0.0.800 (nlgzrgn)",
+   "sha256": "d0c034879a797bbf095e1cd679ae5ac3701089cb547ca77292fed6ad7270a69b",
+   "size": 42211,
+   "url": "https://nfsmods.xyz/uploads/mods/638/658865-NFSMW%20HUD%20Adapter%20v1.0.0.800.zip"
+  },
+  "fe-shadows": {
+   "name": "NFSMW Front-End Shadows (Aero_)",
+   "sha256": "97c9980d0237250d66d39311930a595f7938cc0b84c7112b82deebfa06e90ac5",
+   "size": 996309,
+   "url": "https://nfsmods.xyz/uploads/mods/3005/9cbcd3-NFSMWFEShadows.zip"
+  },
+  "hd-reflections": {
+   "name": "NFS HD Reflections (Aero_)",
+   "sha256": "daaa6aefd4b0918fb8adaadcd80a4cc4322d8063270a31aeb3f75e07de386d78",
+   "size": 636650,
+   "url": "https://nfsmods.xyz/uploads/mods/3363/a486f3-NFS%20HD%20Reflections.zip"
+  },
+  "dsoal": {
+   "name": "DSOAL r648 (kcat): DSOAL_r648.zip, from inside DSOAL.zip on github.com/kcat/dsoal/releases/tag/r648",
+   "sha256": "5b4e47671dea3f9882f3686f9fd5c3a111dcd57c8170dd5bfe0f5a5f18e31966",
+   "size": 6844446
+  },
+  "console-keyboard": {
+   "name": "NFSMWConsoleKeyboard.asi, the console's build (not the 17,920-byte v1.0 release asset): put it in mods-cache by hand",
+   "sha256": "bab3fb339b5d288a5368a54def003900cba847c9fae6844396451aaea47a57a0",
+   "size": 104361
+  },
+  "async-luminance": {
+   "name": "X360StuffAsyncLuminance.asi (unpublished): put it in mods-cache by hand",
+   "sha256": "d8a35fc74a2fd44bfee36c57b8c402e031f6083b904743136524316edf60a412",
+   "size": 16384
+  },
+  "movies/attract_movie_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: attract_movie_english_ntsc.vp6",
+   "sha256": "dc92793eeae3008caad318208f3de342f10112683dd223710e93a20d535d11c5",
+   "size": 101830228,
+   "drive": "1U6l-iXOx5fbEhVsV9z_JiUsOcHoha4CE"
+  },
+  "movies/blacklist_01_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_01_english_ntsc.vp6",
+   "sha256": "346c7e49eea52ef0d359266161dc94f0dec42fe434bbe0d0476bfdd540ded052",
+   "size": 45793372,
+   "drive": "1PyFUQy5_jdeJtwsIpOMU2hU3dBPMHfF1"
+  },
+  "movies/blacklist_02_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_02_english_ntsc.vp6",
+   "sha256": "4fa1af16dde03573723936dad013e4e73bd8c56e3788649304d62b82a9d1dbe3",
+   "size": 46875384,
+   "drive": "1othMljwmQWUWhgwg1P7XxEY66ttuRYUj"
+  },
+  "movies/blacklist_03_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_03_english_ntsc.vp6",
+   "sha256": "f217f11bb6cff45586e7373b465b2c141368a3ec4d8ff56dcfb3bb48ac1fd07a",
+   "size": 40141854,
+   "drive": "1UZgJ2Wsqmife-IhIFj6egpzf5g1nzeFT"
+  },
+  "movies/blacklist_04_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_04_english_ntsc.vp6",
+   "sha256": "68b03c0df0edd219ba0da0d66c2973437a3c6d6443972d302b098329a4707c42",
+   "size": 42636466,
+   "drive": "1jXgkkok7g7PZF1FoMExVhUAAmAgYBkH_"
+  },
+  "movies/blacklist_05_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_05_english_ntsc.vp6",
+   "sha256": "d62244f020ebf1ac8cb4e5cd0f2d4a97c0b7af7c9e91d7ffb7bc87f315337905",
+   "size": 44445984,
+   "drive": "1RCnG84LqPM9sv3--lB1r-MkYTjcqWobu"
+  },
+  "movies/blacklist_06_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_06_english_ntsc.vp6",
+   "sha256": "b3b7b1fe29256051b398f30dd6046f948e10c650a95760657a83155f27fdeab2",
+   "size": 42802240,
+   "drive": "1FDrHay-7Hxowh7jasIG14zyPVo5LUchI"
+  },
+  "movies/blacklist_07_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_07_english_ntsc.vp6",
+   "sha256": "552878840cb0cc2ce642ac96c6eaaffc3044c7cf2cbb15b93c78abeea8aa9155",
+   "size": 45730984,
+   "drive": "1kVVuHuGvWkVDsWc16uKmCdCBZXOBy0bd"
+  },
+  "movies/blacklist_08_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_08_english_ntsc.vp6",
+   "sha256": "8df45ceba5509527960489996f074b788229f517d763e2a487007eb25102bb43",
+   "size": 41286468,
+   "drive": "1LRtHwLxqIQCf2hTkDQ3kvmbiQnC5HkE8"
+  },
+  "movies/blacklist_09_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_09_english_ntsc.vp6",
+   "sha256": "30aa52b432c674d609cc972ef3311bbc7b0be5466bf94cc4604815c5b156a2e4",
+   "size": 41043524,
+   "drive": "1kEB3aUtx_WdVUyBI5me5ya7QhnLreO6k"
+  },
+  "movies/blacklist_10_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_10_english_ntsc.vp6",
+   "sha256": "3fe6585f12c5d475b7bec262284e595de146c1ca7f01141b856870b750dea871",
+   "size": 43366116,
+   "drive": "1VumIKpAuVWDd3O9Yx3gQQ9pVnErKXjwa"
+  },
+  "movies/blacklist_11_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_11_english_ntsc.vp6",
+   "sha256": "a89bfb1f038fe5825be03d9b54b64507da250aa0efddf76dba073c78a1217b63",
+   "size": 46011994,
+   "drive": "1ZANL5NxjjsvK-22gsLUkdju07Yhr0vQl"
+  },
+  "movies/blacklist_12_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_12_english_ntsc.vp6",
+   "sha256": "91e6d83a59e342c84c001087c57bf23a3d08a532b6508f7ff2ee8c4fd7c6fa1e",
+   "size": 39348166,
+   "drive": "1vVKMpItG6yIbzMrtD-RQO9yghZqhlSP4"
+  },
+  "movies/blacklist_13_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_13_english_ntsc.vp6",
+   "sha256": "80c31b4a6990d954802a6494a6516ad11cbc3d3e0faa293c6c3555f8cb4a92c6",
+   "size": 38835120,
+   "drive": "10cJza871zy3OPy2ZoLYjLUMklG2jnl6F"
+  },
+  "movies/blacklist_14_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_14_english_ntsc.vp6",
+   "sha256": "1ebce4c27711cf255961a268f41112d051fa767ca7f8c9eff786eb551c45a104",
+   "size": 38715202,
+   "drive": "17PCcUVsDKr2AtHtjw4ZGBhoejnEVuFKT"
+  },
+  "movies/blacklist_15_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: blacklist_15_english_ntsc.vp6",
+   "sha256": "8a92aaf67e942e6a98a08be79abc336aa910f2032705cecc4b82520e503d48d9",
+   "size": 36913844,
+   "drive": "1A1a24T-M5RKG_fomvWHWLPwr7X5EAzPh"
+  },
+  "movies/bounty_tutorial_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: bounty_tutorial_english_ntsc.vp6",
+   "sha256": "9d63958a8c1c94abbf412d46c5ef6180dd620d2bfd691efb77db7c53aea841b1",
+   "size": 19644538,
+   "drive": "1PEarMpWLw2Qp-GBd0p1rMlDY_GBKOl1E"
+  },
+  "movies/drag_tutorial_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: drag_tutorial_english_ntsc.vp6",
+   "sha256": "9fe74a678d3acd8b129762984548992566ee5a741311bf6c5a8c8b5a71c1a2b6",
+   "size": 24818922,
+   "drive": "1j1FyOywJSyfecnoikrjAToMTxuoShwaF"
+  },
+  "movies/eahd_bumper_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: eahd_bumper_english_ntsc.vp6",
+   "sha256": "af93e1950a86e93f6baaafd37544e5438ba10a515693cb8806c8b132ca0f3358",
+   "size": 2311654,
+   "drive": "1t6NueKTqjUXuTEMgvHJKrDre9aFHilV2"
+  },
+  "movies/ealogo_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: ealogo_english_ntsc.vp6",
+   "sha256": "bdc66570e5f553e67e690fd1c2cf87ed78db1928a73de4f3f72df96b37f9b26b",
+   "size": 469438,
+   "drive": "1DBaj9pqNv2FolIMphHcS3mjZiOuHXW4u"
+  },
+  "movies/psa_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: psa_english_ntsc.vp6",
+   "sha256": "00aa3ce2fb979fa2775cf9964dec96576f051a21feba4bcd6eda6f164831461c",
+   "size": 20376190,
+   "drive": "1BedECfxAzSrthdT97QuAR4ULPZOHZzWh"
+  },
+  "movies/pursuit_tutorial_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: pursuit_tutorial_english_ntsc.vp6",
+   "sha256": "cca41a4183b0b3c04872c159cf75da6d92f3719be4f0a285c9ca3f1f0e09c2f8",
+   "size": 41555512,
+   "drive": "1qYJiVtuaO0N7okIWX2RgOcoBYkYLC5Nq"
+  },
+  "movies/speedtrap_tutorial_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: speedtrap_tutorial_english_ntsc.vp6",
+   "sha256": "dc04dd33f84e445ef541bd7b8dd9ba5e7a4dcb6c2fa91ff8c7e5eaec1e3480dd",
+   "size": 18600654,
+   "drive": "1A7gYIlR49Rw8NgpgZUP7go8t7GKHl24R"
+  },
+  "movies/storyfmv_bla134_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_bla134_english_ntsc.vp6",
+   "sha256": "32638ca75979a352bae8da828c368539c7b024afb77c82d2a3d1a36b0c45695f",
+   "size": 39246542,
+   "drive": "1uvC7eoIjKSnocpP9QBVjiPOVvN2BjBE6"
+  },
+  "movies/storyfmv_bus12_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_bus12_english_ntsc.vp6",
+   "sha256": "e0843bce8d4e255ad876c97bf668185c8fb4a7bb388f75a9ca6c0b13b6add05d",
+   "size": 263300154,
+   "drive": "1Rw1xPjjSqGvDNEehYKIUwiXv0HTY2iJA"
+  },
+  "movies/storyfmv_cro06_coh06a_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_cro06_coh06a_english_ntsc.vp6",
+   "sha256": "15be187aca6af90b6a841e7bed9789550f3396e1ff6b9cab35ee98614e7060bc",
+   "size": 310764764,
+   "drive": "1EQ9j2ltq2MOGImVyCjtdKhdGvwnVBiNb"
+  },
+  "movies/storyfmv_her136_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_her136_english_ntsc.vp6",
+   "sha256": "6ca72d590f71b607f16e244d74f3b11a27b08ec2c94e1be0bc19ad5dfb7d3bf5",
+   "size": 155780554,
+   "drive": "1b3iLRtAohBtEsDY0_JJiUgIRXEapEVnH"
+  },
+  "movies/storyfmv_pin11_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_pin11_english_ntsc.vp6",
+   "sha256": "30110fc1d0b3db4f5fdedd7031854cf7fba001898d17c697e9c302be581f3956",
+   "size": 61913672,
+   "drive": "1YUbQLX75KT8t9Tq51wO4PNSQnAlYAB2z"
+  },
+  "movies/storyfmv_rac01_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_rac01_english_ntsc.vp6",
+   "sha256": "f0bfc24fa101382cfd53fce441a5e3fad785640f09f3ec6fee391fbc838df221",
+   "size": 68402934,
+   "drive": "12TvAfGMbYJ3ceBgqioyRe7uwwLNVS2N6"
+  },
+  "movies/storyfmv_rap30_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_rap30_english_ntsc.vp6",
+   "sha256": "1dafe79c6731e799757e4c1168af8f610dab1f7750cf98a50562e4a26146b947",
+   "size": 68472038,
+   "drive": "1ysAaqmVyIYWBaTkkuvX6SHI_5SXjxmp2"
+  },
+  "movies/storyfmv_raz08_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_raz08_english_ntsc.vp6",
+   "sha256": "71d19f127b736e2308c98efaecd45294cf9cdefbb3b29c054201070542087a0d",
+   "size": 220897622,
+   "drive": "1JFe9AFLHJ87R5DYDP8Qw8IXhafx7827Y"
+  },
+  "movies/storyfmv_saf25_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: storyfmv_saf25_english_ntsc.vp6",
+   "sha256": "df5a0f4dc6b8027941a41bfcf1e428842317ad97bd631d788f8e1199a3dadd90",
+   "size": 76243324,
+   "drive": "1WhDp_V3pL4oIGbhWpBshH-shVBppLC-g"
+  },
+  "movies/tollbooth_tutorial_english_ntsc.vp6": {
+   "name": "Xbox 360 Converted Movies: tollbooth_tutorial_english_ntsc.vp6",
+   "sha256": "2ee7a3cae1be043a87106c84881755f9594e3aebc4b6126113bfc62e6f9b8148",
+   "size": 18749142,
+   "drive": "1ek_RA_tWRCjPyKDErgBaSFbvjqcMOrvd"
+  },
+  "d3d9-lean": {
+   "name": "d3d9.dll, DXVK 3.1.1 lean (prospero/v3.1.1-lean, the console's build): put it in mods-cache by hand",
+   "sha256": "ff68775bf59b322e44d9388d57d744158bb30b99a0d2fed40c692ab66375747e",
+   "size": 7966734
+  },
+  "d3dx9_26": {
+   "name": "d3dx9_26.dll (x86, Microsoft DirectX redistributable): put it in mods-cache by hand",
+   "sha256": "8ea96fe01c3c86a36fcb3795ae03eb12034003e335ef475571efaeda17c5bc78",
+   "size": 2297552
+  },
+  "d3dx9_43": {
+   "name": "d3dx9_43.dll (x86, Microsoft DirectX redistributable): put it in mods-cache by hand",
+   "sha256": "0b28546be22c71834501f7d7185ede5d79742457331c7ee09efc14490dd64f5f",
+   "size": 1998168
+  }
+ },
+ "game_files": [
+  {
+   "source": "speed-exe",
+   "to": "speed.exe"
+  },
+  {
+   "source": "asi-loader",
+   "to": "dinput8.dll",
+   "member": "dinput8.dll"
+  },
+  {
+   "source": "xtendedinput",
+   "to": "scripts/",
+   "member": "scripts/"
+  },
+  {
+   "source": "xtendedinput",
+   "to": "GLOBAL/",
+   "member": "GLOBAL/"
+  },
+  {
+   "source": "widescreenfix",
+   "to": "scripts/",
+   "member": "scripts/"
+  },
+  {
+   "source": "x360/FRONTEND/PLATFORMS/CAR_LOT.BIN",
+   "to": "FRONTEND/PLATFORMS/CAR_LOT.BIN"
+  },
+  {
+   "source": "x360/FRONTEND/PLATFORMS/CAREER_SAFEHOUSE.BIN",
+   "to": "FRONTEND/PLATFORMS/CAREER_SAFEHOUSE.BIN"
+  },
+  {
+   "source": "x360/FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP.BIN",
+   "to": "FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP.BIN"
+  },
+  {
+   "source": "x360/FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP_BACKROOM.BIN",
+   "to": "FRONTEND/PLATFORMS/CUSTOMIZATION_SHOP_BACKROOM.BIN"
+  },
+  {
+   "source": "x360/FRONTEND/PLATFORMS/PlatformCrib.BIN",
+   "to": "FRONTEND/PLATFORMS/PlatformCrib.BIN"
+  },
+  {
+   "source": "x360/FRONTEND/FrontB.lzc",
+   "to": "FRONTEND/FrontB.lzc"
+  },
+  {
+   "source": "x360/FX/COMPILED/car.fx.o",
+   "to": "FX/COMPILED/car.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/carnormalmap.fx.o",
+   "to": "FX/COMPILED/carnormalmap.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/debugPoly.fx.o",
+   "to": "FX/COMPILED/debugPoly.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/grass.fx.o",
+   "to": "FX/COMPILED/grass.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/hdr.fx.o",
+   "to": "FX/COMPILED/hdr.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/particles.fx.o",
+   "to": "FX/COMPILED/particles.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/shadowscreenfilter.fx.o",
+   "to": "FX/COMPILED/shadowscreenfilter.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/shadowvolume.fx.o",
+   "to": "FX/COMPILED/shadowvolume.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/sky.fx.o",
+   "to": "FX/COMPILED/sky.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/standard.fx.o",
+   "to": "FX/COMPILED/standard.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/trees.fx.o",
+   "to": "FX/COMPILED/trees.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/visualtreatment.fx.o",
+   "to": "FX/COMPILED/visualtreatment.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/waterseashader.fx.o",
+   "to": "FX/COMPILED/waterseashader.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/world.fx.o",
+   "to": "FX/COMPILED/world.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/worldbone.fx.o",
+   "to": "FX/COMPILED/worldbone.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/worldnormalmap.fx.o",
+   "to": "FX/COMPILED/worldnormalmap.fx.o"
+  },
+  {
+   "source": "x360/FX/COMPILED/worldreflect.fx.o",
+   "to": "FX/COMPILED/worldreflect.fx.o"
+  },
+  {
+   "source": "x360/GLOBAL/attributes.bin",
+   "to": "GLOBAL/attributes.bin"
+  },
+  {
+   "source": "x360/GLOBAL/DYNTEX.BIN",
+   "to": "GLOBAL/DYNTEX.BIN"
+  },
+  {
+   "source": "x360/GLOBAL/GlobalB.lzc",
+   "to": "GLOBAL/GlobalB.lzc"
+  },
+  {
+   "source": "x360/GLOBAL/GlobalMemoryFile.bin",
+   "to": "GLOBAL/GlobalMemoryFile.bin"
+  },
+  {
+   "source": "x360/GLOBAL/HUDTEXRACE.BIN",
+   "to": "GLOBAL/HUDTEXRACE.BIN"
+  },
+  {
+   "source": "x360/GLOBAL/HUDTEXTURESPHOTOFINISH.BIN",
+   "to": "GLOBAL/HUDTEXTURESPHOTOFINISH.BIN"
+  },
+  {
+   "source": "x360/GLOBAL/InGameA.bun",
+   "to": "GLOBAL/InGameA.bun"
+  },
+  {
+   "source": "x360/GLOBAL/InGameB.lzc",
+   "to": "GLOBAL/InGameB.lzc"
+  },
+  {
+   "source": "x360/scripts/NFSMW_XenonEffects.asi",
+   "to": "scripts/NFSMW_XenonEffects.asi"
+  },
+  {
+   "source": "x360/scripts/NFSMW_XenonEffects.ini",
+   "to": "scripts/NFSMW_XenonEffects.ini"
+  },
+  {
+   "source": "x360/scripts/TexWizard.asi",
+   "to": "scripts/TexWizard.asi"
+  },
+  {
+   "source": "x360/scripts/TexWizard.json",
+   "to": "scripts/TexWizard.json"
+  },
+  {
+   "source": "x360/scripts/X360Stuff.asi",
+   "to": "scripts/X360Stuff.asi"
+  },
+  {
+   "source": "x360/scripts/X360Stuff.ini",
+   "to": "scripts/X360Stuff.ini"
+  },
+  {
+   "source": "x360/scripts/XenonEffects.tpk",
+   "to": "scripts/XenonEffects.tpk"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_350Z_01d_shrt2.gin",
+   "to": "SOUND/ENGINE/GIN_350Z_01d_shrt2.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_350Z_Jason_shrt2.gin",
+   "to": "SOUND/ENGINE/GIN_350Z_Jason_shrt2.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Audi_S4.gin",
+   "to": "SOUND/ENGINE/GIN_Audi_S4.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Audi_S4_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Audi_S4_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_328i_e46_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_328i_e46_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_450i_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_450i_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_LagSeca.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_LagSeca.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_LagSeca_V2.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_LagSeca_V2.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_race.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_race.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_race_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_race_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_Silver.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_Silver.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_Silver_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_Silver_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_BMW_M3_white_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_BMW_M3_white_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Bronco_Comp.gin",
+   "to": "SOUND/ENGINE/GIN_Bronco_Comp.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Bronco_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Bronco_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Cavel_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Cavel_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Cavel_v1_Base.gin",
+   "to": "SOUND/ENGINE/GIN_Cavel_v1_Base.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Cavel_v1_Lev1.gin",
+   "to": "SOUND/ENGINE/GIN_Cavel_v1_Lev1.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Corv_z06_dyn.gin",
+   "to": "SOUND/ENGINE/GIN_Corv_z06_dyn.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Corvette_Z06.gin",
+   "to": "SOUND/ENGINE/GIN_Corvette_Z06.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Corvette_Z06_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Corvette_Z06_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_DB9.gin",
+   "to": "SOUND/ENGINE/GIN_DB9.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_DB9_upgrd.gin",
+   "to": "SOUND/ENGINE/GIN_DB9_upgrd.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_DB9_upgrd_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_DB9_upgrd_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Diablo.gin",
+   "to": "SOUND/ENGINE/GIN_Diablo.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Eclip2000_v1_CD.gin",
+   "to": "SOUND/ENGINE/GIN_Eclip2000_v1_CD.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Eclipse_2000_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Eclipse_2000_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Eclipse_5Zigen.gin",
+   "to": "SOUND/ENGINE/GIN_Eclipse_5Zigen.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Ford_Focus2_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Ford_Focus2_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_FordFocus_comp2.gin",
+   "to": "SOUND/ENGINE/GIN_FordFocus_comp2.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_FordFocus_Road.gin",
+   "to": "SOUND/ENGINE/GIN_FordFocus_Road.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Gallardo_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Gallardo_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_GTi_Pull_01b_shrt.gin",
+   "to": "SOUND/ENGINE/GIN_GTi_Pull_01b_shrt.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_GTO_65_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_GTO_65_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Honda_Prelude.gin",
+   "to": "SOUND/ENGINE/GIN_Honda_Prelude.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Honda_Prelude_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Honda_Prelude_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Honda_S2000_5zigen_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Honda_S2000_5zigen_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Honda_S2000_Spugen_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Honda_S2000_Spugen_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_HondaS2000_Church.gin",
+   "to": "SOUND/ENGINE/GIN_HondaS2000_Church.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Infinit_G35_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Infinit_G35_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_ITR_Pull_01cc_shrt.gin",
+   "to": "SOUND/ENGINE/GIN_ITR_Pull_01cc_shrt.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Lotus_Elise.gin",
+   "to": "SOUND/ENGINE/GIN_Lotus_Elise.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mazda_RX7.gin",
+   "to": "SOUND/ENGINE/GIN_Mazda_RX7.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mazda_RX8_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Mazda_RX8_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_MBZ_SL65.gin",
+   "to": "SOUND/ENGINE/GIN_MBZ_SL65.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mits_5zigen_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Mits_5zigen_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_MitsEclipse_2000.gin",
+   "to": "SOUND/ENGINE/GIN_MitsEclipse_2000.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Murcielago.gin",
+   "to": "SOUND/ENGINE/GIN_Murcielago.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Murcielago_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Murcielago_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mustang_Drag.gin",
+   "to": "SOUND/ENGINE/GIN_Mustang_Drag.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mustang_Drag_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Mustang_Drag_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mustang_GT_A.gin",
+   "to": "SOUND/ENGINE/GIN_Mustang_GT_A.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mustang_GT_A_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Mustang_GT_A_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Mustang_Nscr_COMP.gin",
+   "to": "SOUND/ENGINE/GIN_Mustang_Nscr_COMP.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_MustSal_Ramp_V2_CD.gin",
+   "to": "SOUND/ENGINE/GIN_MustSal_Ramp_V2_CD.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Nascar_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Nascar_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Nissan_Skyline.gin",
+   "to": "SOUND/ENGINE/GIN_Nissan_Skyline.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_911_RSR_orange.gin",
+   "to": "SOUND/ENGINE/GIN_POR_911_RSR_orange.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_911_RSR_orange_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_POR_911_RSR_orange_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_928.gin",
+   "to": "SOUND/ENGINE/GIN_POR_928.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_928_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_POR_928_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_928_V8.gin",
+   "to": "SOUND/ENGINE/GIN_POR_928_V8.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_Carrera_GT_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_POR_Carrera_GT_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_POR_DP6.gin",
+   "to": "SOUND/ENGINE/GIN_POR_DP6.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Protege_Ramp_Lev2_CD.gin",
+   "to": "SOUND/ENGINE/GIN_Protege_Ramp_Lev2_CD.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Protege_Ramp_V2_CD.gin",
+   "to": "SOUND/ENGINE/GIN_Protege_Ramp_V2_CD.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_RX8_Ramp_v1_CD.gin",
+   "to": "SOUND/ENGINE/GIN_RX8_Ramp_v1_CD.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_S2000_Church_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_S2000_Church_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Toyota_GTS.gin",
+   "to": "SOUND/ENGINE/GIN_Toyota_GTS.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Toyota_GTS_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Toyota_GTS_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_TRCK_Accel.gin",
+   "to": "SOUND/ENGINE/GIN_TRCK_Accel.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_TRCK_Decel.gin",
+   "to": "SOUND/ENGINE/GIN_TRCK_Decel.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_TVR_Tuscan.gin",
+   "to": "SOUND/ENGINE/GIN_TVR_Tuscan.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Viper_A.gin",
+   "to": "SOUND/ENGINE/GIN_Viper_A.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Viper_A_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Viper_A_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Viper_B.gin",
+   "to": "SOUND/ENGINE/GIN_Viper_B.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_Viper_B_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_Viper_B_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_VR6_Jetta_M3.gin",
+   "to": "SOUND/ENGINE/GIN_VR6_Jetta_M3.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_VR6_Jetta_M4.gin",
+   "to": "SOUND/ENGINE/GIN_VR6_Jetta_M4.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_VW_Cab_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_VW_Cab_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_VW_Cabriolet.gin",
+   "to": "SOUND/ENGINE/GIN_VW_Cabriolet.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_VW_Scirocco.gin",
+   "to": "SOUND/ENGINE/GIN_VW_Scirocco.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_WRX2F2F_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_WRX2F2F_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_WRX_2F2F.gin",
+   "to": "SOUND/ENGINE/GIN_WRX_2F2F.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_WRX_STi_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_WRX_STi_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_WRX_Street_DCL.gin",
+   "to": "SOUND/ENGINE/GIN_WRX_Street_DCL.gin"
+  },
+  {
+   "source": "x360/SOUND/ENGINE/GIN_WRXSTi_Pull_09.gin",
+   "to": "SOUND/ENGINE/GIN_WRXSTi_Pull_09.gin"
+  },
+  {
+   "source": "x360/SOUND/PFDATA/MW_Music.mpf",
+   "to": "SOUND/PFDATA/MW_Music.mpf"
+  },
+  {
+   "source": "x360/SOUND/PFDATA/MW_Music.mus",
+   "to": "SOUND/PFDATA/MW_Music.mus"
+  },
+  {
+   "source": "x360/TRACKS/TexWizardX360/meta.json",
+   "to": "TRACKS/TexWizardX360/meta.json"
+  },
+  {
+   "source": "x360/TRACKS/TexWizardX360/textures.bin",
+   "to": "TRACKS/TexWizardX360/textures.bin"
+  },
+  {
+   "source": "x360/TRACKS/STREAML2RA.BUN",
+   "to": "TRACKS/STREAML2RA.BUN"
+  },
+  {
+   "source": "hd-content-support",
+   "to": "scripts/NFSMWHDContentSupport.asi",
+   "member": "NFS HD Content Support/NFSMWHDContentSupport/scripts/NFSMWHDContentSupport.asi"
+  },
+  {
+   "source": "hud-adapter",
+   "to": "scripts/NFSMWHUDAdapter.asi",
+   "member": "scripts/NFSMWHUDAdapter.asi"
+  },
+  {
+   "source": "fe-shadows",
+   "to": "scripts/NFSMWFEShadows.asi",
+   "member": "NFSMWFEShadows/scripts/NFSMWFEShadows.asi"
+  },
+  {
+   "source": "fe-shadows",
+   "to": "scripts/NFSMWFEShadows.ini",
+   "member": "NFSMWFEShadows/scripts/NFSMWFEShadows.ini"
+  },
+  {
+   "source": "hd-reflections",
+   "to": "scripts/",
+   "member": "NFS HD Reflections/NFSMWHDReflections/scripts/"
+  },
+  {
+   "source": "dsoal",
+   "to": "dsound.dll",
+   "member": "DSOAL/Win32/dsound.dll"
+  },
+  {
+   "source": "dsoal",
+   "to": "dsoal-aldrv.dll",
+   "member": "DSOAL/Win32/dsoal-aldrv.dll"
+  },
+  {
+   "source": "dsoal",
+   "to": "alsoft.ini",
+   "member": "DSOAL/Win32/alsoft.ini"
+  },
+  {
+   "source": "console-keyboard",
+   "to": "scripts/NFSMWConsoleKeyboard.asi"
+  },
+  {
+   "source": "async-luminance",
+   "to": "scripts/X360StuffAsyncLuminance.asi"
+  },
+  {
+   "source": "movies/attract_movie_english_ntsc.vp6",
+   "to": "MOVIES/attract_movie_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_01_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_01_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_02_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_02_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_03_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_03_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_04_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_04_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_05_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_05_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_06_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_06_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_07_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_07_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_08_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_08_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_09_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_09_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_10_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_10_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_11_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_11_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_12_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_12_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_13_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_13_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_14_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_14_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/blacklist_15_english_ntsc.vp6",
+   "to": "MOVIES/blacklist_15_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/bounty_tutorial_english_ntsc.vp6",
+   "to": "MOVIES/bounty_tutorial_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/drag_tutorial_english_ntsc.vp6",
+   "to": "MOVIES/drag_tutorial_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/eahd_bumper_english_ntsc.vp6",
+   "to": "MOVIES/eahd_bumper_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/ealogo_english_ntsc.vp6",
+   "to": "MOVIES/ealogo_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/psa_english_ntsc.vp6",
+   "to": "MOVIES/psa_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/pursuit_tutorial_english_ntsc.vp6",
+   "to": "MOVIES/pursuit_tutorial_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/speedtrap_tutorial_english_ntsc.vp6",
+   "to": "MOVIES/speedtrap_tutorial_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_bla134_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_bla134_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_bus12_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_bus12_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_cro06_coh06a_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_cro06_coh06a_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_her136_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_her136_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_pin11_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_pin11_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_rac01_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_rac01_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_rap30_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_rap30_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_raz08_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_raz08_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/storyfmv_saf25_english_ntsc.vp6",
+   "to": "MOVIES/storyfmv_saf25_english_ntsc.vp6"
+  },
+  {
+   "source": "movies/tollbooth_tutorial_english_ntsc.vp6",
+   "to": "MOVIES/tollbooth_tutorial_english_ntsc.vp6"
+  }
+ ],
+ "system_files": [
+  {
+   "source": "d3d9-lean",
+   "to": "syswow64/d3d9.dll",
+   "keep_builtin": true
+  },
+  {
+   "source": "d3dx9_26",
+   "to": "syswow64/d3dx9_26.dll",
+   "keep_builtin": true
+  },
+  {
+   "source": "d3dx9_43",
+   "to": "syswow64/d3dx9_43.dll",
+   "keep_builtin": true
+  }
+ ],
+ "patches": [
+  {
+   "file": "speed.exe",
+   "offset": 2371282,
+   "from": "e829a00000",
+   "to": "9090909090",
+   "_why": "the frame limiter's call"
+  },
+  {
+   "file": "speed.exe",
+   "offset": 286,
+   "from": "0f",
+   "to": "2f",
+   "_why": "large address aware"
+  }
+ ],
+ "ini": [
+  {
+   "file": "scripts/NFS_XtendedInput.ini",
+   "values": {
+    "UseWin32Cursor": "0",
+    "UseCustomCursor": "0",
+    "EnableMouseHiding": "0",
+    "ControllerIconMode": "1",
+    "FirstControlDevice": "1"
+   }
+  },
+  {
+   "file": "scripts/NFSMostWanted.WidescreenFix.ini",
+   "lf": true,
+   "values": {
+    "FixHUD": "0",
+    "Scaling": "0",
+    "FMVWidescreenMode": "0",
+    "SkipIntro": "0",
+    "ImproveGamepadSupport": "3",
+    "ImproveShadowLOD": "0",
+    "AutoScaleShadowsRes": "0",
+    "DisableMotionBlur": "1",
+    "ConsoleGamma": "2",
+    "SMAA": "1"
+   }
+  },
+  {
+   "file": "scripts/NFSMWFEShadows.ini",
+   "values": {
+    "RestoreShadows": "1"
+   }
+  },
+  {
+   "file": "scripts/NFSMWHDReflections.ini",
+   "values": {
+    "CubemapBrightnessFix": "0",
+    "ForceEnableMirror": "0",
+    "RestoreWaterReflections": "1"
+   }
+  }
+ ],
+ "texts": [
+  {
+   "to": "dxvk.conf",
+   "body": "# NFS Most Wanted — DXVK 3.1.1\n# The 360 pack rewrites dynamic buffers the GPU may still be reading; cached\n# CPU-side copies keep those locks from waiting on the GPU.\nd3d9.cachedDynamicBuffers = True\n"
+  },
+  {
+   "to": "alsoft.ini",
+   "body": "\n# prospero-win: the PS5 port takes 48 kHz stereo; a deeper buffer than the default 3 x 1024 for the console's coarser thread wake-ups.\n[general]\nchannels = stereo\nfrequency = 48000\nperiod_size = 1024\nperiods = 4\nhrtf = false\n",
+   "append": true
+  },
+  {
+   "to": "scripts/X360Stuff.ini",
+   "body": "# 360 Stuff config\r\n\r\n[VIDEO]\r\n\r\n# Enables custom grass shader. May negatively affect performance\r\nGrassShader = 1\r\n\r\n# Enables parallax scrolling on certain surfaces. Some may prefer this to be off.\r\nDoParallax = 1\r\n\r\n# Uses car's reflection cubemap for rearview mirror.\r\n# Also enables rendering other cars into cubemap\r\nCubemapRVM = 1\r\n\r\n# For performance, Xbox 360 only renders cars into the rear cubemap face\r\n# While slow, this can yield nicer looking results in reflections\r\n# (NOTE: this option is EXPERIMENTAL and may be buggy)\r\nCarsInAllCubemapFaces = 0\r\n\r\n# Enables motion blur. Set to 2 to disable depth masking (may slightly improve performance)\r\nMotionBlur = 0\r\n\r\n# Enables depth of field in NIS cutscenes and certain game moment cameras\r\nDOF = 1\r\n\r\n# Widescreen UI mode\r\n# 0 = Auto-Detect, 1 = Force on, 2 = Force off\r\nWidescreenUIMode = 0\r\n\r\n# Disable this if you're using the original PC Movies (16:9 letterboxed to 4:3)\r\nWidescreenMovies = 1\r\n\r\n# Changes 3D scaling as it varies between various versions\r\n# (and is almost never mathematically correct leading to varying levels of stretching and squashing)\r\n# 0 = Mathematically correct, 1 = Xbox 360, 2 = PC, 3 = PS3, 4 = Original Xbox,\r\n# 5 = GameCube (NTSC), 6 = GameCube (PAL), 7 = PS2 (NTSC), 8 = PS2 (PAL)\r\n# See \"Previews\\Scaling\" for image comparisons\r\nScalingMode = 1\r\n\r\n# Changes 2D/FE scaling as it varies between various versions\r\n# 0 = Custom/Correct scale, 1 = Xbox 360 scale (in widescreen it is equivalent to 0 with 0.92 scale),\r\n# 2 = PC scale, 3 = PS3 scale, 4 = Original Xbox scale, 5 = GameCube (NTSC) scale,\r\n# 6 = GameCube (PAL) scale,  7 = PS2 (NTSC) scale, 8 = PS2 (PAL) scale\r\n# See \"Previews\\Scaling\" for image comparisons\r\nFEScalingMode = 1\r\n\r\n# Sets the scale of the UI when FEScalingMode is 0.\r\n# On Xbox and Xbox 360 in widescreen it is 0.92. On PC and PS2 it is 1.0. On PS3 it is about 0.93 in widescreen.\r\nFEScale = 1.0\r\n\r\n# Various parts of the frontend begin to fall apart as the framerate increases above 60fps.\r\n# Enabling this caps the framerate in the frontend to 60 to avoid the issues.\r\nCapFEFramerate = 1\r\n\r\n# Makes the sunsets no longer engulf the world in shadow,\r\n# hiding the shortcomings of the LiSPSM shadowmapping technique\r\n# PC hid the issues by fading them out instead.\r\nXbox360ShadowAngle = 1\r\n\r\n# Enables the built-in lite widescreen fix (EXPERIMENTAL)\r\nWidescreenFix = 0\r\n\r\n# Sets a custom resolution if widescreen fix isn't present. A value of 0 makes it autodetect the desktop resolution.\r\nXResolution = 0\r\nYResolution = 0\r\n\r\n# Enables the game's built-in unused borderless windowed mode\r\nWindowed = 0\r\n\r\n[ENHANCEMENTS]\r\n\r\n# Xbox 360 doesn't do an actual blur when downscaling for blackbloom, this fixes that\r\nNicerBlackBloom = 1\r\n\r\n# Xbox 360 doesn't do an actual blur when downscaling for DOF, this fixes that\r\nNicerDOF = 1\r\n\r\n# Xbox 360 uses a depth sorting algorithm for trees, though that doesn't always yield the best results. This forces the use of fixed rendering order values.\r\nFixedTreeRenderOrder = 1\r\n\r\n# Xbox 360 uses lowlod shader for traffic and cop cars in the main view. Enable this to use full LOD shader instead.\r\nUseFullLODShaderOnTrafficAndCops = 0\r\n\r\n# Xbox 360 sets twkTimeOfDayOvercast in NISes, but rarely ever sets it back properly, causing the weather cycle to freeze until it does\r\n# Enabling this makes the override get reset the next time you return to FE.\r\n# It also nerfs Earl's Earth-rotating powers.\r\nResetOvercastOverrideAfterNIS = 1\r\n\r\n# The Xbox 360 version limits the render distance of cubemaps (except for the rear face as it's used for RVM) to 100m. \r\n# You can extend it by setting this to a higher value\r\n# 100.0 = Xbox 360, 15000.0 = PC (same as main view, slightly overkill), 300.0 = ProStreet\r\nEnvMapFarPlane = 100.0\r\n\r\n# Same as above but for the rear face and RVM. Due to it being used for the mirror it has a bigger distance.\r\n# 400.0 = Xbox 360 (both MW and ProStreet), 15000.0 = PC (same as main view)\r\nMirrorFarPlane = 400.0\r\n\r\n# On the 360 version they tried to fix stretching at screen edges during intense motion blur by reversing its direction,\r\n# but they only did it on the Z axis making it appear incorrect diagonally. This fixes that. You can also set it to 2\r\n# to remove the fix altogether and make it more like Carbon where they also did that.\r\nFixDiagonalMotionBlur = 1\r\n\r\n[MISC]\r\n\r\n# Makes game take screenshots in PNG format instead of TGA\r\nTakePNGScreenshots = 1\r\n\r\n# Changes path that screenshots are saved to.\r\n# Example path: %UserProfile%\\Documents\\NFS Most Wanted\r\n# Defaults to My Pictures folder if path is blank or doesn't exist.\r\nPNGScreenshotPath = %UserProfile%\\Documents\\NFS Most Wanted\r\n\r\n# Sets car lighting (Shaper Light Rig) setup\r\n# 0: Xbox 360\r\n# 1: OPM\r\n# 2: E3-style\r\n# 3: vanilla PC/unmodified (use this if another mod modifies shaper lights)\r\nCarShaperLightType = 0\r\n\r\n# Allows cars to self-shadow (NOT how it's intended by devs so don't expect it to look good)\r\nCarSelfShadow = 0\r\n\r\n# Enables controller tips screen (VERY broken right now)\r\nEnableLoadingControllerScreen = 0\r\n\r\n# Controller tips texture name (_C1 suffix for analog steer, _C2 for dpad steer)\r\nLoadingControllerScreenTextureName = LOADING_CONTROLLER_X360_C1\r\n\r\n# Controls the sensitivity of the motion blur to speed\r\n# Default value is 1.0\r\nDirectionalMotionBlurStrength = 1.0\r\n\r\n# Xbox 360 has unused angular motion blur, nullified by its strength constant being set to 0\r\n# A recommended value to reenable it would be around 500\r\n# Default value is 0.0\r\nAngularMotionBlurStrength = 0.0\r\n\r\n# Allows you to change the minimum shadow projection height\r\n# 0.7 = Xbox 360, 1.0 = nearly straight down, 0.0 = can go down to horizon\r\n# NOTE: this value is approximate as it only changes the Z component of the sun direction vector\r\n# and doesn't change lighting or the sun position itself, only shadowcasting.\r\n# It's not recommended to change this value if you value accuracy.\r\nMinimumShadowAngleHeight = 0.7\r\n\r\n# Fixes time of day changes done by NISes on the 360 version.\r\n# Disabling this restores broken PC behavior.\r\nNISTimeOfDayEvent = 1\r\n\r\n# Enables the use of the current-gen/PC sun flare instead.\r\n# Only enable this if you like the bigger flare on those versions, or need compatibility with existing sun flare mods.\r\nCurrentGenSunFlare = 0\r\n\r\n# The retail Xbox 360 version uses the black bloom curve for both black bloom AND color bloom.\r\n# Enabling this restores what seems to have been early behavior, and what is the retail PC behavior.\r\n# Use this with visual treatment presets tuned for PC visual treatment.\r\nUseColourBloomCurve = 0\r\n\r\n# This value affects the brightness of exposure adaptation. It is not recommended to be changed from the Xbox 360 default of 0.14.\r\n# Set this to 0.19 for (roughly) PC-equivalent brightness, which is best paired with the option above.\r\n# NOTE: NISes have the ability to override this value. So far a NIS that does this hasn't been observed, but the capability is there.\r\nMiddleGrayValue = 0.14\r\n\r\n# Set this to a value greater than zero to force a constant luminance level. May offer a very slight speedup.\r\n# Setting this to 1.0 and MiddleGrayValue to 0.62 should offer roughly the same constant luminance as PC.\r\nForcedLuminance = 0.0\r\n"
+  }
+ ],
+ "expect": {
+  "speed.exe": "fe3e406617afd5457b51263257fca22bd93cfd29f8ec702d8b8f6c83ea93cc48",
+  "dxvk.conf": "6cc5e983a3a49a683304421f3730b76134154ac97994210466bc338575776418",
+  "alsoft.ini": "8095d96846443b30759ba5618d0ce76e8b0ccfd8d2ec7fa971e165fae90d2f6c",
+  "scripts/X360Stuff.ini": "b518c78dd9e7f5765bb2079084028dfe9c84f29bdaf0df8b6282a9a9d6708d2b",
+  "scripts/NFS_XtendedInput.ini": "089da8e83678ca3e4d68879925d5f3100da5ab86c7487d5b3acc6ba7b1fd7376",
+  "scripts/NFSMostWanted.WidescreenFix.ini": "2dbdfd7c3c65acaff9a5839ee08845e91e990b9216765c448e2f3d02e3ca03e6",
+  "scripts/NFSMWFEShadows.ini": "319ef646a6051a7b32b12e93f706e0cd7956d163e917bb836eb4c2082e26e564",
+  "scripts/NFSMWHDReflections.ini": "50b72efbb5c0a13ae91698fee9ee93d2bf020656d5b168519e257475933ea9e7"
+ },
+ "registry": {
+  "machine": [
+   {
+    "key": "Software\\Wow6432Node\\EA Games\\Need for Speed Most Wanted",
+    "name": "CD Drive",
+    "string": "C:\\Games\\NFSMW\\"
+   },
+   {
+    "key": "Software\\Wow6432Node\\EA Games\\Need for Speed Most Wanted",
+    "name": "DisplayName",
+    "string": "Need for Speed Most Wanted"
+   },
+   {
+    "key": "Software\\Wow6432Node\\EA Games\\Need for Speed Most Wanted",
+    "name": "Install Dir",
+    "string": "C:\\Games\\NFSMW\\"
+   },
+   {
+    "key": "Software\\Wow6432Node\\EA Games\\Need for Speed Most Wanted",
+    "name": "Product GUID",
+    "string": "{A48B9CD8-C2BA-4EC9-0081-7260D238C7CF}"
+   }
+  ],
+  "user": [
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "CacheSize",
+    "dword": 2936691712
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "CD Drive",
+    "string": "D:\\"
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "FirstTime",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_CarEnvironmentMapEnable",
+    "dword": 2
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_CarEnvironmentMapUpdateData",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_CarLodLevel",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_FSAALevel",
+    "dword": 0
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_MotionBlurEnable",
+    "dword": 0
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_OverBrightEnable",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_ParticleSystemEnable",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_PerformanceLevel",
+    "dword": 5
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_RacingResolution",
+    "dword": 2399144048
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_RainEnable",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_RoadReflectionEnable",
+    "dword": 3
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_ShadowDetail",
+    "dword": 2
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_TextureFiltering",
+    "dword": 2
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_VisualTreatment",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_VSyncOn",
+    "dword": 0
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "g_WorldLodLevel",
+    "dword": 3
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "Install Dir",
+    "string": "C:\\Games\\NFSMW\\"
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "InstallDir",
+    "string": "C:\\Games\\NFSMW\\"
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "Language",
+    "string": "English US"
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "Path",
+    "string": "C:\\Games\\NFSMW\\"
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "SIZE",
+    "dword": 132
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "StreamingInstall",
+    "dword": 0
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "SwapSize",
+    "dword": 73400320
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "VERSION",
+    "dword": 1
+   },
+   {
+    "key": "Software\\EA Games\\Need for Speed Most Wanted",
+    "name": "VTMode",
+    "dword": 0
+   }
+  ]
+ },
+ "profile": {
+  "id": "nfs-most-wanted-2005",
+  "name": "NFS Most Wanted",
+  "executable": "C:\\Games\\NFSMW\\speed.exe",
+  "working_directory": "C:\\Games\\NFSMW",
+  "dll_overrides": "d3d8,d3d9,d3d10core,d3d11,dxgi=n;dinput8,dsound=n,b;d3dx9_26,d3dx9_43=n",
+  "width": 3840,
+  "height": 2160,
+  "runtime": {
+   "fast_clock": "true",
+   "shared_input": "true",
+   "thread_scheduling": "true"
+  },
+  "after": "nfs-most-wanted-2005.profile"
+ },
+ "pending": []
+}

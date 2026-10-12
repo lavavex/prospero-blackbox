@@ -116,6 +116,13 @@ clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" 
     "$root/src/core/save_file.cpp" -o "$build/profile-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/profile-test"
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
+    -DSTORE_ASSETS="\"$root/assets\"" "$root/tests/store_game_install_test.cpp" \
+    "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" \
+    "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" \
+    "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/core/save_file.cpp" \
+    "${objects[@]}" "${miniz[@]}" -o "$build/game-install-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/game-install-test"
+clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     "$root/tests/store_http_test.cpp" "$root/src/catalog/catalog.cpp" \
     "$root/src/net/http.cpp" "${objects[@]}" -o "$build/http-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/http-test"
