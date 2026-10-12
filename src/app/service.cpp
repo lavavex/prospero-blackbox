@@ -9,6 +9,8 @@
 #include "system/title_registry.hpp"
 #include "system/self_update_store.hpp"
 #include "app/service.hpp"
+#include "library/game_sources.hpp"
+#include "library/prefix.hpp"
 #include "core/save_file.hpp"
 #include "core/qr.hpp"
 #include "platform/ps5/system.hpp"
@@ -307,6 +309,42 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, std::string &er
     {
         progress_.phase = static_cast<int>(install::Phase::removing);
         return library::uninstall_game(plan, paths, options, error);
+    }
+    // What mods-cache lacks: from what the manager carries, else downloaded.
+    progress_.phase = static_cast<int>(install::Phase::downloading);
+    const library::Download download = [this](const std::string &url, std::uint64_t limit,
+                                              const std::function<bool(std::string_view)> &sink,
+                                              std::string &why)
+    {
+        const auto response = net::get(url, net::Purpose::source, limit, sink, job_control_);
+        if (response.ok() && response.status == 200)
+            return true;
+        why = response.error.empty() ? "HTTP " + std::to_string(response.status) : response.error;
+        return false;
+    };
+    if (!library::fetch_sources(
+            plan, root_ + "/mods-cache", bundle, download,
+            [&](const library::FetchStatus &status)
+            {
+                progress_.total = status.total;
+                progress_.done = status.done;
+            },
+            job_control_.cancelled, error))
+        return false;
+    // The prefix, made from the bare prefix the manager carries when it isn't there yet.
+    const auto prefix = library::effective_plan(plan, options).prefix;
+    if (!library::prefix_ready(win_root, prefix))
+    {
+        progress_.phase = static_cast<int>(install::Phase::unpacking);
+        if (!library::ensure_prefix(
+                win_root, prefix, bundle + "/bare-prefix-nfs-blackbox.zip",
+                [&](std::uint64_t done, std::uint64_t total)
+                {
+                    progress_.total = total;
+                    progress_.done = done;
+                },
+                job_control_.cancelled, error))
+            return false;
     }
     return library::install_game(
         plan, *manifest, paths, options,

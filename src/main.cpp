@@ -293,6 +293,8 @@ int main()
     // The games' install plans ship in the app; installs go into the chosen prefix
     // (a test one unless the settings say otherwise).
     service.plans = app_root + "/assets/plans";
+    // Files the manager carries for them (plan sources by SHA-256, the bare prefix).
+    service.bundle = app_root + "/assets/bundle";
     service.game_prefix = screen.settings().game_prefix;
 #ifdef STORE_INSTALLER
     service.installer = elevated;

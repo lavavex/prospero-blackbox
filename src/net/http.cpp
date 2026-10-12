@@ -63,11 +63,20 @@ Response get(const std::string &url, Purpose purpose, std::uint64_t limit, const
         response.error = "Invalid download request";
         return response;
     }
+    // A pinned source: an https address with a host, no spaces or control characters.
+    const auto https = [](const std::string &address)
+    {
+        return address.size() <= 4096 && address.starts_with("https://") && address.size() > 8 &&
+               address[8] != '/' &&
+               std::none_of(address.begin(), address.end(),
+                            [](unsigned char c) { return c <= 32 || c == 127; });
+    };
     std::string current = url;
     for (int redirects = 0; redirects <= 5; ++redirects)
     {
-        if (!(purpose == Purpose::catalog ? catalog::api_url(current)
-                                          : catalog::artifact_url(current, redirects > 0)))
+        if (!(purpose == Purpose::catalog  ? catalog::api_url(current)
+              : purpose == Purpose::source ? https(current)
+                                           : catalog::artifact_url(current, redirects > 0)))
         {
             response.error = "The download address is not allowed";
             return response;

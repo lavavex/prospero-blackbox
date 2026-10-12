@@ -99,6 +99,9 @@ class Service
     // prospero-win's data, and the prefix games go into ("" for each plan's own; a test
     // prefix keeps a test install apart from the live one, its profile named after it).
     std::string plans;
+    // Files shipped with the manager (<bundle>/<sha256> plan sources, <bundle>/
+    // bare-prefix-nfs-blackbox.zip): taken before downloading; empty for none.
+    std::string bundle;
     std::string win_root = "/data/prospero-win";
     std::string game_prefix;
     // The settings file, written by a worker: never on the frame.

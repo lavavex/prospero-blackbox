@@ -21,7 +21,10 @@ const char *transport_name();
 enum class Purpose
 {
     catalog,
-    artifact
+    artifact,
+    // A file a game's plan pins by size and SHA-256 (checked by the caller): any https
+    // address, since what arrives is only used when it is that file.
+    source
 };
 struct Control
 {
