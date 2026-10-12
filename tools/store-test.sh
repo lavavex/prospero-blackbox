@@ -108,6 +108,10 @@ clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" 
     -o "$build/base-game-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/base-game-test"
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
+    "$root/tests/store_wine_registry_test.cpp" "$root/src/library/wine_registry.cpp" \
+    "$root/src/core/save_file.cpp" -o "$build/registry-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/registry-test"
+clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     "$root/tests/store_http_test.cpp" "$root/src/catalog/catalog.cpp" \
     "$root/src/net/http.cpp" "${objects[@]}" -o "$build/http-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/http-test"
