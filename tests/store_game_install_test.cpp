@@ -195,6 +195,15 @@ int main()
     assert(refused("\"member\": \"scripts/\"", "\"member\": \"../\""));
     assert(refused("{\"source\": \"exe\", \"to\": \"game.exe\"}", "{\"source\": \"nope\", \"to\": \"x\"}"));
     assert(refused("\"schema\": 1", "\"schema\": 2"));
+    assert(refused("\"source\": \"up\"}", "\"source\": \"up\", \"kind\": \"bsdiff\"}"));
+    assert(!plan.upgrades[0].rtpatch);
+    {
+        auto text = plan_text;
+        text.replace(text.find("\"source\": \"up\"}"), 15, "\"source\": \"up\", \"kind\": \"rtpatch\"}");
+        InstallPlan with_patch;
+        assert(parse_plan(text, with_patch, error) && with_patch.upgrades[0].rtpatch &&
+               with_patch.upgrades[0].from == "1.0" && with_patch.upgrades[0].source == "up");
+    }
     assert(refused("\"prefix\": \"shared\"", "\"prefix\": \"../shared\""));
     assert(refused("https://example.com", "http://example.com"));
     assert(refused("\"width\": 1920", "\"width\": 99"));

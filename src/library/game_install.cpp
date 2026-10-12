@@ -3,6 +3,7 @@
 #include "library/game_install.hpp"
 #include "core/save_file.hpp"
 #include "library/tree.hpp"
+#include "library/rtpatch.hpp"
 #include "library/upgrade.hpp"
 #include "library/wine_registry.hpp"
 #include "third_party/miniz/miniz.h"
@@ -433,11 +434,15 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
     }
     // An older release is brought up to the plan's by its upgrade file, in the copy.
     std::string upgrade;
+    bool rtpatch = false;
     if (base.version != plan.release)
     {
-        for (const auto &[from, source] : plan.upgrades)
-            if (from == base.version)
-                upgrade = source;
+        for (const auto &candidate : plan.upgrades)
+            if (candidate.from == base.version)
+            {
+                upgrade = candidate.source;
+                rtpatch = candidate.rtpatch;
+            }
         if (upgrade.empty())
         {
             error = "The base copy is version " + base.version + ", and there's no upgrade from "
@@ -541,8 +546,9 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
     if (!upgrade.empty())
     {
         step("Upgrading to " + plan.release);
-        if (!apply_upgrade(files[upgrade], work, plan.game, base.version, plan.release, cancel,
-                           error))
+        if (rtpatch ? !apply_rtpatch(files[upgrade], work, cancel, error)
+                    : !apply_upgrade(files[upgrade], work, plan.game, base.version, plan.release, cancel,
+                                     error))
             return fail();
         const auto upgraded = inspect(work, manifest);
         if (upgraded.state != State::ready || upgraded.version != plan.release)

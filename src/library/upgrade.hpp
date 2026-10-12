@@ -17,8 +17,9 @@ namespace store::library
 //   ops/<n>       records, until the end: 'C' u64 offset, u64 length (bytes of the old
 //                 file) or 'A' u64 length, then that many bytes; little-endian
 //
-// It carries only what changed, so it is no use without the old release. EA's patch
-// itself is never run: the console can't start its installer, and its format is closed.
+// It carries only what changed, so it is no use without the old release. A publisher's
+// own patch can be used instead where its format is known (rtpatch.hpp); this is the
+// fallback when it isn't.
 
 // Applies the upgrade to the game's folder (a copy, never the base copy itself): every
 // old file is checked before it changes and every new one after; a changed file replaces

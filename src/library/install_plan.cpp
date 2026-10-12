@@ -354,7 +354,10 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
             read.fail(where + " names " + source + ", which isn't in sources");
         if (from == plan.release)
             read.fail(where + " is from the release it installs");
-        plan.upgrades.emplace_back(std::move(from), std::move(source));
+        const auto kind = read.text(item, "kind", false, where);
+        if (!kind.empty() && kind != "zip" && kind != "rtpatch")
+            read.fail(where + " is of kind " + kind + ", which isn't zip or rtpatch");
+        plan.upgrades.push_back({std::move(from), std::move(source), kind == "rtpatch"});
     }
     auto *pending = array(read, root, "pending");
     yyjson_arr_foreach(pending, index, count, item)

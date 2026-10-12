@@ -93,9 +93,15 @@ struct InstallPlan
     // Pieces of the finished setup the plan can't install yet (no pinned source):
     // an install with any refuses to start unless it is told to go without them.
     std::vector<std::string> pending;
-    // Older releases of the base copy this plan installs from: each one's upgrade file
-    // (a Source, see upgrade.hpp) brings a copy of it up to release first.
-    std::vector<std::pair<std::string, std::string>> upgrades; // from release, source id
+    // Older releases of the base copy this plan installs from: each one's upgrade (a
+    // Source) brings a copy of it up to release first. "kind": "zip" (the default) is our
+    // own upgrade file (upgrade.hpp); "rtpatch" is the publisher's patch (rtpatch.hpp).
+    struct Upgrade
+    {
+        std::string from, source;
+        bool rtpatch = false;
+    };
+    std::vector<Upgrade> upgrades;
 
     const Source *source(const std::string &id) const;
 };
