@@ -114,10 +114,12 @@ class Screen
     void set_detail(const catalog::Entry &entry);
     void set_detail_error(const std::string &id, std::string message);
     void set_icon(const std::string &id, std::uint32_t texture);
-    // The manager's own icon (sce_sys/icon0.png): the opening, the top bar, About.
-    void set_logo(std::uint32_t texture)
+    // The manager's emblem for the opening, the top bar and About: cut out (assets/logo.png,
+    // drawn as it is) or the Home-screen icon (a tile, drawn with rounded corners).
+    void set_logo(std::uint32_t texture, bool cutout)
     {
         logo_ = texture;
+        logo_cutout_ = cutout;
     }
     void set_art(const std::string &id, std::uint32_t texture);
     void set_background(const std::string &id, std::uint32_t texture);
@@ -425,6 +427,7 @@ class Screen
     void close_developer();
     std::string qr_id_;
     std::uint32_t qr_texture_ = 0, coming_soon_art_ = 0, logo_ = 0;
+    bool logo_cutout_ = false;
     int qr_width_ = 0;
     Sort sort_ = Sort::name;
 

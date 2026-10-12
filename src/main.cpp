@@ -242,10 +242,14 @@ int main()
     {
         std::string encoded;
         Image image;
-        if (save::read_file(app_root + "/sce_sys/icon0.png", &encoded, 2u << 20) &&
-            decode_png(encoded, image))
+        // The emblem on its own; the Home-screen icon when the app was built without it.
+        const bool cutout = save::read_file(app_root + "/assets/logo.png", &encoded, 2u << 20) &&
+                            decode_png(encoded, image);
+        if (cutout || (save::read_file(app_root + "/sce_sys/icon0.png", &encoded, 2u << 20) &&
+                       decode_png(encoded, image)))
             screen.set_logo(
-                renderer.batch().create_texture(image.width, image.height, image.rgba.data()));
+                renderer.batch().create_texture(image.width, image.height, image.rgba.data()),
+                cutout);
     }
     const std::string own_version = read_content_version(app_root + "/sce_sys/param.json");
     store::Service service(elevated ? storage_root : "", own_version);

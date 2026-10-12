@@ -1540,7 +1540,8 @@ void Screen::draw_top_bar(const ui::Fonts &fonts)
     // A soft band of Farlight's dark, so the bar reads over any key art.
     list.gradient_rect({0, 0, kWidth, 200.0f}, 0, kDeep.with_alpha(0.7f), kDeep.with_alpha(0.0f));
     if (logo_ && !intro_showing())
-        list.image(logo_, {kMargin - 4.0f, kTopY - 17.0f, 34.0f, 34.0f}, {0, 0, 1, 1}, kWhite, 7.0f);
+        list.image(logo_, {kMargin - 8.0f, kTopY - 21.0f, 42.0f, 42.0f}, {0, 0, 1, 1}, kWhite,
+                   logo_cutout_ ? 0.0f : 7.0f);
     ui::text(list, fonts.semibold, "PROSPERO BLACKBOX", kMargin + 42.0f,
                                  centred(kTopY, 22), 22, kInk, gfx::Align::left, 5.0f);
 
@@ -2729,7 +2730,7 @@ void Screen::draw_intro(const ui::Fonts &fonts)
     constexpr float kSize = 300.0f, kRadius = 60.0f;
     const float cx = 960.0f, cy = 400.0f;
     const float corner_x = kMargin + 13.0f, corner_y = kTopY; // the top bar's icon
-    const float scale = tween::lerp(1.0f, 34.0f / kSize, leave);
+    const float scale = tween::lerp(1.0f, 42.0f / kSize, leave);
     const float k = still ? tween::clamp01(t / 0.35f) : tween::clamp01(t / 0.6f);
     if (logo_ && k > 0.0f)
     {
@@ -2739,12 +2740,14 @@ void Screen::draw_intro(const ui::Fonts &fonts)
                      kSize, kSize};
         list.push_transform(scale, cx, cy, (corner_x - cx) * leave, (corner_y - cy) * leave);
         list.push_transform(0.62f + 0.38f * pop, r.cx(), r.cy(), 0, 0);
-        list.glow(r.inset(-12.0f), kRadius + 12.0f, 80,
+        list.glow(r.inset(logo_cutout_ ? 40.0f : -12.0f), kRadius + 12.0f, 80,
                   gold.with_alpha((0.28f + 0.1f * breathe) * alpha * (1.0f - leave)));
-        list.image(logo_, r, {0, 0, 1, 1}, kWhite.with_alpha(alpha), kRadius * (1.0f - leave * 0.6f));
-        // A sheen sweeps across once it has landed, then every few seconds.
+        list.image(logo_, r, {0, 0, 1, 1}, kWhite.with_alpha(alpha),
+                   logo_cutout_ ? 0.0f : kRadius * (1.0f - leave * 0.6f));
+        // A sheen sweeps across the tile once it has landed, then every few seconds (not over
+        // the cut-out emblem, where it would cross empty space).
         const float sweep = still ? -1.0f : std::fmod(t - 0.75f, 3.2f) / 0.7f;
-        if (t > 0.75f && leave <= 0.0f && sweep >= 0.0f && sweep <= 1.0f)
+        if (!logo_cutout_ && t > 0.75f && leave <= 0.0f && sweep >= 0.0f && sweep <= 1.0f)
         {
             list.push_clip(r.inset(2.0f));
             const float sx = r.x - 60.0f + (r.w + 120.0f) * tween::cubic_in_out(sweep);
@@ -3751,7 +3754,8 @@ void Screen::draw_panel(const ui::Fonts &fonts, std::uint32_t glass)
         const float cx = px + 64.0f, cy = panel.y + 96.0f;
         list.glow({cx - 56.0f, cy - 56.0f, 112.0f, 112.0f}, 40, 50, kAccent.with_alpha(0.2f));
         if (logo_)
-            list.image(logo_, {cx - 48.0f, cy - 48.0f, 96.0f, 96.0f}, {0, 0, 1, 1}, kWhite, 20.0f);
+            list.image(logo_, {cx - 48.0f, cy - 48.0f, 96.0f, 96.0f}, {0, 0, 1, 1}, kWhite,
+                       logo_cutout_ ? 0.0f : 20.0f);
         ui::text(list, fonts.display, "Prospero BlackBox", px + 150.0f, panel.y + 98.0f, 52, kInk);
         ui::text(list, fonts.regular, "The Black Box Need for Speed games, as native PS5 titles",
                  px + 152.0f, panel.y + 136.0f, 22, kInk.with_alpha(0.62f));

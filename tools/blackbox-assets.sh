@@ -28,6 +28,14 @@ for game in nfs-underground nfs-underground-2 nfs-most-wanted-2005 nfs-carbon nf
     fi
 done
 
+# The emblem without its background, for the opening, the top bar and About
+# (art/prospero-blackbox-logo.png, cut from the icon's source; local only).
+if [[ -f $art/prospero-blackbox-logo.png ]]; then
+    cp "$art/prospero-blackbox-logo.png" "$root/assets/logo.png"
+else
+    echo "==> [art] no $art/prospero-blackbox-logo.png: the icon stands in for the logo" >&2
+fi
+
 if [[ ! -f $icon ]]; then
     echo "==> [art] no icon at $icon: building without Home-screen art" >&2
     exit 0

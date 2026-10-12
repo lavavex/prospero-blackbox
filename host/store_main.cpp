@@ -438,11 +438,13 @@ int main(int argc, char **argv)
                 return hui::save::read_file(path, &encoded, 2u << 20) &&
                        hui::decode_png(encoded, image);
             };
-            if (hui::Image logo; picture(app_root + "/sce_sys/icon0.png", logo))
+            hui::Image logo;
+            const bool cutout = picture(app_root + "/assets/logo.png", logo);
+            if (cutout || picture(app_root + "/sce_sys/icon0.png", logo))
             {
                 textures.push_back(
                     renderer.batch().create_texture(logo.width, logo.height, logo.rgba.data()));
-                screen.set_logo(textures.back());
+                screen.set_logo(textures.back(), cutout);
             }
             for (const auto &entry : snapshot.entries)
             {
@@ -581,6 +583,12 @@ int main(int argc, char **argv)
             }
             else if (mode == "reel-intro")
                 screen.play_intro();
+            else if (mode == "intro")
+            {
+                // The opening a second in: the emblem landed, the name in.
+                screen.play_intro();
+                settle(60);
+            }
             else if (mode == "busy-home")
             {
                 screen.set_installer(true, true, "", "/data/homebrew");
@@ -814,7 +822,9 @@ int main(int argc, char **argv)
             else
                 return 9;
         }
-        for (int frame = 0; frame < 120; ++frame)
+        // Two seconds to settle, except for the opening, which would be over by then.
+        const int warm_up = argc == 5 && std::string(argv[4]) == "intro" ? 0 : 120;
+        for (int frame = 0; frame < warm_up; ++frame)
             screen.update({}, 1.0f / 60.0f, feedback);
         if (const char *reel = std::getenv("STORE_REEL"); reel && argc == 5)
         {
