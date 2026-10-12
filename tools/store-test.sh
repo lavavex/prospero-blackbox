@@ -112,6 +112,10 @@ clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" 
     "$root/src/core/save_file.cpp" -o "$build/registry-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/registry-test"
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
+    "$root/tests/store_game_profile_test.cpp" "$root/src/library/game_profile.cpp" \
+    "$root/src/core/save_file.cpp" -o "$build/profile-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/profile-test"
+clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     "$root/tests/store_http_test.cpp" "$root/src/catalog/catalog.cpp" \
     "$root/src/net/http.cpp" "${objects[@]}" -o "$build/http-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/http-test"
