@@ -6,6 +6,7 @@
 # Compiles, links, signs, validates, and assembles the root skeleton app.
 
 set -euo pipefail
+export LC_ALL=C
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 # The app folder and its ZIP are the only output: any other format name is refused.
