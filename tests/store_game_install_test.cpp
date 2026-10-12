@@ -7,6 +7,7 @@
 #include "third_party/picosha2/picosha2.h"
 #include <cassert>
 #include <filesystem>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -124,12 +125,33 @@ int main()
         return "\"" + id + "\": {\"name\": \"" + id + "\", \"sha256\": \"" + sha(body) +
                "\", \"size\": " + std::to_string(body.size()) + extra + "}";
     };
+    // Our upgrade from 1.0 to 2.0: data.bin rewritten, extra.bin built from its old bytes,
+    // a file new in 2.0 in a folder 1.0 lacks, a file 2.0 no longer has.
+    const auto u64 = [](std::uint64_t value)
+    {
+        std::string out;
+        for (int i = 0; i < 8; ++i)
+            out += static_cast<char>(value >> (8 * i));
+        return out;
+    };
+    const std::string upgrade = zip(
+        {{"upgrade.json",
+          "{\"schema\": 1, \"game\": \"GAME\", \"from\": \"1.0\", \"to\": \"2.0\", \"files\": ["
+          "{\"path\": \"DATA/data.bin\", \"from_sha256\": \"" + sha(older) + "\", \"sha256\": \"" +
+              sha(current) + "\", \"ops\": \"ops/0\"},"
+          "{\"path\": \"DATA/extra.bin\", \"from_sha256\": \"" + sha("abcdef") + "\", \"sha256\": \"" +
+              sha("cdefXY") + "\", \"ops\": \"ops/1\"},"
+          "{\"path\": \"Support/new/readme.txt\", \"sha256\": \"" + sha("new in 2.0") +
+              "\", \"ops\": \"ops/2\"}], \"remove\": [\"DATA/gone.txt\"]}"},
+         {"ops/0", "A" + u64(3000) + current},
+         {"ops/1", "C" + u64(2) + u64(4) + "A" + u64(2) + "XY"},
+         {"ops/2", "A" + u64(10) + "new in 2.0"}});
     const std::string plan_text =
         "{\"schema\": 1, \"game\": \"GAME\", \"title\": \"The Game\", \"release\": \"2.0\","
         " \"prefix\": \"shared\", \"sources\": {" +
         source("exe", exe) + ", " +
         source("mods", mods, ", \"url\": \"https://example.com/mods.zip\"") + ", " +
-        source("dll", dll) +
+        source("dll", dll) + ", " + source("up", upgrade) +
         "}, \"game_files\": ["
         "{\"source\": \"exe\", \"to\": \"game.exe\"},"
         "{\"source\": \"mods\", \"member\": \"dinput8.dll\", \"to\": \"dinput8.dll\"},"
@@ -151,6 +173,7 @@ int main()
         " \"executable\": \"C:\\\\Games\\\\GAME\\\\game.exe\", \"working_directory\": \"C:\\\\Games\\\\GAME\","
         " \"dll_overrides\": \"dinput8=n,b\", \"width\": 1920, \"height\": 1080,"
         " \"runtime\": {\"fast_clock\": \"true\"}, \"after\": \"other.profile\"},"
+        " \"upgrades\": [{\"from\": \"1.0\", \"source\": \"up\"}],"
         " \"pending\": [\"A mod with no source yet\"]}";
     InstallPlan plan;
     assert(parse_plan(plan_text, plan, error));
@@ -221,11 +244,38 @@ int main()
     cache(data, mods, ".zip");
     assert(missing_sources(plan, (data / "mods-cache").string(), go).empty());
 
-    // An older base copy is not installed over.
+    // An older base copy: without an upgrade from it, refused; with one, its copy is
+    // upgraded as it installs (the base copy itself stays 1.0).
     put(base / "data" / "data.bin", older);
+    put(base / "data" / "extra.bin", "abcdef");
+    put(base / "data" / "gone.txt", "1.0 only");
+    {
+        auto none = plan;
+        none.upgrades.clear();
+        assert(!install_game(none, game, paths, options, progress, go, error));
+        assert(error.find("version 1.0, and there's no upgrade") != std::string::npos);
+    }
+    assert(!install_game(plan, game, paths, options, progress, go, error)); // not in mods-cache
+    assert(error.find("lacks 1 file") != std::string::npos && error.find(sha(upgrade)) != std::string::npos);
+    cache(data, upgrade, ".zip");
+    steps.clear();
+    assert(install_game(plan, game, paths, options, progress, go, error));
+    assert(std::find(steps.begin(), steps.end(), "Upgrading to 2.0") != steps.end());
+    assert(read(installed / "data" / "data.bin") == current && read(installed / "data" / "extra.bin") == "cdefXY" &&
+           read(installed / "Support" / "new" / "readme.txt") == "new in 2.0" &&
+           !fs::exists(installed / "data" / "gone.txt") && !fs::exists(installed / "DATA"));
+    assert(read(data / "installs" / "shared" / "GAME.json").find("\"base_release\": \"1.0\"") !=
+           std::string::npos);
+    assert(read(base / "data" / "data.bin") == older); // the base copy is never changed
+    // An upgrade for other bytes is refused, and the install before it stays.
+    put(base / "data" / "extra.bin", "abcdeZ");
     assert(!install_game(plan, game, paths, options, progress, go, error));
-    assert(error.find("version 1.0") != std::string::npos);
+    assert(error.find("isn't the 1.0 file") != std::string::npos &&
+           read(installed / "data" / "extra.bin") == "cdefXY");
+    // From here on, a 2.0 copy.
     put(base / "data" / "data.bin", current);
+    fs::remove(base / "data" / "extra.bin");
+    fs::remove(base / "data" / "gone.txt");
 
     // The install.
     steps.clear();

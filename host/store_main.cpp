@@ -494,7 +494,8 @@ int main(int argc, char **argv)
                                               : store::library::State::ready;
                 base.version = mode == "mw-old" ? "1.2" : "1.3";
                 base.path = "/data/prospero-blackbox/base-games/NFSMW";
-                base.detail = "Version " + base.version + ".";
+                base.detail = mode == "mw-old" ? "Version 1.2: upgraded to 1.3 as it installs."
+                                               : "Version " + base.version + ".";
                 screen.set_installer(true, true, "", "/data/homebrew");
                 screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99995"}
                                                      : std::vector<std::string>{},

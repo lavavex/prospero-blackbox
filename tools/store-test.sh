@@ -117,7 +117,7 @@ clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" 
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$build/profile-test"
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     -DSTORE_ASSETS="\"$root/assets\"" "$root/tests/store_game_install_test.cpp" \
-    "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" \
+    "$root/src/library/game_install.cpp" "$root/src/library/upgrade.cpp" "$root/src/library/install_plan.cpp" \
     "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" \
     "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/core/save_file.cpp" \
     "${objects[@]}" "${miniz[@]}" -o "$build/game-install-test"
@@ -136,7 +136,7 @@ clang -std=c11 "${flags[@]}" -Wall -Wextra -Werror -c "$root/src/system/update_c
 clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
     "$root/tests/store_service_test.cpp" "$root/src/app/service.cpp" \
     "$root/src/system/inventory.cpp" "$root/src/system/locations.cpp" \
-    "$root/src/core/qr.cpp" "$root/src/catalog/blackbox.cpp" "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" "$root/src/system/app_folder.cpp" \
+    "$root/src/core/qr.cpp" "$root/src/catalog/blackbox.cpp" "$root/src/library/base_game.cpp" "$root/src/library/tree.cpp" "$root/src/library/upgrade.cpp" "$root/src/library/game_install.cpp" "$root/src/library/install_plan.cpp" "$root/src/library/game_profile.cpp" "$root/src/library/wine_registry.cpp" "$root/src/system/app_folder.cpp" \
     "$root/src/catalog/icons.cpp" "$root/src/catalog/catalog.cpp" \
     "$root/src/core/image.cpp" "$root/src/core/save_file.cpp" "$root/host/platform_host.cpp" \
     "$root/src/install/archive.cpp" "$root/src/install/files.cpp" \

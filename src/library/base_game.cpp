@@ -165,8 +165,8 @@ BaseGame inspect(const std::string &folder, const Manifest &manifest)
             result.state = release.needs_patch ? State::needs_patch : State::ready;
             result.version = release.version;
             result.detail = release.needs_patch
-                                ? "Version " + result.version + ": patched to " +
-                                      manifest.releases.front().version + " when it is installed."
+                                ? "Version " + result.version + ": upgraded to " +
+                                      manifest.releases.front().version + " as it installs."
                                 : "Version " + result.version + ".";
             return result;
         }

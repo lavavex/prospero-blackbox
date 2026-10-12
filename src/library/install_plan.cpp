@@ -345,6 +345,17 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
         if (!read.failed && !profile_text(p, unused, error))
             read.failed = true;
     }
+    auto *upgrades = array(read, root, "upgrades");
+    yyjson_arr_foreach(upgrades, index, count, item)
+    {
+        const auto where = "upgrades[" + std::to_string(index) + "]";
+        auto from = read.text(item, "from", true, where), source = read.text(item, "source", true, where);
+        if (!plan.source(source))
+            read.fail(where + " names " + source + ", which isn't in sources");
+        if (from == plan.release)
+            read.fail(where + " is from the release it installs");
+        plan.upgrades.emplace_back(std::move(from), std::move(source));
+    }
     auto *pending = array(read, root, "pending");
     yyjson_arr_foreach(pending, index, count, item)
     {

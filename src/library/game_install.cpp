@@ -3,6 +3,7 @@
 #include "library/game_install.hpp"
 #include "core/save_file.hpp"
 #include "library/tree.hpp"
+#include "library/upgrade.hpp"
 #include "library/wine_registry.hpp"
 #include "third_party/miniz/miniz.h"
 #include "third_party/picosha2/picosha2.h"
@@ -430,12 +431,19 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
                                             : "The base copy isn't ready: " + base.detail;
         return false;
     }
+    // An older release is brought up to the plan's by its upgrade file, in the copy.
+    std::string upgrade;
     if (base.version != plan.release)
     {
-        error = "The base copy is version " + base.version + "; this install needs " +
-                plan.release + ", and the console can't patch it up yet. Copy a " +
-                plan.release + " install.";
-        return false;
+        for (const auto &[from, source] : plan.upgrades)
+            if (from == base.version)
+                upgrade = source;
+        if (upgrade.empty())
+        {
+            error = "The base copy is version " + base.version + ", and there's no upgrade from "
+                    "it to " + plan.release + ". Copy a " + plan.release + " install.";
+            return false;
+        }
     }
     if (!plan.pending.empty() && !options.without_pending)
     {
@@ -458,34 +466,38 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
         return false;
 
     std::uint64_t needed = 0;
+    std::vector<std::string> used;
+    for (const auto *list : {&plan.game_files, &plan.system_files})
+        for (const auto &placement : *list)
+            used.push_back(placement.source);
+    if (!upgrade.empty())
+        used.push_back(upgrade);
     {
         std::set<std::string> counted;
-        for (const auto *list : {&plan.game_files, &plan.system_files})
-            for (const auto &placement : *list)
-                if (counted.insert(placement.source).second)
-                    needed += plan.source(placement.source)->size;
+        for (const auto &id : used)
+            if (counted.insert(id).second)
+                needed += plan.source(id)->size;
     }
     step("Checking the mod files", needed);
     const auto cache = paths.data_root + "/mods-cache";
     std::map<std::string, std::string> files; // source id -> its file in the cache
     std::vector<const Source *> missing;
-    for (const auto *list : {&plan.game_files, &plan.system_files})
-        for (const auto &placement : *list)
-            if (!files.count(placement.source))
+    for (const auto &id : used)
+        if (!files.count(id))
+        {
+            const auto *source = plan.source(id);
+            auto file = find_cached(cache, *source, cancel);
+            if (cancel.load())
             {
-                const auto *source = plan.source(placement.source);
-                auto file = find_cached(cache, *source, cancel);
-                if (cancel.load())
-                {
-                    error = "Cancelled";
-                    return false;
-                }
-                if (file.empty())
-                    missing.push_back(source);
-                files[placement.source] = std::move(file);
-                status.done += source->size;
-                progress(status);
+                error = "Cancelled";
+                return false;
             }
+            if (file.empty())
+                missing.push_back(source);
+            files[id] = std::move(file);
+            status.done += source->size;
+            progress(status);
+        }
     if (!missing.empty())
     {
         error = "mods-cache lacks " + std::to_string(missing.size()) + " file" +
@@ -526,6 +538,19 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
         remove_all(work);
         return false;
     };
+    if (!upgrade.empty())
+    {
+        step("Upgrading to " + plan.release);
+        if (!apply_upgrade(files[upgrade], work, plan.game, base.version, plan.release, cancel,
+                           error))
+            return fail();
+        const auto upgraded = inspect(work, manifest);
+        if (upgraded.state != State::ready || upgraded.version != plan.release)
+        {
+            error = "The upgraded copy isn't " + plan.release + ": " + upgraded.detail;
+            return fail();
+        }
+    }
     step("Adding the mods", plan.game_files.size());
     for (const auto &placement : plan.game_files)
     {
@@ -651,7 +676,8 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
 
     // ---- what was installed, for repair and updates ----
     std::string record = "{\n  \"schema\": 1,\n  \"game\": " + json_text(plan.game) +
-                         ",\n  \"release\": " + json_text(base.version) +
+                         ",\n  \"release\": " + json_text(plan.release) +
+                         ",\n  \"base_release\": " + json_text(base.version) +
                          ",\n  \"prefix\": " + json_text(plan.prefix) +
                          ",\n  \"profile\": " + json_text(plan.profile.id) +
                          ",\n  \"installed_at\": " + std::to_string(static_cast<long long>(options.now)) +

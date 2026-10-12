@@ -2333,18 +2333,14 @@ Screen::Offer Screen::offer(const App &app) const
                 std::any_of(running_.begin(), running_.end(), [](const std::string &id)
                             { return id == "PPSA99995" || id == "PPSA99996" ||
                                      (id.starts_with("PPSA994") && id != "PPSA99400"); });
-            const bool current = base.state == State::ready;
+            // A copy a release behind is brought up to date by its upgrade file as it installs.
             out.primary = Order::Kind::install_game;
             out.label = app.game_installed ? "Repair" : "Install";
             out.uninstall = app.game_installed;
-            out.headline = app.game_installed ? "Installed" : current ? "Ready to install"
-                                                                      : "Needs version 1.3";
+            out.headline = app.game_installed ? "Installed" : "Ready to install";
             out.tone = app.game_installed ? 2 : 1;
             if (!installer_)
                 out.reason = installer_reason_;
-            else if (!current)
-                out.reason = "This copy is " + base.version + ". Patch it to 1.3 with EA's "
-                             "patch, or copy a 1.3 install.";
             else if (wine_running)
                 out.reason = "Close prospero-win and the games first: a game saves its "
                              "settings as it closes.";
