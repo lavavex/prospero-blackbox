@@ -2272,7 +2272,8 @@ Screen::Offer Screen::offer(const App &app) const
         }
         return out;
     }
-    if (installed && app.badge == "Update")
+    // A collection game's page is about the game: its Home app comes and goes with it.
+    if (installed && !app.base_known && app.badge == "Update")
     {
         out.headline = "Update";
         out.note = installed->version + "  \xE2\x86\x92  " + app.available_version;
@@ -2281,7 +2282,7 @@ Screen::Offer Screen::offer(const App &app) const
         out.uninstall = true;
         out.tone = 1;
     }
-    else if (installed)
+    else if (installed && !app.base_known)
     {
         out.headline = "Installed";
         out.note =
@@ -2350,7 +2351,8 @@ Screen::Offer Screen::offer(const App &app) const
                 out.reason = app.game_installed
                                  ? "Builds the game again from the base copy and its mods. Saves "
                                    "stay."
-                                 : "Adds the mods and settings. Every file is checked first.";
+                                 : "Adds the mods and settings and puts the game on the Home "
+                                   "screen. Every file is checked first.";
             }
         }
         else

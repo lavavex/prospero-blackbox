@@ -79,6 +79,10 @@ struct Request
     // The store updating itself: its own running folder is swapped for the new
     // one and the old one is kept until the next start, which finishes the job.
     bool self_update = false;
+    // A copy the manager carries (a collection game's Home app): read from this file
+    // instead of downloading entry.artifact, and held to the same size, SHA-256 and
+    // archive checks.
+    std::string archive;
 };
 struct Result
 {

@@ -93,8 +93,9 @@ class Service
     bool request_adopt(const catalog::Entry &entry, const std::string &location);
     // Copies a game's base copy from a USB drive into base-games (entry.id names the game).
     bool request_import(const catalog::Entry &entry);
-    // Installs (or repairs) a collection game into its prefix from its plan, or removes it.
-    bool request_game(const catalog::Entry &entry, bool remove);
+    // Installs (or repairs) a collection game into its prefix from its plan, with its Home
+    // app in location (the scanned folder that holds, or will hold, it), or removes both.
+    bool request_game(const catalog::Entry &entry, bool remove, const std::string &location);
     // Set before start(): where the games' install plans are (<plans>/<folder>.json),
     // prospero-win's data, and the prefix games go into ("" for each plan's own; a test
     // prefix keeps a test install apart from the live one, its profile named after it).
@@ -178,7 +179,12 @@ class Service
     std::atomic<bool> bases_stale_{true};
     void check_bases();
     bool import_job(const catalog::Entry &entry, std::string &error);
-    bool game_job(const catalog::Entry &entry, bool remove, std::string &error);
+    bool game_job(const catalog::Entry &entry, bool remove, const std::string &location,
+                  const install::Environment &environment, std::string &error);
+    bool home_app(const catalog::Entry &game, const std::string &location,
+                  const install::Environment &environment, std::string &error);
+    bool remove_home_app(const std::string &id, const std::string &location,
+                         const install::Environment &environment, std::string &error);
     // The game's plan and the options this manager installs it with; false without one.
     bool game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
                    const library::Manifest *&manifest, library::InstallOptions &options,

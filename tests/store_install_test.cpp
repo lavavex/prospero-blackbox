@@ -1036,6 +1036,49 @@ void check_worker(const fs::path &base, const std::string &program)
 }
 } // namespace
 
+// A copy the manager carries (a game's Home app): read from its file, never downloaded,
+// held to the listing's size and SHA-256 like a download; its address isn't checked.
+void check_carried(const fs::path &base)
+{
+    Fixture f(base, "carried");
+    const auto fetch = f.environment.fetch;
+    f.environment.fetch = nullptr; // nothing is downloaded, so no network is needed
+    const auto carried = f.root / "bundle" / (kId + ".zip");
+    auto request = f.request("01.000.001");
+    request.entry.artifact = "bundled";
+    request.archive = carried.string();
+    fs::create_directories(carried.parent_path());
+    put(carried, f.artifact);
+    auto result = f.apply(request);
+    assert(result.ok && result.operation == "install" && f.requests == 0);
+    assert(tree(f.target()) == expected_tree(app("01.000.001")) && f.managed() == "01.000.001" &&
+           f.settled());
+
+    // A carried copy that doesn't match its listing, or isn't there, changes nothing.
+    auto update = f.request("01.000.002");
+    update.entry.artifact = "bundled";
+    update.archive = carried.string();
+    put(carried, f.artifact.substr(0, f.artifact.size() - 1) + "x");
+    result = f.apply(update);
+    assert(!result.ok && result.error == "The file doesn't match the listing");
+    assert(f.managed() == "01.000.001" && f.settled());
+    fs::remove(carried);
+    assert(!f.apply(update).ok && f.managed() == "01.000.001" && f.settled());
+
+    // The right one updates it as any download would; without a carried file the address
+    // is held to the rules again.
+    put(carried, f.artifact);
+    result = f.apply(update);
+    assert(result.ok && result.operation == "update" && f.requests == 0 &&
+           f.managed() == "01.000.002" && f.settled());
+    update = f.request("01.000.003");
+    update.entry.artifact = "bundled";
+    assert(!f.apply(update).ok);
+    f.environment.fetch = fetch;
+    result = f.apply(update);
+    assert(!result.ok && result.error == "The download address isn't allowed");
+}
+
 int main(int argc, char **argv)
 {
     char temporary[] = "/tmp/prospero-install-XXXXXX";
@@ -1045,6 +1088,7 @@ int main(int argc, char **argv)
     check_archives(root);
     check_running(root);
     check_transactions(root);
+    check_carried(root);
     check_self_update(root);
     check_interruptions(root);
     if (argc > 1)

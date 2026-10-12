@@ -23,10 +23,12 @@
 #include "install/files.hpp"
 #include "catalog/icons.hpp"
 #include "catalog/blackbox.hpp"
+#include "third_party/yyjson/yyjson.h"
 #include <chrono>
 #include "system/app_folder.hpp"
 #include "core/image.hpp"
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <ctime>
 #include <set>
@@ -37,6 +39,60 @@
 
 namespace store
 {
+namespace
+{
+// The Home app the manager carries for a game: <bundle>/apps.json names its archive, size,
+// SHA-256 and version (nfs-blackbox-ps5's tools/make-bundle.py writes it).
+bool carried_app(const std::string &bundle, const catalog::Entry &game, catalog::Entry &app,
+                 std::string &archive)
+{
+    std::string body;
+    if (bundle.empty() || !install::read_small(bundle + "/apps.json", 64 * 1024, body))
+        return false;
+    yyjson_doc *doc = yyjson_read(body.data(), body.size(), 0);
+    if (!doc)
+        return false;
+    yyjson_val *entry = yyjson_obj_get(yyjson_doc_get_root(doc), game.id.c_str());
+    const auto text = [entry](const char *key)
+    {
+        const char *value = yyjson_get_str(yyjson_obj_get(entry, key));
+        return std::string(value ? value : "");
+    };
+    const std::string file = text("file"), digest = text("sha256"), version = text("version");
+    const std::uint64_t size = yyjson_get_uint(yyjson_obj_get(entry, "size"));
+    yyjson_doc_free(doc);
+    std::array<std::uint8_t, 32> bytes{};
+    if (file.empty() || file.front() == '.' || file.find('/') != std::string::npos ||
+        !catalog::hex_bytes(digest, bytes) || !catalog::version(version) || size == 0)
+        return false;
+    app = {};
+    app.id = game.id;
+    app.name = game.name;
+    app.status = "available";
+    app.format = "zip";
+    app.digest = digest;
+    app.size = size;
+    app.content_version = version;
+    app.version = "bundled-" + version;
+    archive = bundle + "/" + file;
+    app.artifact = archive;
+    return true;
+}
+
+// The version of the app in <location>/<id>, when there is one.
+bool folder_version(const std::string &location, const std::string &id, std::string &version)
+{
+    std::string body, error;
+    catalog::Entry metadata;
+    if (!install::read_small(location + "/" + id + "/sce_sys/param.json", catalog::kDetailLimit,
+                             body) ||
+        !catalog::parse_installed(body, metadata, error) || metadata.id != id)
+        return false;
+    version = metadata.content_version;
+    return true;
+}
+} // namespace
+
 Service::~Service()
 {
     stop();
@@ -262,9 +318,9 @@ bool Service::request_import(const catalog::Entry &entry)
     return enqueue({Job::Kind::import_base, entry, {}});
 }
 
-bool Service::request_game(const catalog::Entry &entry, bool remove)
+bool Service::request_game(const catalog::Entry &entry, bool remove, const std::string &location)
 {
-    return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, {}});
+    return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, location});
 }
 
 bool Service::game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
@@ -285,18 +341,64 @@ bool Service::game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
     options = {};
     options.now = std::time(nullptr);
     options.app_version = version_;
+    // The profile keeps the plan's id whatever the prefix: the game's Home app starts
+    // that id, so it plays whichever install the manager made last.
     if (!game_prefix.empty() && game_prefix != plan.prefix)
     {
         options.prefix = game_prefix;
-        options.profile_id = game_prefix;
         options.profile_name = plan.profile.name + " (" + game_prefix + ")";
     }
     return true;
 }
 
-// The installer's worker: a collection game installed (or repaired) from its plan, or
-// removed, with the job's progress.
-bool Service::game_job(const catalog::Entry &entry, bool remove, std::string &error)
+// The game's Home app, from the copy the manager carries: installed when missing, updated
+// when the carried one is newer, through the same transaction as any app. A build that
+// carries none leaves it to the user.
+bool Service::home_app(const catalog::Entry &game, const std::string &location,
+                       const install::Environment &environment, std::string &error)
+{
+    catalog::Entry app;
+    std::string archive, current;
+    if (!carried_app(bundle, game, app, archive))
+    {
+        hui::sys::log("[STORE] home app id=%s: none carried", game.id.c_str());
+        return true;
+    }
+    if (folder_version(location, game.id, current) &&
+        !catalog::update_available(current, app.content_version))
+        return true;
+    const auto result =
+        install::apply(environment, {app, location, {}, false, archive}, job_control_, progress_);
+    hui::sys::log("[STORE] home app id=%s operation=%s ok=%d version=%s error=%s %s",
+                  game.id.c_str(), result.operation.c_str(), result.ok, result.version.c_str(),
+                  result.error.c_str(), result.note.c_str());
+    if (!result.ok)
+        error = "The game is installed, but its Home app isn't: " + result.error;
+    return result.ok;
+}
+
+// The game's Home app taken off the console, when the manager installed it.
+bool Service::remove_home_app(const std::string &id, const std::string &location,
+                              const install::Environment &environment, std::string &error)
+{
+    if (location.empty() || access((environment.root + "/receipts/" + id + ".json").c_str(), F_OK) != 0)
+        return true;
+    const auto result = install::uninstall(environment, id, location, progress_);
+    if (!result.ok)
+    {
+        error = "Its Home app can't be removed: " + result.error;
+        return false;
+    }
+    const int unregistered = system::unregister_title(id);
+    hui::sys::log("[STORE] home app id=%s removed, unregister rc=0x%08x", id.c_str(),
+                  static_cast<unsigned>(unregistered));
+    return true;
+}
+
+// The installer's worker: a collection game installed (or repaired) from its plan with its
+// Home app, or both removed, with the job's progress.
+bool Service::game_job(const catalog::Entry &entry, bool remove, const std::string &location,
+                       const install::Environment &environment, std::string &error)
 {
     library::InstallPlan plan;
     const library::Manifest *manifest = nullptr;
@@ -307,6 +409,9 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, std::string &er
     bases_stale_ = true;
     if (remove)
     {
+        // The app first: while it can't go (running), the game stays playable.
+        if (!remove_home_app(entry.id, location, environment, error))
+            return false;
         progress_.phase = static_cast<int>(install::Phase::removing);
         return library::uninstall_game(plan, paths, options, error);
     }
@@ -346,22 +451,24 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, std::string &er
                 job_control_.cancelled, error))
             return false;
     }
-    return library::install_game(
-        plan, *manifest, paths, options,
-        [&](const library::InstallStatus &status)
-        {
-            using install::Phase;
-            // The page shows phases: the steps that move bytes show how far they are.
-            const auto phase = status.step.starts_with("Checking") ? Phase::verifying
-                               : status.step == "Copying the base copy" ||
-                                       status.step == "Adding the mods"
-                                   ? Phase::copying
-                                   : Phase::activating;
-            progress_.phase = static_cast<int>(phase);
-            progress_.total = status.total;
-            progress_.done = status.done;
-        },
-        job_control_.cancelled, error);
+    if (!library::install_game(
+            plan, *manifest, paths, options,
+            [&](const library::InstallStatus &status)
+            {
+                using install::Phase;
+                // The page shows phases: the steps that move bytes show how far they are.
+                const auto phase = status.step.starts_with("Checking") ? Phase::verifying
+                                   : status.step == "Copying the base copy" ||
+                                           status.step == "Adding the mods"
+                                       ? Phase::copying
+                                       : Phase::activating;
+                progress_.phase = static_cast<int>(phase);
+                progress_.total = status.total;
+                progress_.done = status.done;
+            },
+            job_control_.cancelled, error))
+        return false;
+    return home_app(entry, location, environment, error);
 }
 
 // Where each game's base copy is and what it is: published when it changes (a copy put
@@ -740,7 +847,7 @@ void Service::run_installer()
         {
             const bool remove = job.kind == Job::Kind::uninstall_game;
             result.operation = remove ? "game-uninstall" : "game-install";
-            result.ok = game_job(job.entry, remove, result.error);
+            result.ok = game_job(job.entry, remove, job.location, environment, result.error);
         }
 #ifdef STORE_FILE_WORKER
         else if (job.entry.id == environment.self)
@@ -755,7 +862,7 @@ void Service::run_installer()
 #endif
         else
             result = install::apply(
-                environment, {job.entry, job.location, minimum, job.entry.id == environment.self},
+                environment, {job.entry, job.location, minimum, job.entry.id == environment.self, {}},
                 job_control_, progress_);
         hui::sys::log("[STORE] job id=%s operation=%s ok=%d version=%s error=%s %s",
                       job.entry.id.c_str(), result.operation.c_str(), result.ok,
@@ -799,7 +906,7 @@ void Service::run_installer()
                                            "after a restart.")
                 : result.operation == "import" ? "Kept in base-games for installs. The USB drive can go."
                 : result.operation == "game-install"
-                    ? "It is in prospero-win's game list now. Its own Home-screen app comes later."
+                    ? "Start it from its own app on the Home screen, or from prospero-win."
                 : result.operation == "game-uninstall"
                     ? "Its saves stay in the prefix, and so does the base copy."
                 : result.operation == "adopt" ? "Prospero BlackBox will offer its updates from now on."

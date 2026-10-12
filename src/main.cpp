@@ -626,7 +626,8 @@ int main()
                                           order.kind == store::Order::Kind::uninstall_game
                                       ? service.request_game(
                                             order.entry,
-                                            order.kind == store::Order::Kind::uninstall_game)
+                                            order.kind == store::Order::Kind::uninstall_game,
+                                            order.location)
                                   : order.kind == store::Order::Kind::uninstall
                                       ? service.request_uninstall(order.id, order.location)
                                       : service.cancel_job(order.id);

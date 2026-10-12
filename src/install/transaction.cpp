@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 namespace store::install
 {
@@ -310,6 +311,51 @@ bool download(const Environment &environment, const catalog::Entry &entry, const
     return false;
 }
 
+// Reads a file the manager carries as a download would arrive, in pieces.
+Fetch read_local(const std::string &file)
+{
+    return [file](const std::string &, std::uint64_t limit, const net::Sink &sink,
+                  net::Control &control)
+    {
+        net::Response response;
+        const int descriptor = open(file.c_str(), O_RDONLY | O_NOFOLLOW);
+        if (descriptor < 0)
+        {
+            response.error = "The copy Prospero BlackBox carries can't be read";
+            return response;
+        }
+        std::vector<char> buffer(1 << 20);
+        for (;;)
+        {
+            if (control.cancelled.load())
+            {
+                response.error = "Cancelled";
+                break;
+            }
+            const auto count = read(descriptor, buffer.data(), buffer.size());
+            if (count < 0 && errno == EINTR)
+                continue;
+            if (count < 0 || (response.bytes += static_cast<std::uint64_t>(count)) > limit)
+            {
+                response.error = "The copy Prospero BlackBox carries can't be read";
+                break;
+            }
+            if (count == 0)
+            {
+                response.status = 200;
+                break;
+            }
+            if (!sink(std::string_view(buffer.data(), static_cast<std::size_t>(count))))
+            {
+                response.error = "The download could not be saved";
+                break;
+            }
+        }
+        close(descriptor);
+        return response;
+    };
+}
+
 // ShadowMountPlus copies an app's sce_sys once, when it first registers the
 // title. After an update the store brings those copies up to date itself.
 // Best effort: the app is installed whether or not this works.
@@ -373,13 +419,13 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         return result;
     };
     std::array<std::uint8_t, 32> digest{};
-    if (!environment.fetch || environment.root.empty())
+    if ((!environment.fetch && request.archive.empty()) || environment.root.empty())
         return fail("Installing isn't available: no permission to write");
     if (!catalog::title_id(id) || entry.status != "available")
         return fail("This app can't be installed yet");
     if (entry.format != "zip")
         return fail("Can't be installed by this version of Prospero BlackBox");
-    if (!catalog::artifact_url(entry.artifact))
+    if (request.archive.empty() && !catalog::artifact_url(entry.artifact))
         return fail("The download address isn't allowed");
     if (!catalog::hex_bytes(entry.digest, digest) || entry.size > catalog::kArtifactLimit)
         return fail("The listing can't be installed safely");
@@ -475,7 +521,14 @@ Result apply(const Environment &environment, const Request &request, net::Contro
     progress.total = entry.size;
     progress.done = 0;
     progress.phase = static_cast<int>(Phase::downloading);
-    if (!download(environment, entry, paths.archive, control, progress, error))
+    Environment carried;
+    if (!request.archive.empty())
+    {
+        carried = environment;
+        carried.fetch = read_local(request.archive);
+    }
+    if (!download(request.archive.empty() ? environment : carried, entry, paths.archive, control,
+                  progress, error))
         return abandon(error);
     STORE_STEP("downloaded");
 
