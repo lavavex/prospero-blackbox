@@ -7,8 +7,8 @@
 #   PB_BACKGROUND  3840x2160 PNG (default: ../art/prospero-blackbox-bg.png)
 #   PB_ART         the games' icons (default: ../art/<game>.png)
 #   PS5_ASSETS_TOOL the BC7 converter (default: ../PS5_Vulkan/tools/prepare-assets.sh)
-# Without them the app is built without Home-screen art (the console shows a
-# blank tile) and a warning is printed.
+# Without them the app is built with a plain stand-in icon and no background (the
+# console shows a dark tile) and a warning is printed.
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 icon=${PB_ICON:-$root/../art/prospero-blackbox-icon0.png}
@@ -37,7 +37,21 @@ else
 fi
 
 if [[ ! -f $icon ]]; then
-    echo "==> [art] no icon at $icon: building without Home-screen art" >&2
+    # A clean clone has no art: a plain dark 512x512 icon (nothing of EA's) lets the
+    # build go through; the console then shows that on the Home screen.
+    if [[ ! -f $out/icon0.png ]]; then
+        python3 - "$out/icon0.png" <<'PY2'
+import struct, sys, zlib
+size, colour = 512, bytes((24, 24, 28))
+rows = b"".join(b"\0" + colour * size for _ in range(size))
+def chunk(kind, body):
+    return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0))
+       + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b""))
+open(sys.argv[1], "wb").write(png)
+PY2
+    fi
+    echo "==> [art] no icon at $icon: building with a plain stand-in icon, no background" >&2
     exit 0
 fi
 cp "$icon" "$out/icon0.png"
