@@ -39,13 +39,15 @@ bash tools/store-test.sh                                # the host checks
 ## Home-screen art
 
 The art uses EA's Need for Speed emblem, so it is **not** in this repository.
-`tools/blackbox-assets.sh` (run by `make app`) copies it in from the workspace:
+`tools/blackbox-assets.sh` (run by `make app`) copies it in from the private
+nfs-blackbox-ps5 checkout beside this one (`NFSBB`, default `../nfs-blackbox-ps5`):
 
 | Variable | Default | What |
 | --- | --- | --- |
-| `PB_ICON` | `../art/prospero-blackbox-icon0.png` | 512x512 PNG |
-| `PB_BACKGROUND` | `../art/prospero-blackbox-bg.png` | 3840x2160 RGB PNG |
-| `PS5_ASSETS_TOOL` | `../PS5_Vulkan/tools/prepare-assets.sh` | BC7 converter for `pic0.dds`/`pic1.dds` |
+| `PB_ICON` | `$NFSBB/art/prospero-blackbox-icon0.png` | 512x512 PNG |
+| `PB_BACKGROUND` | `$NFSBB/art/prospero-blackbox-bg.png` | 3840x2160 RGB PNG |
+| `PB_ART` | `$NFSBB/art` | the games' icons (`<game>.png`) |
+| `PS5_ASSETS_TOOL` | `$NFSBB/PS5_Vulkan/tools/prepare-assets.sh` | BC7 converter for `pic0.dds`/`pic1.dds` |
 
 Without them the app builds with no Home-screen art.
 

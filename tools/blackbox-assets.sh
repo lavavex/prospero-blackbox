@@ -2,21 +2,23 @@
 # Home-screen art for Prospero BlackBox: icon0.png, pic0.dds, pic1.dds.
 #
 # The art uses EA's Need for Speed emblem, so it is never committed (see
-# .gitignore). It is taken from the workspace's local art folder at build time:
-#   PB_ICON        512x512 PNG   (default: ../art/prospero-blackbox-icon0.png)
-#   PB_BACKGROUND  3840x2160 PNG (default: ../art/prospero-blackbox-bg.png); or, beside it,
+# .gitignore). It is taken at build time from the private nfs-blackbox-ps5 repo, checked
+# out beside this one (NFSBB, default ../nfs-blackbox-ps5):
+#   PB_ICON        512x512 PNG   (default: $NFSBB/art/prospero-blackbox-icon0.png)
+#   PB_BACKGROUND  3840x2160 PNG (default: $NFSBB/art/prospero-blackbox-bg.png); or, beside it,
 #                  the converted prospero-blackbox-bg.dds (BC7), used as pic0 and pic1
-#   PB_ART         the games' icons (default: ../art/<game>.png)
-#   PS5_ASSETS_TOOL the BC7 converter (default: ../PS5_Vulkan/tools/prepare-assets.sh)
+#   PB_ART         the games' icons (default: $NFSBB/art/<game>.png)
+#   PS5_ASSETS_TOOL the BC7 converter (default: $NFSBB/PS5_Vulkan/tools/prepare-assets.sh)
 # Without them the app is built with a plain stand-in icon and no background (the
 # console shows a dark tile) and a warning is printed.
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-icon=${PB_ICON:-$root/../art/prospero-blackbox-icon0.png}
-background=${PB_BACKGROUND:-$root/../art/prospero-blackbox-bg.png}
-tool=${PS5_ASSETS_TOOL:-$root/../PS5_Vulkan/tools/prepare-assets.sh}
+nfsbb=${NFSBB:-$root/../nfs-blackbox-ps5}
+icon=${PB_ICON:-$nfsbb/art/prospero-blackbox-icon0.png}
+background=${PB_BACKGROUND:-$nfsbb/art/prospero-blackbox-bg.png}
+tool=${PS5_ASSETS_TOOL:-$nfsbb/PS5_Vulkan/tools/prepare-assets.sh}
 out=$root/sce_sys
-art=${PB_ART:-$root/../art}
+art=${PB_ART:-$nfsbb/art}
 
 # The games' icons (cover art, so local only too): assets/games/<art>.png, the
 # names the built-in catalog (src/catalog/blackbox.cpp) uses.
