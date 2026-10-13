@@ -500,9 +500,39 @@ int main(int argc, char **argv)
                 screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99403"}
                                                      : std::vector<std::string>{},
                                    true);
-                screen.set_base("PPSA99403", base, mode == "mw-installed");
+                // The plan's option, as the Service publishes it.
+                screen.set_base("PPSA99403", base, mode == "mw-installed",
+                                {{"x360", "Xbox 360 graphics",
+                                  "The Xbox 360 look: the X360 Stuff Pack 4.2, the converted Xbox 360 "
+                                  "movies, HD Content Support, Front-End Shadows, HD Reflections, "
+                                  "native D3DX and an async-luminance fix. About 3.7 GB more to download.",
+                                  false}});
                 assert(screen.open_app("PPSA99403"));
                 settle(90);
+                if (mode == "mw-ask")
+                {
+                    // Install pressed: the question about the option.
+                    hui::InputFrame press;
+                    press.pressed = hui::action_bit(hui::Action::confirm);
+                    screen.update(press, 1.0f / 60.0f, feedback);
+                    settle(40);
+                }
+                else if (mode == "mw-installing")
+                {
+                    // Downloading, the first stage, the box grown.
+                    screen.set_activity({"PPSA99403", 1, 640u << 20, 1495u << 20, {}, 0,
+                                         {"Getting Xbox 360 Stuff Pack 4.2 (9 of 14)"}});
+                    settle(60);
+                }
+                else if (mode == "mw-installing-files")
+                {
+                    // Further on: the game's files, the stages before it done.
+                    screen.set_activity({"PPSA99403", 6, 1200u << 20, 3000u << 20, {}, 3,
+                                         {"All 17 files ready", "Using the prefix pb-mw",
+                                          "Your copy and the mod files check out",
+                                          "Copying your game into the prefix"}});
+                    settle(60);
+                }
             }
             else if (mode.starts_with("theme-"))
             {
@@ -578,9 +608,9 @@ int main(int argc, char **argv)
                     const std::uint64_t total =
                         mode == "page-installing" ? 197867360ull : 412000000ull;
                     const int phase = mode == "page-installing" ? 1 : 3;
-                    screen.set_activity({id, phase, total / 5, total, {"PPSA99420"}});
+                    screen.set_activity({id, phase, total / 5, total, {"PPSA99420"}, -1, {}});
                     settle(60);
-                    screen.set_activity({id, phase, total * 43 / 100, total, {"PPSA99420"}});
+                    screen.set_activity({id, phase, total * 43 / 100, total, {"PPSA99420"}, -1, {}});
                 }
             }
             else if (mode == "reel-install")
@@ -612,10 +642,10 @@ int main(int argc, char **argv)
             {
                 screen.set_installer(true, true, "", "/data/homebrew");
                 screen.set_activity(
-                    {"PPSA99169", 1, 197867360ull / 5, 197867360ull, {"PPSA99420"}});
+                    {"PPSA99169", 1, 197867360ull / 5, 197867360ull, {"PPSA99420"}, -1, {}});
                 settle(60);
                 screen.set_activity(
-                    {"PPSA99169", 1, 197867360ull * 43 / 100, 197867360ull, {"PPSA99420"}});
+                    {"PPSA99169", 1, 197867360ull * 43 / 100, 197867360ull, {"PPSA99420"}, -1, {}});
                 for (int i = 0; i < 1; ++i)
                 {
                     screen.update(right, 1.0f / 60.0f, feedback);
@@ -665,7 +695,7 @@ int main(int argc, char **argv)
             {
                 // An install in progress, seen from the grid and the top bar.
                 screen.set_installer(true, true, "", "/data/homebrew");
-                screen.set_activity({"PPSA99007", 1, 30u << 20, 58u << 20, {"PPSA99420"}});
+                screen.set_activity({"PPSA99007", 1, 30u << 20, 58u << 20, {"PPSA99420"}, -1, {}});
             }
             else if (mode == "queue" || mode == "downloads" || mode == "settings" ||
                      mode == "about")
@@ -677,7 +707,7 @@ int main(int argc, char **argv)
                 if (mode == "queue" || mode == "downloads")
                 {
                     screen.set_activity(
-                        {"PPSA99007", 3, 61u << 20, 94u << 20, {"PPSA99420", "PPSA99169"}});
+                        {"PPSA99007", 3, 61u << 20, 94u << 20, {"PPSA99420", "PPSA99169"}, -1, {}});
                     screen.finish_job(
                         true, false, "ProsperoRadio installed",
                         "ShadowMountPlus will add it to your home screen in a moment.");
@@ -808,10 +838,10 @@ int main(int argc, char **argv)
                     if (mode == "detail-progress")
                     {
                         // Two samples a second apart give the page a speed, and so a time left.
-                        screen.set_activity({entry.id, 1, entry.size / 5, entry.size, {}});
+                        screen.set_activity({entry.id, 1, entry.size / 5, entry.size, {}, -1, {}});
                         for (int frame = 0; frame < 60; ++frame)
                             screen.update({}, 1.0f / 60.0f, feedback);
-                        screen.set_activity({entry.id, 1, entry.size * 2 / 5, entry.size, {}});
+                        screen.set_activity({entry.id, 1, entry.size * 2 / 5, entry.size, {}, -1, {}});
                     }
                     if (mode == "detail-armed")
                     {
@@ -903,17 +933,17 @@ int main(int argc, char **argv)
                     const int f = frame - start;
                     if (f >= 0 && f < 240)
                         screen.set_activity(
-                            {id, 1, total * static_cast<std::uint64_t>(f) / 240, total, {}});
+                            {id, 1, total * static_cast<std::uint64_t>(f) / 240, total, {}, -1, {}});
                     else if (f >= 240 && f < 270)
-                        screen.set_activity({id, 2, 0, 0, {}});
+                        screen.set_activity({id, 2, 0, 0, {}, -1, {}});
                     else if (f >= 270 && f < 420)
                         screen.set_activity({id,
                                              3,
                                              unpacked * static_cast<std::uint64_t>(f - 270) / 150,
                                              unpacked,
-                                             {}});
+                                             {}, -1, {}});
                     else if (f >= 420 && f < 444)
-                        screen.set_activity({id, 4, 0, 0, {}});
+                        screen.set_activity({id, 4, 0, 0, {}, -1, {}});
                     else if (f == 444)
                     {
                         screen.set_activity({});

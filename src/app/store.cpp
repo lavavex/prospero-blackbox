@@ -1227,7 +1227,7 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
                           (shown.game_installed ? "Repair " : "Install ") + shown.name + " with " +
                               option.title + "?",
                           option.description,
-                          {{"Cancel"}, {"Without"}, {"With " + option.title, ui::ButtonKind::primary}},
+                          {{"Cancel"}, {"No"}, {"Yes", ui::ButtonKind::primary}},
                           option.on ? 2 : 1},
                          feedback);
         }
@@ -1372,7 +1372,7 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
         const bool answered = dialog_.handle(input, feedback) == ui::Event::activated;
         if (answered && ask_ == Ask::game_options)
         {
-            // 0 Cancel, 1 Without, 2 With.
+            // 0 Cancel, 1 No (without it), 2 Yes (with it).
             for (const auto &app : apps_)
                 if (app.title_id == ask_id_ && dialog_.choice() >= 1 && !app.game_options.empty())
                     order(app, Order::Kind::install_game,
@@ -2275,8 +2275,8 @@ Screen::Offer Screen::offer(const App &app) const
             out.primary = Order::Kind::cancel;
             out.armed = true;
         }
-        out.reason = game ? "Your copy of the game is never changed, and the install before "
-                            "this one stays until the new one checks out."
+        out.reason = game ? "Your game copy is never changed. The old install stays until this "
+                            "one checks out."
                           : "The app's folder is only changed once everything is verified and unpacked.";
         return out;
     }
@@ -2535,8 +2535,8 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
     Rect box = kActionBox;
     box.y += 30.0f * motion() * (1.0f - content);
     // Taller while a game installs: room for its stages.
-    box.y -= 96.0f * grow_;
-    box.h += 300.0f * grow_;
+    box.y -= 112.0f * grow_; // up to just under the top, down to above the button hints
+    box.h += 236.0f * grow_;
     list.push_opacity(content);
     list.shadow({box.x, box.y + 24.0f, box.w, box.h}, 32, 60, kBlack.with_alpha(0.5f));
     // Frosted glass over the key art: the blurred picture, a tint, a sheen
@@ -2706,7 +2706,7 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
 void Screen::draw_game_stages(const ui::Fonts &fonts, gfx::DrawList &list, const Rect &box,
                               const Offer &state) const
 {
-    const float x = box.x + 34.0f, w = box.w - 68.0f, cx = box.cx(), cy = box.y + 172.0f;
+    const float x = box.x + 34.0f, w = box.w - 68.0f, cx = box.cx(), cy = box.y + 164.0f;
     // The ring: how far the measured part of this stage is, or a spinner.
     const float radius = 72.0f;
     list.ring(cx, cy, radius, 9.0f, kInk.with_alpha(0.12f));
@@ -2726,7 +2726,7 @@ void Screen::draw_game_stages(const ui::Fonts &fonts, gfx::DrawList &list, const
     // The stages, top to bottom: done ones checked with what they did, the one under way
     // lit with what it is doing now, the rest waiting.
     const int now = activity_.stage;
-    const float top = box.y + 290.0f, row = 62.0f;
+    const float top = box.y + 272.0f, row = 56.0f;
     const int count = static_cast<int>(std::size(library::kGameStages));
     for (int i = 0; i < count; ++i)
     {
@@ -2758,7 +2758,7 @@ void Screen::draw_game_stages(const ui::Fonts &fonts, gfx::DrawList &list, const
     }
     // How far the bytes are, and the time left.
     ui::text(list, fonts.regular, fonts.regular.font->fit(state.note, 19, w), cx,
-             top + row * static_cast<float>(count) + 24.0f, 19, kInk.with_alpha(0.74f),
+             top + row * static_cast<float>(count) + 16.0f, 19, kInk.with_alpha(0.74f),
              gfx::Align::center);
 }
 
