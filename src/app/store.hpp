@@ -115,6 +115,8 @@ struct Activity
     int phase = 0;  // install::Phase
     std::uint64_t done = 0, total = 0;
     std::vector<std::string> waiting;
+    int stage = -1;                  // a game install: its stage (kGameStages), else -1
+    std::vector<std::string> stages; // and each stage's line
 };
 
 // The layout follows the UI library's "Storefront" design: a featured banner,
@@ -371,6 +373,10 @@ class Screen
     std::string time_left() const;
     void draw_action_box(const hui::ui::Fonts &fonts, std::uint32_t glass, const App &app,
                          float content);
+    // A game install in the grown action box: a ring for what can be measured, then its
+    // stages, each with what it is doing or did.
+    void draw_game_stages(const hui::ui::Fonts &fonts, hui::gfx::DrawList &list,
+                          const hui::gfx::Rect &box, const Offer &state) const;
 
     hui::ui::Theme theme_;
     std::string theme_id_;       // whose colours the interface is wearing or easing toward
@@ -418,7 +424,7 @@ class Screen
     } ask_ = Ask::none;
     // Uninstalling is a hold, not a question: the button fills while it is held.
     hui::ui::HoldButton hold_;
-    bool chime_ = false; // a job finished well: its toast plays the completion sound
+    bool quiet_ = false; // a job finished well: its toast comes without a sound
     bool intro_on_ = false, intro_leaving_ = false;
     float intro_clock_ = 0.0f, intro_leave_ = 0.0f;
     void draw_intro(const hui::ui::Fonts &fonts);
@@ -457,6 +463,7 @@ class Screen
     bool close_armed_ = false;
     float close_hold_ = 0.0f;
     float time_ = 0.0f, banner_clock_ = 0.0f;
+    float grow_ = 0.0f; // 0..1: the action box grown to list a game install's stages
     hui::tween::Spring scroll_, page_, banner_focus_, plate_;
     hui::tween::Timer banner_fade_, swap_;
     hui::ui::SpringRect ring_, chip_pill_;

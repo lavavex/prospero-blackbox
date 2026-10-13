@@ -1307,6 +1307,14 @@ void Screen::close_developer()
 void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
 {
     time_ += dt;
+    {
+        // The action box grows while the page's game installs, to list its stages.
+        const App *shown = page_app();
+        const float target =
+            shown && activity_.stage >= 0 && activity_.id == shown->title_id ? 1.0f : 0.0f;
+        grow_ = settings_.reduce_motion ? target
+                                        : grow_ + (target - grow_) * std::min(1.0f, dt * 7.0f);
+    }
     follow_theme(dt);
     // Where this frame's input lands, before it changes anything: the home page, idle.
     const bool at_home = !panel_ && !details_ && !dialog_.is_open() &&
@@ -1491,14 +1499,15 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     article_.update(dt);
     dialog_.update(dt);
     hold_.update(dt);
-    if (chime_)
+    if (quiet_)
     {
-        // The toast of a job that went well plays the completion sound.
+        // The toast of a job that went well says so without a sound (the owner found the
+        // completion chime noisy); a failure still sounds.
         const auto notify = toasts_.style.sounds.notify;
-        toasts_.style.sounds.notify = audio::Cue::complete;
+        toasts_.style.sounds.notify = audio::Cue::count;
         toasts_.update(dt, feedback);
         toasts_.style.sounds.notify = notify;
-        chime_ = false;
+        quiet_ = false;
     }
     else
         toasts_.update(dt, feedback);
@@ -2208,7 +2217,7 @@ void Screen::set_installer(bool available, bool guard, std::string reason, std::
 void Screen::finish_job(bool ok, bool restart, std::string title, std::string body)
 {
     const bool cancelled = title.ends_with(": cancelled");
-    chime_ = ok && !cancelled;
+    quiet_ = ok && !cancelled;
     restart_needed_ = restart_needed_ || restart;
     history_.push_back({ok, title, body});
     if (history_.size() > 12)
@@ -2243,7 +2252,10 @@ Screen::Offer Screen::offer(const App &app) const
                        : phase == Phase::removing   ? "Removing"
                        : phase == Phase::copying    ? "Copying to the console"
                                                     : "Waiting";
-        const bool measured = (phase == Phase::downloading || phase == Phase::unpacking ||
+        const bool game = !waiting && activity_.stage >= 0 && activity_.id == app.title_id;
+        if (game)
+            out.headline = library::kGameStages[activity_.stage];
+        const bool measured = (game || phase == Phase::downloading || phase == Phase::unpacking ||
                                phase == Phase::copying) &&
                               activity_.total > 0;
         if (measured)
@@ -2263,7 +2275,9 @@ Screen::Offer Screen::offer(const App &app) const
             out.primary = Order::Kind::cancel;
             out.armed = true;
         }
-        out.reason = "The app's folder is only changed once everything is verified and unpacked.";
+        out.reason = game ? "Your copy of the game is never changed, and the install before "
+                            "this one stays until the new one checks out."
+                          : "The app's folder is only changed once everything is verified and unpacked.";
         return out;
     }
 
@@ -2520,6 +2534,9 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
     auto &list = overlay_;
     Rect box = kActionBox;
     box.y += 30.0f * motion() * (1.0f - content);
+    // Taller while a game installs: room for its stages.
+    box.y -= 96.0f * grow_;
+    box.h += 300.0f * grow_;
     list.push_opacity(content);
     list.shadow({box.x, box.y + 24.0f, box.w, box.h}, 32, 60, kBlack.with_alpha(0.5f));
     // Frosted glass over the key art: the blurred picture, a tint, a sheen
@@ -2535,7 +2552,9 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
     ui::text(list, fonts.semibold, "ON THIS CONSOLE", x, box.y + 54.0f, 16, kInk.with_alpha(0.55f),
              gfx::Align::left, 3.5f);
     const float cx = box.cx(), cy = box.y + 196.0f;
-    if (state.busy)
+    if (state.busy && activity_.stage >= 0 && activity_.id == app.title_id)
+        draw_game_stages(fonts, list, box, state);
+    else if (state.busy)
     {
         // A ring for the part that can be measured, and the whole job as steps.
         using Phase = install::Phase;
@@ -2632,7 +2651,7 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
 
     // The primary button: filled when it can be pressed, at rest when it
     // can't, and the line under it always says why.
-    Rect button{x, box.y + 452.0f, w, 70.0f};
+    Rect button{x, box.y + box.h - 152.0f, w, 70.0f};
     button.x += ui::shake(nudge_.value, time_, 10.0f) * (details_ ? 1.0f : 0.0f);
     if (!state.label.empty())
     {
@@ -2682,6 +2701,65 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
                       button.y + (state.label.empty() ? 30.0f : 104.0f), 19, w, 27,
                       kInk.with_alpha(0.6f), 2);
     list.pop_opacity();
+}
+
+void Screen::draw_game_stages(const ui::Fonts &fonts, gfx::DrawList &list, const Rect &box,
+                              const Offer &state) const
+{
+    const float x = box.x + 34.0f, w = box.w - 68.0f, cx = box.cx(), cy = box.y + 172.0f;
+    // The ring: how far the measured part of this stage is, or a spinner.
+    const float radius = 72.0f;
+    list.ring(cx, cy, radius, 9.0f, kInk.with_alpha(0.12f));
+    if (state.progress >= 0.0f)
+    {
+        list.glow({cx - radius, cy - radius, radius * 2.0f, radius * 2.0f}, radius, 36,
+                  kAccent.with_alpha(0.12f));
+        list.arc(cx, cy, radius, 9.0f, -1.5708f, 6.2832f * state.progress, kAccent);
+        ui::text(list, fonts.mono, std::to_string(static_cast<int>(state.progress * 100.0f)) + "%",
+                 cx, cy + 14.0f, 38, kInk, gfx::Align::center);
+    }
+    else
+        list.arc(cx, cy, radius, 9.0f, time_ * 3.4f, 1.7f, kAccent);
+    ui::text(list, fonts.semibold, fonts.semibold.font->fit(ui::upper(state.headline), 12, 104.0f), cx,
+             cy + 36.0f, 12, kInk.with_alpha(0.62f), gfx::Align::center, 2.0f);
+
+    // The stages, top to bottom: done ones checked with what they did, the one under way
+    // lit with what it is doing now, the rest waiting.
+    const int now = activity_.stage;
+    const float top = box.y + 290.0f, row = 62.0f;
+    const int count = static_cast<int>(std::size(library::kGameStages));
+    for (int i = 0; i < count; ++i)
+    {
+        const float y = top + row * static_cast<float>(i), dot = x + 14.0f;
+        if (i + 1 < count) // the line down to the next stage
+            list.rounded_rect({dot - 1.5f, y + 16.0f, 3.0f, row - 32.0f}, 1.5f,
+                              i < now ? kAccent : kInk.with_alpha(0.16f));
+        if (i < now)
+        {
+            list.circle(dot, y, 12.0f, kAccent);
+            draw_check(list, dot, y, 13.0f, kOnAccent);
+        }
+        else if (i == now)
+        {
+            list.circle(dot, y, 12.0f + 3.0f * breath(), kAccent.with_alpha(0.25f));
+            list.ring(dot, y, 11.0f, 3.0f, kAccent);
+            list.circle(dot, y, 4.5f, kAccent);
+        }
+        else
+            list.ring(dot, y, 10.0f, 2.0f, kInk.with_alpha(0.28f));
+        const float tx = x + 46.0f, tw = w - 46.0f;
+        ui::text(list, fonts.semibold, library::kGameStages[i], tx, y + 7.0f, 20,
+                 i == now ? kInk : kInk.with_alpha(i < now ? 0.82f : 0.4f));
+        const std::string line =
+            static_cast<std::size_t>(i) < activity_.stages.size() ? activity_.stages[i] : std::string{};
+        if (!line.empty() && i <= now)
+            ui::text(list, fonts.regular, fonts.regular.font->fit(line, 16, tw), tx, y + 31.0f, 16,
+                     i == now ? kAccent.with_alpha(0.95f) : kInk.with_alpha(0.55f));
+    }
+    // How far the bytes are, and the time left.
+    ui::text(list, fonts.regular, fonts.regular.font->fit(state.note, 19, w), cx,
+             top + row * static_cast<float>(count) + 24.0f, 19, kInk.with_alpha(0.74f),
+             gfx::Align::center);
 }
 
 void Screen::draw_page(const ui::Fonts &fonts, std::uint32_t glass)
@@ -2787,7 +2865,7 @@ void Screen::draw_page(const ui::Fonts &fonts, std::uint32_t glass)
     // The QR code for the app's page, under the panel.
     if (qr_texture_ != 0 && qr_id_ == app.title_id)
     {
-        list.push_opacity(content);
+        list.push_opacity(content * (1.0f - grow_)); // under the grown box: out of the way
         const Rect code{kActionBox.x + 4.0f, kActionBox.y + kActionBox.h + 26.0f, 92.0f, 92.0f};
         list.rounded_rect(code.inset(-6.0f), 12, kWhite);
         list.image(qr_texture_, code, gfx::kFullUv, kWhite);

@@ -657,7 +657,7 @@ int main()
             const auto done = view.done, total = view.total;
 #endif
             screen.set_activity({view.id, static_cast<int>(view.phase), view.done, view.total,
-                                 std::move(view.waiting)});
+                                 std::move(view.waiting), view.stage, std::move(view.stages)});
 #ifdef STORE_DEVELOPMENT
             if (report)
             {

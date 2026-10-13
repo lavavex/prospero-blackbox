@@ -434,8 +434,13 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
         progress_.phase = static_cast<int>(install::Phase::removing);
         return library::uninstall_game(plan, paths, options, error);
     }
-    // What mods-cache lacks: from what the manager carries, else downloaded.
+    // What mods-cache lacks: from what the manager carries, else downloaded. The page lists
+    // the stages (kGameStages) with what each is doing.
+    const auto chosen_plan = library::effective_plan(plan, options);
+    const auto needed = library::needed_sources(chosen_plan).size();
+    stage(0, "Looking for the " + std::to_string(needed) + " files it needs");
     progress_.phase = static_cast<int>(install::Phase::downloading);
+    std::size_t fetching = 0;
     const library::Download download = [this](const std::string &url, std::uint64_t limit,
                                               const std::function<bool(std::string_view)> &sink,
                                               std::string &why)
@@ -448,18 +453,30 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
     };
     // Only the chosen options' sources: an install without them downloads none of theirs.
     if (!library::fetch_sources(
-            library::effective_plan(plan, options), root_ + "/mods-cache", bundle, download,
+            chosen_plan, root_ + "/mods-cache", bundle, download,
             [&](const library::FetchStatus &status)
             {
                 progress_.total = status.total;
                 progress_.done = status.done;
+                if (status.index != fetching)
+                {
+                    // "NFS HD Reflections (Aero_)" -> "NFS HD Reflections"
+                    fetching = status.index;
+                    stage(0, "Getting " + status.name.substr(0, status.name.find(" (")) + " (" +
+                                 std::to_string(status.index) + " of " +
+                                 std::to_string(status.count) + ")");
+                }
             },
             job_control_.cancelled, error))
         return false;
+    stage(0, "All " + std::to_string(needed) + " files ready");
     // The prefix, made from the bare prefix the manager carries when it isn't there yet.
-    const auto prefix = library::effective_plan(plan, options).prefix;
-    if (!library::prefix_ready(win_root, prefix))
+    const auto prefix = chosen_plan.prefix;
+    if (library::prefix_ready(win_root, prefix))
+        stage(1, "Using the prefix " + prefix);
+    else
     {
+        stage(1, "Making the prefix " + prefix);
         progress_.phase = static_cast<int>(install::Phase::unpacking);
         if (!library::ensure_prefix(
                 win_root, prefix, bundle + "/bare-prefix-nfs-blackbox.zip",
@@ -470,6 +487,7 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
                 },
                 job_control_.cancelled, error))
             return false;
+        stage(1, "Made the prefix " + prefix);
     }
     if (!library::install_game(
             plan, *manifest, paths, options,
@@ -485,10 +503,31 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
                 progress_.phase = static_cast<int>(phase);
                 progress_.total = status.total;
                 progress_.done = status.done;
+                // Its steps, in the page's words, under the stage each belongs to; a stage
+                // left behind says what it did.
+                const auto &step = status.step;
+                const int at = step.starts_with("Checking the") && step != "Checking the result" ? 2
+                               : step == "Setting up Wine" || step == "Installed"              ? 4
+                                                                                               : 3;
+                const char *done[] = {"", "", "Your copy and the mod files check out",
+                                      "The game's files are in place"};
+                for (int before = 2; before < at; ++before)
+                    stage(before, done[before]);
+                stage(at, step == "Checking the base copy"   ? "Checking your copy of the game"
+                          : step == "Copying the base copy"  ? "Copying your game into the prefix"
+                          : step == "Settings"               ? "Writing the mods' settings"
+                          : step == "Checking the result"    ? "Checking every file it changed"
+                          : step == "Setting up Wine"        ? "Wine's DLLs, registry and profile"
+                          : step == "Installed"              ? "Registry and profile set"
+                                                             : step);
             },
             job_control_.cancelled, error))
         return false;
-    return home_app(entry, location, environment, error);
+    stage(5, "Putting its app on the Home screen");
+    if (!home_app(entry, location, environment, error))
+        return false;
+    stage(5, "On the Home screen");
+    return true;
 }
 
 // Where each game's base copy is and what it is: published when it changes (a copy put
@@ -639,11 +678,31 @@ void Service::stop_at(std::string step)
     stop_step_ = std::move(step);
 }
 
+void Service::stage(int index, std::string line)
+{
+    std::lock_guard lock(stage_mutex_);
+    stages_.resize(std::size(library::kGameStages));
+    stage_ = index;
+    stages_[static_cast<std::size_t>(index)] = std::move(line);
+}
+
+void Service::clear_stages()
+{
+    std::lock_guard lock(stage_mutex_);
+    stage_ = -1;
+    stages_.clear();
+}
+
 bool Service::job(JobView &view)
 {
     std::unique_lock lock(mutex_, std::try_to_lock);
     if (!lock.owns_lock())
         return false;
+    {
+        std::lock_guard stages(stage_mutex_);
+        view.stage = stage_;
+        view.stages = stages_;
+    }
     view.id = job_id_;
     view.phase = static_cast<install::Phase>(progress_.phase.load());
     view.done = progress_.done.load();
@@ -831,6 +890,7 @@ void Service::run_installer()
                 progress_.phase = static_cast<int>(install::Phase::idle);
                 progress_.done = 0;
                 progress_.total = 0;
+                clear_stages();
             }
         }
         if (job.entry.id.empty())
@@ -957,6 +1017,7 @@ void Service::run_installer()
         {
             std::lock_guard lock(mutex_);
             job_id_.clear();
+            clear_stages();
             progress_.phase = static_cast<int>(install::Phase::idle);
         }
         publish(std::move(done));

@@ -29,6 +29,10 @@ struct InstallOptions
     std::vector<std::string> chosen; // the plan's options to add (ids); unknown ones are ignored
 };
 
+// A game install's stages, as the manager's page lists them (its job's progress).
+inline constexpr const char *kGameStages[] = {"Downloads",  "Wine prefix",   "Checks",
+                                              "Game files", "Wine settings", "Home app"};
+
 // One of a plan's options as the page offers it: on when the last install chose it, or,
 // before any install, when the plan turns it on by default.
 struct OptionView

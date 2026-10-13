@@ -58,7 +58,12 @@ struct JobView
     install::Phase phase = install::Phase::idle;
     std::uint64_t done = 0, total = 0;
     std::vector<std::string> waiting; // titles queued behind it
+    // A game install's stages (library::kGameStages): the one under way, and for each the line it
+    // shows (what it is doing, or once done what it did). -1 and empty for other jobs.
+    int stage = -1;
+    std::vector<std::string> stages;
 };
+
 class Service
 {
   public:
@@ -196,5 +201,11 @@ class Service
                    std::string &error) const;
     std::map<std::string, bool> installed_;
     std::map<std::string, std::vector<std::string>> options_on_; // as last published
+    // The running game install's stage and lines (JobView), set by the worker.
+    std::mutex stage_mutex_;
+    int stage_ = -1;
+    std::vector<std::string> stages_;
+    void stage(int index, std::string line);
+    void clear_stages();
 };
 } // namespace store
