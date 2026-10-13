@@ -452,7 +452,8 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         if (self ? !folder_version(paths.target, id, previous)
                  : !managed(paths, id, request.location, previous))
             return fail("Installed outside Prospero BlackBox. Not managed by this app.");
-        if (!catalog::update_available(previous, entry.content_version))
+        if (!catalog::update_available(previous, entry.content_version) &&
+            !(request.same_version && previous == entry.content_version))
             return fail("The catalog doesn't list a newer version");
         if (const int state = self ? 0 : running(environment, id); state != 0)
             return fail(running_refusal(state));
@@ -566,7 +567,8 @@ Result apply(const Environment &environment, const Request &request, net::Contro
         return abandon("The staging folder could not be cleaned");
     if (!folder_version(paths.staged, id, result.version))
         return abandon("The archive isn't a valid app");
-    if (update && !catalog::update_available(previous, result.version))
+    if (update && !catalog::update_available(previous, result.version) &&
+        !(request.same_version && previous == result.version))
         return abandon("The download isn't newer than the installed version");
     if (control.cancelled.load())
         return abandon("Cancelled");

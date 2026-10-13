@@ -364,11 +364,26 @@ bool Service::home_app(const catalog::Entry &game, const std::string &location,
         hui::sys::log("[STORE] home app id=%s: none carried", game.id.c_str());
         return true;
     }
+    // Installed: replaced when the carried one is newer, or the same version built anew
+    // (its bytes differ from what the receipt says was installed: a rebuild with a fix).
+    // One installed by hand has no receipt and is left alone.
+    bool same_version = false;
     if (folder_version(location, game.id, current) &&
         !catalog::update_available(current, app.content_version))
-        return true;
-    const auto result =
-        install::apply(environment, {app, location, {}, false, archive}, job_control_, progress_);
+    {
+        std::string body, why;
+        catalog::Receipt receipt;
+        if (current != app.content_version ||
+            !install::read_small(environment.root + "/receipts/" + game.id + ".json", 64 * 1024,
+                                 body) ||
+            !catalog::parse_receipt(body, receipt, why) || receipt.id != game.id ||
+            receipt.digest == app.digest)
+            return true;
+        same_version = true;
+    }
+    install::Request request{app, location, {}, false, archive};
+    request.same_version = same_version;
+    const auto result = install::apply(environment, request, job_control_, progress_);
     hui::sys::log("[STORE] home app id=%s operation=%s ok=%d version=%s error=%s %s",
                   game.id.c_str(), result.operation.c_str(), result.ok, result.version.c_str(),
                   result.error.c_str(), result.note.c_str());

@@ -83,6 +83,10 @@ struct Request
     // instead of downloading entry.artifact, and held to the same size, SHA-256 and
     // archive checks.
     std::string archive;
+    // Replace an installed app with the same version (the manager's own game apps, when
+    // the carried copy's bytes differ from the installed one's). Off for everything else:
+    // there, an update must be newer.
+    bool same_version = false;
 };
 struct Result
 {

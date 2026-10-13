@@ -1071,6 +1071,27 @@ void check_carried(const fs::path &base)
     result = f.apply(update);
     assert(result.ok && result.operation == "update" && f.requests == 0 &&
            f.managed() == "01.000.002" && f.settled());
+    // The same version again (a game's Home app rebuilt with a fix): refused as an update,
+    // unless the caller asks for it; an older one never.
+    auto again = f.request("01.000.002");
+    again.entry.artifact = "bundled";
+    again.archive = carried.string();
+    put(carried, f.artifact);
+    result = f.apply(again);
+    assert(!result.ok && result.error == "The catalog doesn't list a newer version" &&
+           f.managed() == "01.000.002" && f.settled());
+    again.same_version = true;
+    result = f.apply(again);
+    assert(result.ok && result.operation == "update" && f.managed() == "01.000.002" &&
+           f.settled());
+    auto older = f.request("01.000.001");
+    older.entry.artifact = "bundled";
+    older.archive = carried.string();
+    older.same_version = true;
+    put(carried, f.artifact);
+    assert(!f.apply(older).ok && f.managed() == "01.000.002" && f.settled());
+    put(carried, zip(app("01.000.002")));
+
     update = f.request("01.000.003");
     update.entry.artifact = "bundled";
     assert(!f.apply(update).ok);
