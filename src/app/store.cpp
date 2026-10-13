@@ -2328,12 +2328,13 @@ Screen::Offer Screen::offer(const App &app) const
         }
         else if (usable)
         {
-            // The games' apps share the prefix: the game writes its registry back when it
-            // exits, so nothing changes while one runs.
-            const bool wine_running =
-                std::any_of(running_.begin(), running_.end(), [](const std::string &id)
-                            { return id == "PPSA99996" ||
-                                     (id.starts_with("PPSA994") && id != "PPSA99400"); });
+            // The games' own Home apps (PPSA99401-99406, ours) share the prefix: a game writes
+            // its registry back when it exits, so nothing changes while one runs. Apps this
+            // manager didn't install are none of its business.
+            const auto blocking =
+                std::find_if(running_.begin(), running_.end(), [](const std::string &id)
+                             { return id.starts_with("PPSA9940") && id != "PPSA99400"; });
+            const bool wine_running = blocking != running_.end();
             // A copy a release behind is brought up to date by its upgrade file as it installs.
             out.primary = Order::Kind::install_game;
             out.label = app.game_installed ? "Repair" : "Install";
@@ -2343,8 +2344,14 @@ Screen::Offer Screen::offer(const App &app) const
             if (!installer_)
                 out.reason = installer_reason_;
             else if (wine_running)
-                out.reason = "Close prospero-win and the games first: a game saves its "
-                             "settings as it closes.";
+            {
+                // Said in the headline too: the button rests until the game is closed.
+                out.headline = "Game is open";
+                out.note = "Close " + *blocking + " to install";
+                out.tone = 0;
+                out.reason = "A game saves its settings as it closes. If it's already closed, "
+                             "restart the console.";
+            }
             else
             {
                 out.armed = true;

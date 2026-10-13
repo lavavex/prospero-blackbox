@@ -488,7 +488,7 @@ int main(int argc, char **argv)
             if (mode.starts_with("mw-"))
             {
                 // Most Wanted's page in one of its install states: mw-ready, mw-old (a 1.2
-                // base copy), mw-installed, mw-busy (prospero-win running).
+                // base copy), mw-installed, mw-busy (MW's Home app running).
                 store::library::BaseGame base;
                 base.state = mode == "mw-old" ? store::library::State::needs_patch
                                               : store::library::State::ready;
@@ -497,7 +497,7 @@ int main(int argc, char **argv)
                 base.detail = mode == "mw-old" ? "Version 1.2: upgraded to 1.3 as it installs."
                                                : "Version " + base.version + ".";
                 screen.set_installer(true, true, "", "/data/homebrew");
-                screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99996"}
+                screen.set_running(mode == "mw-busy" ? std::vector<std::string>{"PPSA99403"}
                                                      : std::vector<std::string>{},
                                    true);
                 screen.set_base("PPSA99403", base, mode == "mw-installed");

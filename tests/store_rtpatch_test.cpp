@@ -6,6 +6,7 @@
 // on a copy of the model). Run with a folder argument, it also leaves the patch, the old
 // files and the expected new ones there for tools/rtpatch.py to be checked against.
 #include "library/rtpatch.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <filesystem>
