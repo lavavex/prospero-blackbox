@@ -7,6 +7,7 @@
 #include "gfx/renderer.hpp"
 #include "catalog/catalog.hpp"
 #include "library/base_game.hpp"
+#include "library/game_install.hpp"
 #include "system/inventory.hpp"
 #include "ui/components/dialog.hpp"
 #include "ui/components/hold_button.hpp"
@@ -51,6 +52,7 @@ struct App
     library::BaseGame base = {};
     bool base_known = false;
     bool game_installed = false; // installed into its prefix by Prospero BlackBox
+    std::vector<library::OptionView> game_options = {}; // what Install can add (the plan's)
 };
 
 // What the page asks the installer to do. The frame loop hands it to the
@@ -70,6 +72,7 @@ struct Order
     } kind = Kind::none;
     catalog::Entry entry; // install: the app's verified detail record
     std::string id, location;
+    std::vector<std::string> options; // install_game: the plan's options chosen (ids)
 };
 // What the player chose, kept in /data/prospero-blackbox/settings.txt.
 struct Settings
@@ -125,7 +128,8 @@ class Screen
     void set_inventory(system::Inventory inventory);
     void set_detail(const catalog::Entry &entry);
     void set_detail_error(const std::string &id, std::string message);
-    void set_base(const std::string &id, library::BaseGame base, bool installed);
+    void set_base(const std::string &id, library::BaseGame base, bool installed,
+                  std::vector<library::OptionView> options = {});
     void set_icon(const std::string &id, std::uint32_t texture);
     // The manager's emblem for the opening, the top bar and About: cut out (assets/logo.png,
     // drawn as it is) or the Home-screen icon (a tile, drawn with rounded corners).
@@ -323,7 +327,7 @@ class Screen
     float breath() const;
     void hold_fill(hui::gfx::DrawList &list, const hui::gfx::Rect &button, float radius) const;
     bool hold_shown() const;
-    void order(const App &app, Order::Kind kind);
+    void order(const App &app, Order::Kind kind, std::vector<std::string> options = {});
     bool in_section(const App &app, int section) const;
     void rebuild();
     void refresh_detail();
@@ -409,7 +413,8 @@ class Screen
         none,
         adopt,
         quit,
-        disable_signatures
+        disable_signatures,
+        game_options // Install/Repair: with the game's option or without
     } ask_ = Ask::none;
     // Uninstalling is a hold, not a question: the button fills while it is held.
     hui::ui::HoldButton hold_;

@@ -305,22 +305,24 @@ bool Service::load_policy(system::ScanPolicy &out, std::vector<std::string> *not
 
 bool Service::request_install(const catalog::Entry &entry, const std::string &location)
 {
-    return enqueue({Job::Kind::install, entry, location});
+    return enqueue({Job::Kind::install, entry, location, {}});
 }
 
 bool Service::request_adopt(const catalog::Entry &entry, const std::string &location)
 {
-    return enqueue({Job::Kind::adopt, entry, location});
+    return enqueue({Job::Kind::adopt, entry, location, {}});
 }
 
 bool Service::request_import(const catalog::Entry &entry)
 {
-    return enqueue({Job::Kind::import_base, entry, {}});
+    return enqueue({Job::Kind::import_base, entry, {}, {}});
 }
 
-bool Service::request_game(const catalog::Entry &entry, bool remove, const std::string &location)
+bool Service::request_game(const catalog::Entry &entry, bool remove, const std::string &location,
+                           std::vector<std::string> options)
 {
-    return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, location});
+    return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, location,
+                    std::move(options)});
 }
 
 bool Service::game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
@@ -413,6 +415,7 @@ bool Service::remove_home_app(const std::string &id, const std::string &location
 // The installer's worker: a collection game installed (or repaired) from its plan with its
 // Home app, or both removed, with the job's progress.
 bool Service::game_job(const catalog::Entry &entry, bool remove, const std::string &location,
+                       const std::vector<std::string> &chosen,
                        const install::Environment &environment, std::string &error)
 {
     library::InstallPlan plan;
@@ -420,6 +423,7 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
     library::InstallOptions options;
     if (!game_plan(entry, plan, manifest, options, error))
         return false;
+    options.chosen = chosen;
     const library::InstallPaths paths{root_, win_root};
     bases_stale_ = true;
     if (remove)
@@ -442,8 +446,9 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
         why = response.error.empty() ? "HTTP " + std::to_string(response.status) : response.error;
         return false;
     };
+    // Only the chosen options' sources: an install without them downloads none of theirs.
     if (!library::fetch_sources(
-            plan, root_ + "/mods-cache", bundle, download,
+            library::effective_plan(plan, options), root_ + "/mods-cache", bundle, download,
             [&](const library::FetchStatus &status)
             {
                 progress_.total = status.total;
@@ -500,6 +505,7 @@ void Service::check_bases()
             continue;
         auto found = library::locate(root_, roots, *manifest);
         bool installed = false;
+        std::vector<library::OptionView> views;
         {
             library::InstallPlan plan;
             const library::Manifest *unused = nullptr;
@@ -512,13 +518,20 @@ void Service::check_bases()
                                                     {root_, win_root})
                                    .c_str(),
                                F_OK) == 0;
+            if (!plan.game.empty())
+                views = library::option_views(plan, {root_, win_root}, options);
         }
+        std::vector<std::string> on;
+        for (const auto &view : views)
+            if (view.on)
+                on.push_back(view.id);
         const auto known = bases_.find(game.id);
         if (known != bases_.end() && known->second.state == found.state &&
             known->second.path == found.path && known->second.detail == found.detail &&
-            installed_[game.id] == installed)
+            installed_[game.id] == installed && options_on_[game.id] == on)
             continue;
         installed_[game.id] = installed;
+        options_on_[game.id] = on;
         hui::sys::log("[STORE] base %s state=%d usb=%d path=%s version=%s", game.id,
                       static_cast<int>(found.state), found.on_usb, found.path.c_str(),
                       found.version.c_str());
@@ -528,6 +541,7 @@ void Service::check_bases()
         update.entry.id = game.id;
         update.base = std::move(found);
         update.game_installed = installed;
+        update.game_options = std::move(views);
         publish(std::move(update));
     }
 }
@@ -605,7 +619,7 @@ bool Service::request_uninstall(const std::string &id, const std::string &locati
             if (listed.id == id)
                 entry.name = listed.name;
     }
-    return enqueue({Job::Kind::uninstall, std::move(entry), location});
+    return enqueue({Job::Kind::uninstall, std::move(entry), location, {}});
 }
 
 bool Service::cancel_job(const std::string &id)
@@ -862,7 +876,8 @@ void Service::run_installer()
         {
             const bool remove = job.kind == Job::Kind::uninstall_game;
             result.operation = remove ? "game-uninstall" : "game-install";
-            result.ok = game_job(job.entry, remove, job.location, environment, result.error);
+            result.ok = game_job(job.entry, remove, job.location, job.options, environment,
+                                 result.error);
         }
 #ifdef STORE_FILE_WORKER
         else if (job.entry.id == environment.self)

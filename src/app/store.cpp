@@ -606,7 +606,8 @@ void Screen::set_detail(const catalog::Entry &entry)
         refresh_detail();
 }
 
-void Screen::set_base(const std::string &id, library::BaseGame base, bool installed)
+void Screen::set_base(const std::string &id, library::BaseGame base, bool installed,
+                      std::vector<library::OptionView> options)
 {
     for (auto &app : apps_)
         if (app.title_id == id)
@@ -614,6 +615,7 @@ void Screen::set_base(const std::string &id, library::BaseGame base, bool instal
             app.base = std::move(base);
             app.base_known = true;
             app.game_installed = installed;
+            app.game_options = options;
         }
 }
 
@@ -1214,6 +1216,21 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
                           {{"Cancel"}, {"Manage", ui::ButtonKind::primary}}},
                          feedback);
         }
+        else if (state.primary == Order::Kind::install_game && !shown.game_options.empty())
+        {
+            // The plan's option (MW: the Xbox 360 look), asked each time; the focus opens
+            // on what the last install chose, or the plan's default.
+            const auto &option = shown.game_options.front();
+            ask_ = Ask::game_options;
+            ask_id_ = shown.title_id;
+            dialog_.open({ui::StatusKind::question,
+                          (shown.game_installed ? "Repair " : "Install ") + shown.name + " with " +
+                              option.title + "?",
+                          option.description,
+                          {{"Cancel"}, {"Without"}, {"With " + option.title, ui::ButtonKind::primary}},
+                          option.on ? 2 : 1},
+                         feedback);
+        }
         else
         {
             press_.trigger();
@@ -1344,7 +1361,17 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     if (dialog_.is_open())
     {
         // The question takes every input until it is answered.
-        if (dialog_.handle(input, feedback) == ui::Event::activated && dialog_.choice() == 1)
+        const bool answered = dialog_.handle(input, feedback) == ui::Event::activated;
+        if (answered && ask_ == Ask::game_options)
+        {
+            // 0 Cancel, 1 Without, 2 With.
+            for (const auto &app : apps_)
+                if (app.title_id == ask_id_ && dialog_.choice() >= 1 && !app.game_options.empty())
+                    order(app, Order::Kind::install_game,
+                          dialog_.choice() == 2 ? std::vector<std::string>{app.game_options.front().id}
+                                                : std::vector<std::string>{});
+        }
+        else if (answered && dialog_.choice() == 1)
         {
             if (ask_ == Ask::quit)
                 quit_ = true;
@@ -2038,9 +2065,10 @@ void Screen::draw_grid(const ui::Fonts &fonts)
 
 // ---- drawing: the product page ----------------------------------------------
 
-void Screen::order(const App &app, Order::Kind kind)
+void Screen::order(const App &app, Order::Kind kind, std::vector<std::string> options)
 {
     pending_order = {};
+    pending_order.options = std::move(options);
     // A collection game's uninstall (the hold under Repair) removes it from its prefix.
     if (kind == Order::Kind::uninstall && app.base_known)
         kind = Order::Kind::uninstall_game;

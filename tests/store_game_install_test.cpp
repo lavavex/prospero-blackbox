@@ -113,6 +113,12 @@ int main()
         assert(value.key == "Software\\Wow6432Node\\EA Games\\Need for Speed Most Wanted");
     for (const auto &placement : mw.game_files)
         assert(placement.to.find("glassreflectshader") == std::string::npos);
+    // Its one option, the Xbox 360 look: off unless chosen, no glass shader either.
+    assert(mw.options.size() == 1 && mw.options[0].id == "x360" && !mw.options[0].on &&
+           mw.options[0].game_files.size() == 168 && mw.options[0].system_files.size() == 2 &&
+           mw.options[0].expect.size() == 3 && mw.options[0].dll_overrides == ";d3dx9_26,d3dx9_43=n");
+    for (const auto &placement : mw.options[0].game_files)
+        assert(placement.to.find("glassreflectshader") == std::string::npos);
     std::string profile;
     assert(profile_text(mw.profile, profile, error));
 
@@ -359,6 +365,58 @@ int main()
     assert(!install_game(plan, game, paths, options, progress, stop, error));
     assert(error == "Cancelled" && read(installed / "dinput8.dll") == loader &&
            !fs::exists(installed.string() + ".installing"));
+
+    // A plan option (MW's Xbox 360 look): chosen, its files, edits, expected hash and DLL
+    // overrides are added; not chosen, none of it, and its source isn't needed.
+    const std::string extra = "extra plugin";
+    auto option_text = plan_text;
+    option_text.insert(option_text.find("\"up\": {"), source("opt", extra) + ", ");
+    option_text.insert(option_text.size() - 1,
+                       ", \"options\": [{\"id\": \"extra\", \"title\": \"Extra look\","
+                       " \"description\": \"More.\", \"game_files\": [{\"source\": \"opt\","
+                       " \"to\": \"scripts/Extra.asi\"}], \"texts\": [{\"to\": \"extra.cfg\","
+                       " \"body\": \"on\\n\"}], \"ini\": [{\"file\": \"scripts/Mod.ini\","
+                       " \"values\": {\"Other\": \"y\"}}], \"expect\": {\"extra.cfg\": \"" +
+                           sha("on\n") + "\"}, \"dll_overrides\": \";d3dx9_26=n\"}]");
+    InstallPlan optional;
+    assert(parse_plan(option_text, optional, error));
+    assert(optional.options.size() == 1 && optional.option("extra") && !optional.options[0].on &&
+           optional.options[0].game_files.size() == 1 && optional.options[0].expect.size() == 1);
+    {
+        auto bad = option_text;
+        bad.replace(bad.find("{\"source\": \"opt\""), 16, "{\"source\": \"nope\"");
+        InstallPlan refused_plan;
+        assert(!parse_plan(bad, refused_plan, error) && error.find("nope") != std::string::npos);
+        bad = option_text;
+        bad.insert(bad.size() - 2, ", {\"id\": \"extra\", \"title\": \"Again\"}");
+        assert(!parse_plan(bad, refused_plan, error) && error.find("named twice") != std::string::npos);
+    }
+    auto views = option_views(optional, paths, options);
+    assert(views.size() == 1 && views[0].id == "extra" && views[0].title == "Extra look" &&
+           !views[0].on); // the record before options: off
+    InstallOptions with = options;
+    with.chosen = {"extra", "unknown"};
+    const auto chosen_plan = effective_plan(optional, with);
+    assert(chosen_plan.options.empty() && chosen_plan.game_files.size() == plan.game_files.size() + 1 &&
+           chosen_plan.profile.dll_overrides == "dinput8=n,b;d3dx9_26=n" &&
+           chosen_plan.expect.size() == plan.expect.size() + 1);
+    assert(missing_sources(chosen_plan, (data / "mods-cache").string(), go).size() == 1);
+    assert(missing_sources(effective_plan(optional, options), (data / "mods-cache").string(), go).empty());
+    cache(data, extra, ".asi");
+    assert(install_game(optional, game, paths, with, progress, go, error));
+    assert(read(installed / "scripts" / "Extra.asi") == extra && read(installed / "extra.cfg") == "on\n" &&
+           read(installed / "scripts" / "Mod.ini").find("Other = y") != std::string::npos);
+    assert(read(win / "profiles" / "the-game.profile").find("d3dx9_26=n") != std::string::npos);
+    assert(read(data / "installs" / "shared" / "GAME.json").find("\"options\": [\"extra\"]") !=
+           std::string::npos);
+    views = option_views(optional, paths, options);
+    assert(views.size() == 1 && views[0].on);
+    // Repaired without it: its files go, the record says so.
+    assert(install_game(optional, game, paths, options, progress, go, error));
+    assert(!fs::exists(installed / "scripts" / "Extra.asi") && !fs::exists(installed / "extra.cfg"));
+    assert(read(win / "profiles" / "the-game.profile").find("d3dx9_26=n") == std::string::npos);
+    assert(read(data / "installs" / "shared" / "GAME.json").find("\"options\": []") != std::string::npos);
+    assert(!option_views(optional, paths, options)[0].on);
 
     // A test install beside it: its own prefix, profile and record.
     put(win / "prefixes" / "pb-test" / "system.reg", kSystemReg);

@@ -26,6 +26,15 @@ struct InstallOptions
     std::string prefix;     // empty: the plan's
     std::string profile_id; // empty: the plan's
     std::string profile_name;
+    std::vector<std::string> chosen; // the plan's options to add (ids); unknown ones are ignored
+};
+
+// One of a plan's options as the page offers it: on when the last install chose it, or,
+// before any install, when the plan turns it on by default.
+struct OptionView
+{
+    std::string id, title, description;
+    bool on = false;
 };
 
 struct InstallStatus
@@ -61,8 +70,14 @@ bool install_game(const InstallPlan &plan, const Manifest &manifest, const Insta
 bool uninstall_game(const InstallPlan &plan, const InstallPaths &paths,
                     const InstallOptions &options, std::string &error);
 
-// The plan with the options' prefix and profile in place of its own.
+// The plan with the options' prefix and profile in place of its own, and the chosen plan
+// options' files, edits, expected hashes and DLL overrides added to its own.
 InstallPlan effective_plan(const InstallPlan &plan, const InstallOptions &options);
+
+// The plan's options, each on or off as the last install (its record) chose, or as the plan
+// says when there is no install yet.
+std::vector<OptionView> option_views(const InstallPlan &plan, const InstallPaths &paths,
+                                     const InstallOptions &options);
 
 // The record of the last install: installs/<prefix>/<game>.json under the data root (the
 // effective plan's prefix: a test install keeps its own).

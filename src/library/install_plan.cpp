@@ -107,14 +107,15 @@ yyjson_val *array(Reader &read, yyjson_val *root, const char *key)
     return value;
 }
 
-void placements(Reader &read, yyjson_val *root, const char *key, std::vector<Placement> &out)
+void placements(Reader &read, yyjson_val *root, const char *key, std::vector<Placement> &out,
+                const std::string &label = {})
 {
     auto *list = array(read, root, key);
     std::size_t index = 0, count = 0;
     yyjson_val *item = nullptr;
     yyjson_arr_foreach(list, index, count, item)
     {
-        const auto where = std::string(key) + "[" + std::to_string(index) + "]";
+        const auto where = label + key + "[" + std::to_string(index) + "]";
         if (!yyjson_is_obj(item))
         {
             read.fail(where + " must be an object");
@@ -162,6 +163,66 @@ void registry(Reader &read, yyjson_val *root, const char *key, std::vector<Regis
         out.push_back(std::move(value));
     }
 }
+
+// What a plan and each of its options add to the game: placements, written files, ini
+// edits and the hashes the finished folder must have. label says where (an option's).
+void files(Reader &read, yyjson_val *root, std::vector<Placement> &game_files,
+           std::vector<Placement> &system_files, std::vector<TextFile> &text_files,
+           std::vector<IniEdit> &ini_edits, std::vector<std::pair<std::string, std::string>> &expected,
+           const std::string &label = {})
+{
+    placements(read, root, "game_files", game_files, label);
+    placements(read, root, "system_files", system_files, label);
+    std::size_t index = 0, count = 0;
+    yyjson_val *key = nullptr, *item = nullptr;
+    auto *texts = array(read, root, "texts");
+    yyjson_arr_foreach(texts, index, count, item)
+    {
+        const auto where = label + "texts[" + std::to_string(index) + "]";
+        TextFile file{read.text(item, "to", true, where), read.text(item, "body", true, where),
+                      read.flag(item, "append", where)};
+        if (!safe_relative(file.to))
+            read.fail(where + ": to is not a plain relative path");
+        text_files.push_back(std::move(file));
+    }
+    auto *ini = array(read, root, "ini");
+    yyjson_arr_foreach(ini, index, count, item)
+    {
+        const auto where = label + "ini[" + std::to_string(index) + "]";
+        IniEdit edit;
+        edit.file = read.text(item, "file", true, where);
+        edit.lf = read.flag(item, "lf", where);
+        if (!safe_relative(edit.file))
+            read.fail(where + ": file is not a plain relative path");
+        auto *values = yyjson_obj_get(item, "values");
+        if (!values || !yyjson_is_obj(values))
+            read.fail(where + ": values must be an object");
+        std::size_t inner = 0, inner_count = 0;
+        yyjson_val *name = nullptr, *value = nullptr;
+        if (yyjson_is_obj(values)) // a missing one is already reported
+        yyjson_obj_foreach(values, inner, inner_count, name, value)
+        {
+            if (!yyjson_is_str(value))
+                read.fail(where + ": every value must be text");
+            else
+                edit.values.emplace_back(std::string(yyjson_get_str(name), yyjson_get_len(name)),
+                                         std::string(yyjson_get_str(value), yyjson_get_len(value)));
+        }
+        ini_edits.push_back(std::move(edit));
+    }
+    auto *expect = yyjson_obj_get(root, "expect");
+    if (expect && !yyjson_is_obj(expect))
+        read.fail(label + "expect must be an object");
+    if (yyjson_is_obj(expect))
+    yyjson_obj_foreach(expect, index, count, key, item)
+    {
+        std::string path(yyjson_get_str(key), yyjson_get_len(key));
+        std::string hash = yyjson_is_str(item) ? yyjson_get_str(item) : "";
+        if (!safe_relative(path) || !hex64(hash))
+            read.fail(label + "expect." + path + " must be a plain path and a SHA-256");
+        expected.emplace_back(std::move(path), std::move(hash));
+    }
+}
 } // namespace
 
 bool safe_relative(std::string_view path)
@@ -182,6 +243,14 @@ bool safe_relative(std::string_view path)
         start = end + 1;
     }
     return true;
+}
+
+const InstallPlan::Option *InstallPlan::option(const std::string &id) const
+{
+    for (const auto &known : options)
+        if (known.id == id)
+            return &known;
+    return nullptr;
 }
 
 const Source *InstallPlan::source(const std::string &id) const
@@ -238,48 +307,11 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
             read.fail(where + " is named twice");
         plan.sources.push_back(std::move(source));
     }
-    placements(read, root, "game_files", plan.game_files);
-    placements(read, root, "system_files", plan.system_files);
+    files(read, root, plan.game_files, plan.system_files, plan.texts, plan.ini, plan.expect);
     for (const auto *list : {&plan.game_files, &plan.system_files})
         for (const auto &place : *list)
             if (!plan.source(place.source))
                 read.fail("A placement names " + place.source + ", which isn't in sources");
-
-    auto *texts = array(read, root, "texts");
-    yyjson_arr_foreach(texts, index, count, item)
-    {
-        const auto where = "texts[" + std::to_string(index) + "]";
-        TextFile file{read.text(item, "to", true, where), read.text(item, "body", true, where),
-                      read.flag(item, "append", where)};
-        if (!safe_relative(file.to))
-            read.fail(where + ": to is not a plain relative path");
-        plan.texts.push_back(std::move(file));
-    }
-    auto *ini = array(read, root, "ini");
-    yyjson_arr_foreach(ini, index, count, item)
-    {
-        const auto where = "ini[" + std::to_string(index) + "]";
-        IniEdit edit;
-        edit.file = read.text(item, "file", true, where);
-        edit.lf = read.flag(item, "lf", where);
-        if (!safe_relative(edit.file))
-            read.fail(where + ": file is not a plain relative path");
-        auto *values = yyjson_obj_get(item, "values");
-        if (!values || !yyjson_is_obj(values))
-            read.fail(where + ": values must be an object");
-        std::size_t inner = 0, inner_count = 0;
-        yyjson_val *name = nullptr, *value = nullptr;
-        if (yyjson_is_obj(values)) // a missing one is already reported
-        yyjson_obj_foreach(values, inner, inner_count, name, value)
-        {
-            if (!yyjson_is_str(value))
-                read.fail(where + ": every value must be text");
-            else
-                edit.values.emplace_back(std::string(yyjson_get_str(name), yyjson_get_len(name)),
-                                         std::string(yyjson_get_str(value), yyjson_get_len(value)));
-        }
-        plan.ini.push_back(std::move(edit));
-    }
     auto *patches = array(read, root, "patches");
     yyjson_arr_foreach(patches, index, count, item)
     {
@@ -294,18 +326,6 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
             patch.from.size() != patch.to.size())
             read.fail(where + ": from and to must be hex bytes of the same length");
         plan.patches.push_back(std::move(patch));
-    }
-    auto *expect = yyjson_obj_get(root, "expect");
-    if (expect && !yyjson_is_obj(expect))
-        read.fail("expect must be an object");
-    if (yyjson_is_obj(expect))
-    yyjson_obj_foreach(expect, index, count, key, item)
-    {
-        std::string path(yyjson_get_str(key), yyjson_get_len(key));
-        std::string hash = yyjson_is_str(item) ? yyjson_get_str(item) : "";
-        if (!safe_relative(path) || !hex64(hash))
-            read.fail("expect." + path + " must be a plain path and a SHA-256");
-        plan.expect.emplace_back(std::move(path), std::move(hash));
     }
     auto *reg = yyjson_obj_get(root, "registry");
     if (reg && !yyjson_is_obj(reg))
@@ -369,6 +389,33 @@ bool parse_plan(std::string_view text, InstallPlan &out, std::string &error)
             read.fail("pending: every item must be text");
         else
             plan.pending.emplace_back(yyjson_get_str(item), yyjson_get_len(item));
+    }
+    auto *options = array(read, root, "options");
+    yyjson_arr_foreach(options, index, count, item)
+    {
+        const auto where = "options[" + std::to_string(index) + "]";
+        if (!yyjson_is_obj(item))
+        {
+            read.fail(where + " must be an object");
+            break;
+        }
+        InstallPlan::Option option;
+        option.id = read.text(item, "id", true, where);
+        option.title = read.text(item, "title", true, where);
+        option.description = read.text(item, "description", false, where);
+        option.on = read.flag(item, "default", where);
+        option.dll_overrides = read.text(item, "dll_overrides", false, where);
+        if (!safe_relative(option.id) || option.id.find('/') != std::string::npos)
+            read.fail(where + ": id must be a plain name");
+        if (plan.option(option.id))
+            read.fail(where + ": " + option.id + " is named twice");
+        files(read, item, option.game_files, option.system_files, option.texts, option.ini,
+              option.expect, where + ".");
+        for (const auto *list : {&option.game_files, &option.system_files})
+            for (const auto &place : *list)
+                if (!plan.source(place.source))
+                    read.fail(where + ": a placement names " + place.source + ", which isn't in sources");
+        plan.options.push_back(std::move(option));
     }
     if (read.failed)
         return false;

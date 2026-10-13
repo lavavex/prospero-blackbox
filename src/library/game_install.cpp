@@ -7,13 +7,16 @@
 #include "library/upgrade.hpp"
 #include "library/wine_registry.hpp"
 #include "third_party/miniz/miniz.h"
+#include "third_party/yyjson/yyjson.h"
 #include "library/sha256_hex.hpp"
+#include <algorithm>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
 #include <map>
+#include <memory>
 #include <set>
 #include <strings.h>
 #include <sys/stat.h>
@@ -405,7 +408,48 @@ InstallPlan effective_plan(const InstallPlan &plan, const InstallOptions &option
         out.profile.id = options.profile_id;
     if (!options.profile_name.empty())
         out.profile.name = options.profile_name;
+    for (const auto &option : plan.options)
+    {
+        if (std::find(options.chosen.begin(), options.chosen.end(), option.id) == options.chosen.end())
+            continue;
+        out.game_files.insert(out.game_files.end(), option.game_files.begin(), option.game_files.end());
+        out.system_files.insert(out.system_files.end(), option.system_files.begin(),
+                                option.system_files.end());
+        out.texts.insert(out.texts.end(), option.texts.begin(), option.texts.end());
+        out.ini.insert(out.ini.end(), option.ini.begin(), option.ini.end());
+        out.expect.insert(out.expect.end(), option.expect.begin(), option.expect.end());
+        out.profile.dll_overrides += option.dll_overrides;
+    }
+    out.options.clear(); // added: an install of the result has none left to choose
     return out;
+}
+
+std::vector<OptionView> option_views(const InstallPlan &plan, const InstallPaths &paths,
+                                     const InstallOptions &options)
+{
+    std::vector<OptionView> views;
+    for (const auto &option : plan.options)
+        views.push_back({option.id, option.title, option.description, option.on});
+    // The record's "options", when there is a record that reads.
+    std::string text;
+    if (views.empty() ||
+        !hui::save::read_file(record_path(effective_plan(plan, options), paths), &text, 1u << 20))
+        return views;
+    std::unique_ptr<yyjson_doc, decltype(&yyjson_doc_free)> doc{
+        yyjson_read(text.data(), text.size(), 0), yyjson_doc_free};
+    auto *chosen = doc ? yyjson_obj_get(yyjson_doc_get_root(doc.get()), "options") : nullptr;
+    if (!yyjson_is_arr(chosen))
+        return views; // a record from before options: all off, as it was installed
+    for (auto &view : views)
+    {
+        view.on = false;
+        std::size_t index = 0, count = 0;
+        yyjson_val *item = nullptr;
+        yyjson_arr_foreach(chosen, index, count, item)
+            if (yyjson_is_str(item) && view.id == yyjson_get_str(item))
+                view.on = true;
+    }
+    return views;
 }
 
 bool install_game(const InstallPlan &given, const Manifest &manifest, const InstallPaths &paths,
@@ -691,6 +735,14 @@ bool install_game(const InstallPlan &given, const Manifest &manifest, const Inst
                          ",\n  \"without\": [";
     for (std::size_t i = 0; options.without_pending && i < plan.pending.size(); ++i)
         record += (i ? ", " : "") + json_text(plan.pending[i]);
+    record += "],\n  \"options\": [";
+    bool listed = false;
+    for (const auto &option : options.chosen)
+        if (given.option(option))
+        {
+            record += (listed ? ", " : "") + json_text(option);
+            listed = true;
+        }
     record += "],\n  \"sources\": {";
     bool first = true;
     for (const auto &[id, file] : files)

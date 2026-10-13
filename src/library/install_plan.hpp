@@ -102,8 +102,23 @@ struct InstallPlan
         bool rtpatch = false;
     };
     std::vector<Upgrade> upgrades;
+    // What the user may add at Install (MW's "Xbox 360 graphics"): each adds its files,
+    // edits and expected hashes to the plan's, and its dll_overrides to the profile's.
+    // Its sources are in the plan's list; only the chosen options' are fetched.
+    struct Option
+    {
+        std::string id, title, description;
+        bool on = false; // the plan's default ("default")
+        std::vector<Placement> game_files, system_files;
+        std::vector<TextFile> texts;
+        std::vector<IniEdit> ini;
+        std::vector<std::pair<std::string, std::string>> expect;
+        std::string dll_overrides; // appended to the profile's
+    };
+    std::vector<Option> options;
 
     const Source *source(const std::string &id) const;
+    const Option *option(const std::string &id) const;
 };
 
 // The plan in text, checked whole: every placement names a known source, paths stay

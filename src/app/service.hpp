@@ -49,6 +49,7 @@ struct Update
     std::vector<std::pair<std::string, std::uint64_t>> locations; // path, free bytes
     library::BaseGame base;
     bool game_installed = false; // base: the game's install record is there
+    std::vector<library::OptionView> game_options; // base: what Install can add, each on or off
 };
 // What the installer is doing, for the frame that draws it.
 struct JobView
@@ -95,7 +96,9 @@ class Service
     bool request_import(const catalog::Entry &entry);
     // Installs (or repairs) a collection game into its prefix from its plan, with its Home
     // app in location (the scanned folder that holds, or will hold, it), or removes both.
-    bool request_game(const catalog::Entry &entry, bool remove, const std::string &location);
+    // options: the ids of the plan's options to install with (install only).
+    bool request_game(const catalog::Entry &entry, bool remove, const std::string &location,
+                      std::vector<std::string> options = {});
     // Set before start(): where the games' install plans are (<plans>/<folder>.json),
     // prospero-win's data, and the prefix games go into ("" for each plan's own; a test
     // prefix keeps a test install apart from the live one, its profile named after it).
@@ -135,6 +138,7 @@ class Service
         } kind = Kind::install;
         catalog::Entry entry;
         std::string location;
+        std::vector<std::string> options; // install_game: the plan's options chosen
     };
     static void *entry(void *self);
     static void *icon_entry(void *self);
@@ -180,7 +184,8 @@ class Service
     void check_bases();
     bool import_job(const catalog::Entry &entry, std::string &error);
     bool game_job(const catalog::Entry &entry, bool remove, const std::string &location,
-                  const install::Environment &environment, std::string &error);
+                  const std::vector<std::string> &chosen, const install::Environment &environment,
+                  std::string &error);
     bool home_app(const catalog::Entry &game, const std::string &location,
                   const install::Environment &environment, std::string &error);
     bool remove_home_app(const std::string &id, const std::string &location,
@@ -190,5 +195,6 @@ class Service
                    const library::Manifest *&manifest, library::InstallOptions &options,
                    std::string &error) const;
     std::map<std::string, bool> installed_;
+    std::map<std::string, std::vector<std::string>> options_on_; // as last published
 };
 } // namespace store

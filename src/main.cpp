@@ -535,7 +535,8 @@ int main()
             else if (update.kind == store::Update::Kind::locations)
                 screen.set_locations(std::move(update.locations));
             else if (update.kind == store::Update::Kind::base)
-                screen.set_base(update.entry.id, std::move(update.base), update.game_installed);
+                screen.set_base(update.entry.id, std::move(update.base), update.game_installed,
+                                std::move(update.game_options));
             else if (update.kind == store::Update::Kind::icon)
             {
                 const auto listed = hashes.find(update.entry.id);
@@ -627,7 +628,7 @@ int main()
                                       ? service.request_game(
                                             order.entry,
                                             order.kind == store::Order::Kind::uninstall_game,
-                                            order.location)
+                                            order.location, order.options)
                                   : order.kind == store::Order::Kind::uninstall
                                       ? service.request_uninstall(order.id, order.location)
                                       : service.cancel_job(order.id);
