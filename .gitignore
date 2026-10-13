@@ -33,3 +33,11 @@ dist/
 # What a dev build carries to install on its own (nfs-blackbox-ps5: tools/make-bundle.py):
 # repo-made sources and the bare prefix, never committed.
 /assets/bundle/
+
+# macOS folder metadata, and what libFuzzer leaves in the working folder (tools/store-test.sh).
+.DS_Store
+/slow-unit-*
+/crash-*
+/leak-*
+/timeout-*
+/oom-*
