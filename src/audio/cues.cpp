@@ -73,7 +73,7 @@ constexpr CueInfo kCues[kCueCount] = {
     {"game_over", Bus::sfx, Wave::triangle, 300, 150, 0.8f, 0.4f},
 };
 
-constexpr const char *kSetNames[kSoundSetCount] = {"paper", "glass"};
+constexpr const char *kSetNames[kSoundSetCount] = {"paper", "glass", "menu"};
 
 const CueInfo &info(Cue cue)
 {

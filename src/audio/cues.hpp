@@ -76,6 +76,7 @@ enum class SoundSet : std::uint8_t
 {
     paper, // warm, wooden, tactile (ProsperoPuzzles)
     glass, // soft, airy, tuned chimes (ProsperoEden)
+    menu,  // short original clicks for this store (tools/make-menu-sfx.py)
     count,
 };
 

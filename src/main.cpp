@@ -989,7 +989,7 @@ int main()
         if (screen.settings().sounds)
             for (const auto &cue : feedback.cues)
             {
-                sounds.play(mixer, audio::SoundSet::glass, cue);
+                sounds.play(mixer, audio::SoundSet::menu, cue);
                 if (cue.cue == audio::Cue::complete)
                     music.duck();
             }

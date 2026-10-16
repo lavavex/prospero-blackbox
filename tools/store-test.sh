@@ -67,6 +67,11 @@ clang++ -std=c++20 "${flags[@]}" -fno-exceptions -fno-rtti -Wall -Wextra -Wpedan
     "$root/src/install/files.cpp" "$root/src/install/worker.cpp" "${miniz[@]}" -pthread \
     -o "$build/store-worker"
 ASAN_OPTIONS=detect_leaks=$leaks UBSAN_OPTIONS=halt_on_error=1 "$build/install-test" "$build/store-worker"
+clang++ -std=c++20 "${flags[@]}" -Wall -Wextra -Wpedantic -Werror -I"$root/src" \
+    "$root/tests/store_menu_sfx_test.cpp" "$root/src/audio/cues.cpp" "$root/src/audio/wav.cpp" \
+    "$root/src/audio/mixer.cpp" "$root/src/core/save_file.cpp" -o "$build/menu-sfx-test"
+ASAN_OPTIONS=detect_leaks=$leaks UBSAN_OPTIONS=halt_on_error=1 \
+    "$build/menu-sfx-test" "$root/assets/audio/sfx"
 # Fuzz the ZIP and JSON readers from valid seeds. STORE_FUZZ_SECONDS=0 skips it.
 fuzz_seconds=${STORE_FUZZ_SECONDS:-20}
 if (( fuzz_seconds > 0 )); then
