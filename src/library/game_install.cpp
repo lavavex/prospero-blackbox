@@ -421,7 +421,21 @@ InstallPlan effective_plan(const InstallPlan &plan, const InstallOptions &option
         out.profile.dll_overrides += option.dll_overrides;
     }
     out.options.clear(); // added: an install of the result has none left to choose
+    if (options.overlay == Overlay::fps)
+        out.profile.show_fps = true;
+    else if (options.overlay == Overlay::full)
+        out.profile.debug_env.emplace_back("DXVK_HUD", kFullOverlay);
     return out;
+}
+
+const char *overlay_name(Overlay overlay)
+{
+    return overlay == Overlay::fps ? "fps" : overlay == Overlay::full ? "full" : "off";
+}
+
+Overlay overlay_named(std::string_view name)
+{
+    return name == "fps" ? Overlay::fps : name == "full" ? Overlay::full : Overlay::off;
 }
 
 std::vector<OptionView> option_views(const InstallPlan &plan, const InstallPaths &paths,

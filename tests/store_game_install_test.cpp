@@ -418,6 +418,20 @@ int main()
     assert(read(data / "installs" / "shared" / "GAME.json").find("\"options\": []") != std::string::npos);
     assert(!option_views(optional, paths, options)[0].on);
 
+    // The performance overlay goes into the profile: the counter as show_fps, the full one
+    // as DXVK_HUD (prospero-win refuses both together).
+    {
+        InstallOptions fps = options, full = options;
+        fps.overlay = Overlay::fps;
+        full.overlay = Overlay::full;
+        assert(effective_plan(plan, fps).profile.show_fps && effective_plan(plan, fps).profile.debug_env.empty());
+        const auto hud = effective_plan(plan, full).profile;
+        assert(!hud.show_fps && hud.debug_env.size() == 1 && hud.debug_env[0].first == "DXVK_HUD");
+        assert(overlay_named(overlay_name(Overlay::full)) == Overlay::full && overlay_named("x") == Overlay::off);
+        assert(install_game(plan, game, paths, full, progress, go, error));
+        assert(read(win / "profiles" / "the-game.profile").find("env = DXVK_HUD=fps,frametimes") != std::string::npos);
+    }
+
     // A test install beside it: its own prefix, profile and record.
     put(win / "prefixes" / "pb-test" / "system.reg", kSystemReg);
     put(win / "prefixes" / "pb-test" / "user.reg", kUserReg);

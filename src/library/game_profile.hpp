@@ -31,6 +31,10 @@ struct GameProfile
     std::string input_mode = "xinput"; // xinput, keyboard
     // [runtime]: thread_scheduling, shared_input, fast_clock = true/false; cpu = native/translator
     std::vector<std::pair<std::string, std::string>> switches;
+    // [debug] env = NAME=VALUE: diagnostics variables (DXVK_HUD, ...), at most 5, as prospero-win
+    // takes them (pw_game_profile.c): a known family, never one the title sets itself, and no
+    // DXVK_HUD/GALLIUM_HUD with show_fps, which sets the HUD itself.
+    std::vector<std::pair<std::string, std::string>> debug_env;
 };
 
 // The profile as prospero-win reads it; false with error set when a field breaks its rules.

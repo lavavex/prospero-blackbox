@@ -7,6 +7,7 @@
 #include <ctime>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace store::library
@@ -16,6 +17,20 @@ struct InstallPaths
     std::string data_root;                   // the manager's: base-games, mods-cache, installs
     std::string win_root = "/data/prospero-win"; // prospero-win's: prefixes, profiles
 };
+
+// The performance overlay a game starts with (the page's game settings): none, prospero-win's
+// frame-rate counter (show_fps), or DXVK's HUD with frame times, GPU load, the command-stream
+// thread, draw calls and submissions. prospero-win takes one or the other, never both.
+enum class Overlay
+{
+    off,
+    fps,
+    full
+};
+inline constexpr const char *kFullOverlay = "fps,frametimes,gpuload,cs,drawcalls,submissions,scale=2.5";
+// "off", "fps", "full"; anything else is off.
+const char *overlay_name(Overlay overlay);
+Overlay overlay_named(std::string_view name);
 
 struct InstallOptions
 {
@@ -27,6 +42,7 @@ struct InstallOptions
     std::string profile_id; // empty: the plan's
     std::string profile_name;
     std::vector<std::string> chosen; // the plan's options to add (ids); unknown ones are ignored
+    Overlay overlay = Overlay::off;  // written into the profile
 };
 
 // A game install's stages, as the manager's page lists them (its job's progress).

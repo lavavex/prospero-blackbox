@@ -8,8 +8,11 @@
 #include "catalog/catalog.hpp"
 #include "library/base_game.hpp"
 #include "library/game_install.hpp"
+#include <map>
 #include "system/inventory.hpp"
+#include "ui/components/choice_group.hpp"
 #include "ui/components/dialog.hpp"
+#include "ui/components/sheet.hpp"
 #include "ui/components/hold_button.hpp"
 #include "ui/components/text_view.hpp"
 #include "ui/components/toast.hpp"
@@ -68,11 +71,13 @@ struct Order
         import_base, // copy the game's base copy from USB into base-games
         install_game,   // a collection game: install or repair it in its prefix
         uninstall_game, // a collection game: remove it from its prefix
+        game_settings,  // a collection game: its settings written into its profile
         cancel
     } kind = Kind::none;
     catalog::Entry entry; // install: the app's verified detail record
     std::string id, location;
     std::vector<std::string> options; // install_game: the plan's options chosen (ids)
+    library::Overlay overlay = library::Overlay::off; // install_game, game_settings
 };
 // What the player chose, kept in /data/prospero-blackbox/settings.txt.
 struct Settings
@@ -104,6 +109,9 @@ struct Settings
     // owner moves the live install over) keeps them apart from nfs-blackbox; empty
     // installs into each game's own (nfs-blackbox).
     std::string game_prefix = "pb-mw";
+    // Each collection game's performance overlay (game settings), by title ID; a game not
+    // here has none. Kept as overlay.<title ID>=fps|full.
+    std::map<std::string, library::Overlay> overlays;
 };
 std::string format_settings(const Settings &settings);
 Settings parse_settings(std::string_view text);
@@ -385,6 +393,12 @@ class Screen
     hui::ui::TextView article_;
     hui::ui::ToastStack toasts_;
     hui::ui::Dialog dialog_;
+    // A collection game's settings, Triangle on its page: its performance overlay, kept in
+    // settings_.overlays and written into an installed game's profile at once.
+    hui::ui::Sheet game_sheet_;
+    hui::ui::RadioGroup overlay_choice_;
+    std::string game_sheet_id_;
+    void open_game_settings(const App &app, hui::ui::Feedback &feedback);
     Activity activity_;
     // How fast the running phase moves, smoothed, for the time left.
     float rate_ = 0.0f, rate_time_ = 0.0f;

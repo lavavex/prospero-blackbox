@@ -132,5 +132,28 @@ int main()
            read(profiles / "profiles.lst") == "minesweeper.profile\npinball.profile\n");
     assert(remove_profile(profiles.string(), "pb-mw", error));
     fs::remove_all(profiles);
+    // [debug] env: the performance overlay, as prospero-win takes it; never with show_fps.
+    {
+        auto p = most_wanted();
+        p.debug_env = {{"DXVK_HUD", "fps,frametimes,gpuload,cs,drawcalls,submissions,scale=2.5"}};
+        assert(profile_text(p, text, error) &&
+               text.ends_with("\n[debug]\nenv = DXVK_HUD=fps,frametimes,gpuload,cs,drawcalls,submissions,scale=2.5\n"));
+        p.show_fps = true;
+        assert(!profile_text(p, text, error) && error.find("show_fps") != std::string::npos);
+        p.show_fps = false;
+        for (const auto &bad : std::vector<std::pair<std::string, std::string>>{
+                 {"WINEDEBUG", "+all"},        // not a family prospero-win takes
+                 {"PW_VK_BATCH", "0"},          // one the title sets itself
+                 {"DXVK_HUD", "fps;rm"},        // a character it refuses
+                 {"dxvk_hud", "fps"}})          // a lower-case name
+        {
+            auto q = most_wanted();
+            q.debug_env = {bad};
+            assert(!profile_text(q, text, error));
+        }
+        p.debug_env.assign(6, {"DXVK_LOG_LEVEL", "none"});
+        assert(!profile_text(p, text, error)); // more than 5
+    }
+
     std::cout << "Game profile checks passed\n";
 }

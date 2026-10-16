@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "library/game_profile.hpp"
 #include "core/save_file.hpp"
+#include <cctype>
 #include <cerrno>
 #include <cstring>
+#include <string_view>
 #include <unistd.h>
 
 namespace store::library
@@ -175,6 +177,38 @@ bool profile_text(const GameProfile &p, std::string &text, std::string &error)
                     return fail("[runtime] " + key + " is set twice");
             seen.push_back(key);
             out += key + " = " + value + "\n";
+        }
+    }
+    if (!p.debug_env.empty())
+    {
+        // pw_game_profile.c's debug_env_field, rule for rule.
+        constexpr const char *kFamilies[] = {"PW_", "DXVK_", "MESA_", "GALLIUM_", "ZINK_", "RADV_", "VK_"};
+        constexpr const char *kTitleSet[] = {"PW_VK_BATCH", "PW_INPUT_SHARED_FAST", "GALLIUM_DRIVER"};
+        if (p.debug_env.size() > 5)
+            return fail("[debug] takes at most 5 env lines");
+        out += "\n[debug]\n";
+        std::vector<std::string> seen;
+        for (const auto &[name, value] : p.debug_env)
+        {
+            bool family = false, plain = !name.empty() && name.size() < 48 && !value.empty() && value.size() < 96;
+            for (const char c : name)
+                plain = plain && ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_');
+            for (const char c : value)
+                plain = plain && (std::isalnum(static_cast<unsigned char>(c)) ||
+                                  std::string_view("_+-,.=:/").find(c) != std::string_view::npos);
+            for (const char *prefix : kFamilies)
+                family = family || name.starts_with(prefix);
+            for (const char *own : kTitleSet)
+                family = family && name != own;
+            if (!plain || !family || name.starts_with("PW_QPC_TSC_"))
+                return fail("[debug] env " + name + " is not one prospero-win takes");
+            if (p.show_fps && (name == "DXVK_HUD" || name == "GALLIUM_HUD"))
+                return fail("[debug] env " + name + " with show_fps, which sets it itself");
+            for (const auto &other : seen)
+                if (other == name)
+                    return fail("[debug] env " + name + " is set twice");
+            seen.push_back(name);
+            out += "env = " + name + "=" + value + "\n";
         }
     }
     if (out.size() > kMaxBytes)

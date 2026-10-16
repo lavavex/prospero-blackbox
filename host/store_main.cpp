@@ -517,6 +517,24 @@ int main(int argc, char **argv)
                     screen.update(press, 1.0f / 60.0f, feedback);
                     settle(40);
                 }
+                else if (mode == "mw-settings")
+                {
+                    // Triangle: the game's settings, Full picked.
+                    hui::InputFrame press, down;
+                    press.pressed = hui::action_bit(hui::Action::north);
+                    screen.update(press, 1.0f / 60.0f, feedback);
+                    settle(30);
+                    down.nav = hui::Direction::down;
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        screen.update(down, 1.0f / 60.0f, feedback);
+                        settle(8);
+                    }
+                    hui::InputFrame pick;
+                    pick.pressed = hui::action_bit(hui::Action::confirm);
+                    screen.update(pick, 1.0f / 60.0f, feedback);
+                    settle(40);
+                }
                 else if (mode == "mw-installing")
                 {
                     // Downloading, the first stage, the box grown.

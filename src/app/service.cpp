@@ -305,24 +305,49 @@ bool Service::load_policy(system::ScanPolicy &out, std::vector<std::string> *not
 
 bool Service::request_install(const catalog::Entry &entry, const std::string &location)
 {
-    return enqueue({Job::Kind::install, entry, location, {}});
+    return enqueue({Job::Kind::install, entry, location, {}, library::Overlay::off});
 }
 
 bool Service::request_adopt(const catalog::Entry &entry, const std::string &location)
 {
-    return enqueue({Job::Kind::adopt, entry, location, {}});
+    return enqueue({Job::Kind::adopt, entry, location, {}, library::Overlay::off});
 }
 
 bool Service::request_import(const catalog::Entry &entry)
 {
-    return enqueue({Job::Kind::import_base, entry, {}, {}});
+    return enqueue({Job::Kind::import_base, entry, {}, {}, library::Overlay::off});
 }
 
 bool Service::request_game(const catalog::Entry &entry, bool remove, const std::string &location,
-                           std::vector<std::string> options)
+                           std::vector<std::string> options, library::Overlay overlay)
 {
     return enqueue({remove ? Job::Kind::uninstall_game : Job::Kind::install_game, entry, location,
-                    std::move(options)});
+                    std::move(options), overlay});
+}
+
+bool Service::request_game_settings(const catalog::Entry &entry, library::Overlay overlay)
+{
+    return enqueue({Job::Kind::game_settings, entry, {}, {}, overlay});
+}
+
+// An installed game's profile written again with its settings, and the plan's options its
+// install chose (from the record), so nothing else in it changes.
+bool Service::settings_job(const catalog::Entry &entry, library::Overlay overlay, std::string &error)
+{
+    library::InstallPlan plan;
+    const library::Manifest *manifest = nullptr;
+    library::InstallOptions options;
+    if (!game_plan(entry, plan, manifest, options, error))
+        return false;
+    options.overlay = overlay;
+    const library::InstallPaths paths{root_, win_root};
+    if (access(library::record_path(library::effective_plan(plan, options), paths).c_str(), F_OK) != 0)
+        return true; // not installed: its next install writes the profile with them
+    for (const auto &view : library::option_views(plan, paths, options))
+        if (view.on)
+            options.chosen.push_back(view.id);
+    const auto chosen = library::effective_plan(plan, options);
+    return library::install_profile(win_root + "/profiles", chosen.profile, chosen.profile_after, error);
 }
 
 bool Service::game_plan(const catalog::Entry &entry, library::InstallPlan &plan,
@@ -415,7 +440,7 @@ bool Service::remove_home_app(const std::string &id, const std::string &location
 // The installer's worker: a collection game installed (or repaired) from its plan with its
 // Home app, or both removed, with the job's progress.
 bool Service::game_job(const catalog::Entry &entry, bool remove, const std::string &location,
-                       const std::vector<std::string> &chosen,
+                       const std::vector<std::string> &chosen, library::Overlay overlay,
                        const install::Environment &environment, std::string &error)
 {
     library::InstallPlan plan;
@@ -424,6 +449,7 @@ bool Service::game_job(const catalog::Entry &entry, bool remove, const std::stri
     if (!game_plan(entry, plan, manifest, options, error))
         return false;
     options.chosen = chosen;
+    options.overlay = overlay;
     const library::InstallPaths paths{root_, win_root};
     bases_stale_ = true;
     if (remove)
@@ -658,7 +684,7 @@ bool Service::request_uninstall(const std::string &id, const std::string &locati
             if (listed.id == id)
                 entry.name = listed.name;
     }
-    return enqueue({Job::Kind::uninstall, std::move(entry), location, {}});
+    return enqueue({Job::Kind::uninstall, std::move(entry), location, {}, library::Overlay::off});
 }
 
 bool Service::cancel_job(const std::string &id)
@@ -936,8 +962,13 @@ void Service::run_installer()
         {
             const bool remove = job.kind == Job::Kind::uninstall_game;
             result.operation = remove ? "game-uninstall" : "game-install";
-            result.ok = game_job(job.entry, remove, job.location, job.options, environment,
-                                 result.error);
+            result.ok = game_job(job.entry, remove, job.location, job.options, job.overlay,
+                                 environment, result.error);
+        }
+        else if (job.kind == Job::Kind::game_settings)
+        {
+            result.operation = "game-settings";
+            result.ok = settings_job(job.entry, job.overlay, result.error);
         }
 #ifdef STORE_FILE_WORKER
         else if (job.entry.id == environment.self)

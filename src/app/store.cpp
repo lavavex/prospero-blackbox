@@ -1243,6 +1243,8 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
         details_ = false;
         feedback.play(audio::Cue::back);
     }
+    else if (input.is_pressed(Action::north) && shown.base_known)
+        open_game_settings(shown, feedback);
     else if (input.is_pressed(Action::north))
     {
         auto &app = apps_[visible_[static_cast<std::size_t>(focus_)]];
@@ -1396,6 +1398,25 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
                         order(app, Order::Kind::adopt);
         }
     }
+    else if (game_sheet_.is_open())
+    {
+        // Back closes it; up and down move; Cross picks. A pick is kept and, for an
+        // installed game, written into its profile now.
+        if (game_sheet_.handle(input, feedback) == ui::Event::none)
+        {
+            overlay_choice_.set_active(true);
+            if (overlay_choice_.handle(input, feedback) == ui::Event::changed)
+            {
+                const auto overlay = static_cast<library::Overlay>(overlay_choice_.selected());
+                settings_.overlays[game_sheet_id_] = overlay;
+                settings_changed = true;
+                // The sheet says when it takes effect; no toast over it.
+                for (const auto &app : apps_)
+                    if (app.title_id == game_sheet_id_ && app.game_installed)
+                        order(app, Order::Kind::game_settings);
+            }
+        }
+    }
     else if (panel_)
         update_panel(input, feedback);
     else if (input.is_pressed(Action::menu) ||
@@ -1498,6 +1519,8 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     article_.set_active(details_);
     article_.update(dt);
     dialog_.update(dt);
+    game_sheet_.update(dt);
+    overlay_choice_.update(dt);
     hold_.update(dt);
     if (quiet_)
     {
@@ -2074,10 +2097,40 @@ void Screen::draw_grid(const ui::Fonts &fonts)
 
 // ---- drawing: the product page ----------------------------------------------
 
+void Screen::open_game_settings(const App &app, ui::Feedback &feedback)
+{
+    game_sheet_id_ = app.title_id;
+    game_sheet_.style.theme = overlay_choice_.style.theme = theme_;
+    game_sheet_.style.reduced_motion = overlay_choice_.style.reduced_motion = settings_.reduce_motion;
+    game_sheet_.set_title(app.name + " settings");
+    overlay_choice_.set_title("Performance overlay");
+    overlay_choice_.set_items({{"Off"},
+                               {"Frame rate", "A counter in the top-left corner"},
+                               {"Full", "Frame times, GPU load, draw calls"}});
+    const auto known = settings_.overlays.find(app.title_id);
+    overlay_choice_.set_selected(static_cast<int>(known == settings_.overlays.end() ? library::Overlay::off
+                                                                                    : known->second));
+    overlay_choice_.set_focus(overlay_choice_.selected());
+    game_sheet_.content = [this](ui::Canvas &canvas, const Rect &area, float)
+    {
+        overlay_choice_.set_bounds({area.x, area.y, area.w, overlay_choice_.preferred_height()});
+        overlay_choice_.draw(canvas);
+        ui::paragraph(canvas.list, canvas.fonts.regular,
+                      "It shows from the next time the game starts, and stays through repairs. "
+                      "Full is DXVK's overlay; it also shows its command-stream thread, the "
+                      "game's drawing work on the CPU. The game's settings and saves don't change.",
+                      area.x, area.y + overlay_choice_.preferred_height() + 40.0f, 19, area.w, 27,
+                      kInk.with_alpha(0.6f), 5);
+    };
+    game_sheet_.open(feedback);
+}
+
 void Screen::order(const App &app, Order::Kind kind, std::vector<std::string> options)
 {
     pending_order = {};
     pending_order.options = std::move(options);
+    if (const auto known = settings_.overlays.find(app.title_id); known != settings_.overlays.end())
+        pending_order.overlay = known->second;
     // A collection game's uninstall (the hold under Repair) removes it from its prefix.
     if (kind == Order::Kind::uninstall && app.base_known)
         kind = Order::Kind::uninstall_game;
@@ -3035,7 +3088,9 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
     if (state.uninstall && installer_ && guard_ && !state.busy)
         detail[details++] = {ui::Button::square, "Uninstall"};
     detail[details++] = {ui::Button::dpad, "Scroll"};
-    if (focused() && !focused()->local_only)
+    if (focused() && focused()->base_known)
+        detail[details++] = {ui::Button::triangle, "Game settings"};
+    else if (focused() && !focused()->local_only)
         detail[details++] = {ui::Button::triangle, "Refresh"};
     if (focused() && !focused()->local_only && !focused()->author.empty())
         detail[details++] = {ui::Button::right_stick, "More by this developer"};
@@ -3056,6 +3111,7 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
     draw_job_card(fonts, glass);
     draw_panel(fonts, glass);
     ui::Canvas canvas{overlay_, fonts, glass, time_};
+    game_sheet_.draw(canvas);
     dialog_.draw(canvas);
     toasts_.draw(canvas);
     if (close_hold_ > kCloseDelay)
@@ -3115,7 +3171,14 @@ std::string format_settings(const Settings &settings)
            "\nuse_official=" + (settings.use_official ? "1" : "0") +
            "\nuse_custom=" + (settings.use_custom ? "1" : "0") +
            "\nnews_seen=" + settings.news_seen + "\ntheme=" + settings.theme +
-           "\ngame_prefix=" + settings.game_prefix + "\n";
+           "\ngame_prefix=" + settings.game_prefix + "\n" + [&]
+           {
+               std::string out;
+               for (const auto &[id, overlay] : settings.overlays)
+                   if (overlay != library::Overlay::off)
+                       out += "overlay." + id + "=" + library::overlay_name(overlay) + "\n";
+               return out;
+           }();
 }
 
 Settings parse_settings(std::string_view text)
@@ -3154,6 +3217,10 @@ Settings parse_settings(std::string_view text)
                                       c == '-' || c == '_'; }) &&
                  value.size() <= 48 && (value.empty() || value[0] != '-'))
             settings.game_prefix = value;
+        else if (key.starts_with("overlay.") && key.size() == 8 + 9 &&
+                 std::all_of(key.begin() + 8, key.end(),
+                             [](char c) { return (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'); }))
+            settings.overlays[std::string(key.substr(8))] = library::overlay_named(value);
         else if (key == "catalog_url")
             catalog::normalize_api(value, settings.catalog_url);
         else if (key == "verify_signatures")

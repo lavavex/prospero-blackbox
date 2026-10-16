@@ -628,7 +628,9 @@ int main()
                                       ? service.request_game(
                                             order.entry,
                                             order.kind == store::Order::Kind::uninstall_game,
-                                            order.location, order.options)
+                                            order.location, order.options, order.overlay)
+                                  : order.kind == store::Order::Kind::game_settings
+                                      ? service.request_game_settings(order.entry, order.overlay)
                                   : order.kind == store::Order::Kind::uninstall
                                       ? service.request_uninstall(order.id, order.location)
                                       : service.cancel_job(order.id);
