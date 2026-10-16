@@ -1253,7 +1253,8 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
         refresh_detail();
         feedback.play(audio::Cue::select);
     }
-    else if (input.is_pressed(Action::r3) && !shown.local_only && !shown.author.empty())
+    else if (input.is_pressed(Action::r3) && !shown.local_only && !shown.author.empty() &&
+             !catalog::blackbox_game(shown.title_id))
     {
         const std::string author = shown.author;
         open_developer(author);
@@ -3092,7 +3093,9 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
         detail[details++] = {ui::Button::triangle, "Game settings"};
     else if (focused() && !focused()->local_only)
         detail[details++] = {ui::Button::triangle, "Refresh"};
-    if (focused() && !focused()->local_only && !focused()->author.empty())
+    // The collection is EA Black Box: nothing more of theirs is listed here.
+    if (focused() && !focused()->local_only && !focused()->author.empty() &&
+        !catalog::blackbox_game(focused()->title_id))
         detail[details++] = {ui::Button::right_stick, "More by this developer"};
     detail[details++] = {ui::Button::circle, "Back"};
     // A hint row leaves as the next layer arrives, so two are never legible at once.

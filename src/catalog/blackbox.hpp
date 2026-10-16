@@ -32,6 +32,16 @@ struct Game
 
 std::span<const Game> blackbox_games();
 
+// One of the six built-in games (PPSA99401–99406), whether or not its base copy
+// has been looked up yet.
+inline bool blackbox_game(std::string_view id)
+{
+    for (const auto &game : blackbox_games())
+        if (id == game.id)
+            return true;
+    return false;
+}
+
 // The manager's own colours, before a game is in focus.
 inline constexpr Palette kManagerPalette{0x0e0f24, 0x42358f, 0xffd166, 0x241a05};
 // A game's palette by title ID; the manager's for any other.
