@@ -72,6 +72,7 @@ struct Order
         install_game,   // a collection game: install or repair it in its prefix
         uninstall_game, // a collection game: remove it from its prefix
         game_settings,  // a collection game: its settings written into its profile
+        play,           // single-game app: hand over to the game (/app0/game.bin)
         cancel
     } kind = Kind::none;
     catalog::Entry entry; // install: the app's verified detail record
@@ -233,6 +234,22 @@ class Screen
     }
     // Scripted runs: what a player would do with the controller.
     bool open_app(const std::string &id);
+    // A single game's own app (the launcher, BLACKBOX_GAME): only that game's page, which
+    // never closes; Play when it is installed; no store panel.
+    void set_single_game(std::string id)
+    {
+        single_game_ = std::move(id);
+    }
+    const std::string &single_game() const
+    {
+        return single_game_;
+    }
+    // Installed at start: the page counts down, then plays; Cross plays at once, any other
+    // button stays on the page.
+    void set_autoplay(float seconds)
+    {
+        autoplay_ = seconds;
+    }
     bool page_open() const
     {
         return details_;
@@ -398,6 +415,9 @@ class Screen
     hui::ui::Sheet game_sheet_;
     hui::ui::RadioGroup overlay_choice_;
     std::string game_sheet_id_;
+    std::string single_game_;
+    bool single_opened_ = false;
+    float autoplay_ = 0.0f;
     void open_game_settings(const App &app, hui::ui::Feedback &feedback);
     Activity activity_;
     // How fast the running phase moves, smoothed, for the time left.

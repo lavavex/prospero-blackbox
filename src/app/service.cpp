@@ -763,7 +763,7 @@ void Service::run_installer()
     else
     {
         environment.root = root_;
-        environment.self = "PPSA99400";
+        environment.self = system::own_title();
         environment.self_version = version_;
         environment.fetch = [](const std::string &url, std::uint64_t limit, const net::Sink &sink,
                                net::Control &control)

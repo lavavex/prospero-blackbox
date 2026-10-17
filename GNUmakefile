@@ -14,6 +14,16 @@ STORE_WORKER := build/store-worker/store-worker.elf
 SELF_UPDATE_HELPER := build/self-update/self-updater.elf
 APP_ROOT_FILES := $(STORE_WORKER) $(SELF_UPDATE_HELPER)
 DEVELOPMENT ?= 0
+# One game's own app (its launcher): GAME=<title ID> with games/<title ID>/sce_sys/param.json
+# (the identity the game runner needs) and games/<title ID>/art (its art's name in the
+# nfs-blackbox-ps5 art folder: <name>.png icon, <name>-bg.png background, <name>.at9 music).
+GAME ?=
+ifneq ($(GAME),)
+APP_DEFINITIONS += BLACKBOX_GAME=$(GAME)
+APP_PARAM := games/$(GAME)/sce_sys/param.json
+APP_SCE_SYS := games/$(GAME)/sce_sys
+export GAME_ART := $(shell cat games/$(GAME)/art)
+endif
 # The trace behind the "Debug log" setting (About, klog and debug-trace.txt) is in every
 # build; it writes nothing until the setting is switched on.
 APP_DEFINITIONS += STORE_DEBUG_TRACE=1

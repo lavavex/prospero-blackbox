@@ -6,19 +6,30 @@
 
 namespace store::system
 {
+#define STORE_TITLE_TEXT2(x) #x
+#define STORE_TITLE_TEXT(x) STORE_TITLE_TEXT2(x)
+const char *own_title()
+{
+#ifdef BLACKBOX_GAME
+    return STORE_TITLE_TEXT(BLACKBOX_GAME);
+#else
+    return "PPSA99400";
+#endif
+}
+
 const std::string &app_folder()
 {
     static const std::string folder = []
     {
-        for (const char *candidate :
-             {"/app0", "/system_ex/app/PPSA99400", "/mnt/sandbox/PPSA99400_000/app0"})
+        const std::string title = own_title();
+        for (const std::string &candidate :
+             {std::string("/app0"), "/system_ex/app/" + title, "/mnt/sandbox/" + title + "_000/app0"})
         {
             struct stat info
             {
             };
-            if (stat((std::string(candidate) + "/eboot.bin").c_str(), &info) == 0 &&
-                S_ISREG(info.st_mode))
-                return std::string(candidate);
+            if (stat((candidate + "/eboot.bin").c_str(), &info) == 0 && S_ISREG(info.st_mode))
+                return candidate;
         }
         return std::string("/app0");
     }();

@@ -14,10 +14,15 @@
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 nfsbb=${NFSBB:-$root/../nfs-blackbox-ps5}
-icon=${PB_ICON:-$nfsbb/art/prospero-blackbox-icon0.png}
-background=${PB_BACKGROUND:-$nfsbb/art/prospero-blackbox-bg.png}
+# A game's own app (GAME_ART set by GNUmakefile): that game's art, into its sce_sys.
+game_art=${GAME_ART:-}
+icon=${PB_ICON:-$nfsbb/art/${game_art:-prospero-blackbox-icon0}.png}
+background=${PB_BACKGROUND:-$nfsbb/art/${game_art:-prospero-blackbox}-bg.png}
 tool=${PS5_ASSETS_TOOL:-$nfsbb/PS5_Vulkan/tools/prepare-assets.sh}
-out=$root/sce_sys
+out=$root/${APP_SCE_SYS:-sce_sys}
+if [[ -n $game_art && -f $nfsbb/art/$game_art.at9 ]]; then
+    mkdir -p "$out" && cp "$nfsbb/art/$game_art.at9" "$out/snd0.at9"
+fi
 art=${PB_ART:-$nfsbb/art}
 
 # The games' icons (cover art, so local only too): assets/games/<art>.png, the

@@ -513,6 +513,9 @@ void Screen::set_catalog(std::vector<App> apps, std::string status, bool current
     const auto previous = focused() ? focused()->title_id : std::string{};
     const auto shown = details_ ? previous : std::string{};
     apps_ = std::move(apps);
+    // A single game's app shows that game only.
+    if (!single_game_.empty())
+        std::erase_if(apps_, [this](const App &app) { return app.title_id != single_game_; });
     catalog_current_ = current;
     for (auto &app : apps_)
     {
@@ -558,6 +561,9 @@ void Screen::set_catalog(std::vector<App> apps, std::string status, bool current
                                     [&](auto index) { return apps_[index].title_id == previous; });
     if (found != visible_.end())
         focus_ = static_cast<int>(found - visible_.begin());
+    // ...and opens on its page, once.
+    if (!single_game_.empty() && !single_opened_)
+        single_opened_ = open_app(single_game_);
     details_ = details_ && found != visible_.end() && shown == previous;
     if (details_)
     {
@@ -1238,7 +1244,7 @@ void Screen::update_page(const InputFrame &input, ui::Feedback &feedback)
             order(shown, state.primary);
         }
     }
-    else if (input.is_pressed(Action::back))
+    else if (input.is_pressed(Action::back) && single_game_.empty())
     {
         details_ = false;
         feedback.play(audio::Cue::back);
@@ -1310,6 +1316,19 @@ void Screen::close_developer()
 void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
 {
     time_ += dt;
+    if (autoplay_ > 0.0f)
+    {
+        // The single game's countdown: a button ends it (Cross then plays, as on the page);
+        // run out, it plays. It counts once the page knows the game is installed.
+        const App *shown = page_app();
+        if (raw.pressed != 0 || raw.nav != Direction::none)
+            autoplay_ = 0.0f;
+        else if (shown && shown->game_installed && (autoplay_ -= dt) <= 0.0f)
+        {
+            autoplay_ = 0.0f;
+            order(*shown, Order::Kind::play);
+        }
+    }
     {
         // The action box grows while the page's game installs, to list its stages.
         const App *shown = page_app();
@@ -1402,8 +1421,28 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     else if (game_sheet_.is_open())
     {
         // Back closes it; up and down move; Cross picks. A pick is kept and, for an
-        // installed game, written into its profile now.
-        if (game_sheet_.handle(input, feedback) == ui::Event::none)
+        // installed game, written into its profile now. Square repairs an installed game
+        // (its question about the plan's option comes next).
+        if (input.is_pressed(Action::west))
+        {
+            for (const auto &app : apps_)
+                if (app.title_id == game_sheet_id_ && app.game_installed && installer_)
+                {
+                    game_sheet_.close(feedback);
+                    ask_ = Ask::game_options;
+                    ask_id_ = app.title_id;
+                    if (app.game_options.empty())
+                        order(app, Order::Kind::install_game);
+                    else
+                        dialog_.open({ui::StatusKind::question,
+                                      "Repair " + app.name + " with " + app.game_options.front().title + "?",
+                                      app.game_options.front().description,
+                                      {{"Cancel"}, {"No"}, {"Yes", ui::ButtonKind::primary}},
+                                      app.game_options.front().on ? 2 : 1},
+                                     feedback);
+                }
+        }
+        else if (game_sheet_.handle(input, feedback) == ui::Event::none)
         {
             overlay_choice_.set_active(true);
             if (overlay_choice_.handle(input, feedback) == ui::Event::changed)
@@ -1420,8 +1459,9 @@ void Screen::update(const InputFrame &raw, float dt, ui::Feedback &feedback)
     }
     else if (panel_)
         update_panel(input, feedback);
-    else if (input.is_pressed(Action::menu) ||
-             (input.is_pressed(Action::west) && !details_ && section_ != kUpdates))
+    else if (single_game_.empty() &&
+             (input.is_pressed(Action::menu) ||
+              (input.is_pressed(Action::west) && !details_ && section_ != kUpdates)))
     {
         // Options opens the settings; Square, the queue.
         open_panel(input.is_pressed(Action::menu) ? 1 : 0);
@@ -2116,11 +2156,26 @@ void Screen::open_game_settings(const App &app, ui::Feedback &feedback)
     {
         overlay_choice_.set_bounds({area.x, area.y, area.w, overlay_choice_.preferred_height()});
         overlay_choice_.draw(canvas);
+        float below = area.y + overlay_choice_.preferred_height() + 40.0f;
+        for (const auto &app : apps_)
+            if (app.title_id == game_sheet_id_ && app.game_installed)
+            {
+                // Repair: the install made again from the base copy (the Xbox 360 look on or
+                // off is asked then).
+                ui::draw_button(canvas.list, canvas.fonts, ui::GlyphStyle::dark(), ui::Button::square,
+                                area.x + 16.0f, below + 4.0f, 30);
+                ui::text(canvas.list, canvas.fonts.semibold, "Repair", area.x + 44.0f, below + 12.0f, 22, kInk);
+                ui::text(canvas.list, canvas.fonts.regular,
+                         app.game_options.empty() ? "Install it again from your copy"
+                                                  : "Install it again; " + app.game_options.front().title + " on or off",
+                         area.x + 44.0f, below + 40.0f, 17, kInk.with_alpha(0.6f));
+                below += 80.0f;
+            }
         ui::paragraph(canvas.list, canvas.fonts.regular,
                       "It shows from the next time the game starts, and stays through repairs. "
                       "Full is DXVK's overlay; it also shows its command-stream thread, the "
                       "game's drawing work on the CPU. The game's settings and saves don't change.",
-                      area.x, area.y + overlay_choice_.preferred_height() + 40.0f, 19, area.w, 27,
+                      area.x, below, 19, area.w, 27,
                       kInk.with_alpha(0.6f), 5);
     };
     game_sheet_.open(feedback);
@@ -2128,6 +2183,13 @@ void Screen::open_game_settings(const App &app, ui::Feedback &feedback)
 
 void Screen::order(const App &app, Order::Kind kind, std::vector<std::string> options)
 {
+    if (kind == Order::Kind::play)
+    {
+        pending_order = {};
+        pending_order.kind = kind;
+        pending_order.id = app.title_id;
+        return;
+    }
     pending_order = {};
     pending_order.options = std::move(options);
     if (const auto known = settings_.overlays.find(app.title_id); known != settings_.overlays.end())
@@ -2428,14 +2490,27 @@ Screen::Offer Screen::offer(const App &app) const
             // its registry back when it exits, so nothing changes while one runs. Apps this
             // manager didn't install are none of its business.
             const auto blocking =
-                std::find_if(running_.begin(), running_.end(), [](const std::string &id)
-                             { return id.starts_with("PPSA9940") && id != "PPSA99400"; });
+                std::find_if(running_.begin(), running_.end(), [this](const std::string &id)
+                             { return id.starts_with("PPSA9940") && id != "PPSA99400" &&
+                                      id != single_game_; });
             const bool wine_running = blocking != running_.end();
             // A copy a release behind is brought up to date by its upgrade file as it installs.
             out.primary = Order::Kind::install_game;
             out.label = app.game_installed ? "Repair" : "Install";
+            if (!single_game_.empty() && app.game_installed)
+            {
+                // Its own app: playing is the thing to do; Repair is in its settings.
+                out.primary = Order::Kind::play;
+                out.label = "Play";
+            }
+            const bool counting = !single_game_.empty() && app.game_installed && autoplay_ > 0.0f;
             out.uninstall = app.game_installed;
             out.headline = app.game_installed ? "Installed" : "Ready to install";
+            if (counting)
+            {
+                out.headline = "Starting in " + std::to_string(static_cast<int>(std::ceil(autoplay_)));
+                out.note = "Any other button stays here";
+            }
             out.tone = app.game_installed ? 2 : 1;
             if (!installer_)
                 out.reason = installer_reason_;
@@ -2695,7 +2770,7 @@ void Screen::draw_action_box(const ui::Fonts &fonts, std::uint32_t glass, const 
                 where += "  \xC2\xB7  " + size_text(free) + " free";
         if (!app.installed.empty())
             where = app.installed.front().path;
-        if (state.primary == Order::Kind::install_game)
+        if (state.primary == Order::Kind::install_game || state.primary == Order::Kind::play)
             where = std::string(app.game_installed ? "In" : "Installs into") + " the Wine prefix " +
                     (settings_.game_prefix.empty() ? "nfs-blackbox" : settings_.game_prefix);
         if (state.primary != Order::Kind::none)
@@ -3090,14 +3165,15 @@ void Screen::draw(gfx::Renderer &renderer, const ui::Fonts &fonts)
         detail[details++] = {ui::Button::square, "Uninstall"};
     detail[details++] = {ui::Button::dpad, "Scroll"};
     if (focused() && focused()->base_known)
-        detail[details++] = {ui::Button::triangle, "Game settings"};
+        detail[details++] = {ui::Button::triangle, single_game_.empty() ? "Game settings" : "Settings"};
     else if (focused() && !focused()->local_only)
         detail[details++] = {ui::Button::triangle, "Refresh"};
     // The collection is EA Black Box: nothing more of theirs is listed here.
     if (focused() && !focused()->local_only && !focused()->author.empty() &&
         !catalog::blackbox_game(focused()->title_id))
         detail[details++] = {ui::Button::right_stick, "More by this developer"};
-    detail[details++] = {ui::Button::circle, "Back"};
+    if (single_game_.empty())
+        detail[details++] = {ui::Button::circle, "Back"};
     // A hint row leaves as the next layer arrives, so two are never legible at once.
     scene_.push_opacity(1.0f - tween::clamp01(page * 3.0f));
     ui::draw_hints(scene_, fonts, glyphs, home, homes, kRight, true);

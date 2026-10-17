@@ -501,12 +501,19 @@ int main(int argc, char **argv)
                                                      : std::vector<std::string>{},
                                    true);
                 // The plan's option, as the Service publishes it.
-                screen.set_base("PPSA99403", base, mode == "mw-installed",
+                screen.set_base("PPSA99403", base, mode == "mw-installed" || mode == "mw-solo-installed",
                                 {{"x360", "Xbox 360 graphics",
                                   "The Xbox 360 look: the X360 Stuff Pack 4.2, the converted Xbox 360 "
                                   "movies, HD Content Support, Front-End Shadows, HD Reflections, "
                                   "native D3DX and an async-luminance fix. About 3.7 GB more to download.",
                                   false}});
+                if (mode.starts_with("mw-solo"))
+                {
+                    // The game's own app: its page only, counting down when installed.
+                    screen.set_single_game("PPSA99403");
+                    if (mode == "mw-solo-installed")
+                        screen.set_autoplay(30.0f); // long enough to be seen in the picture
+                }
                 assert(screen.open_app("PPSA99403"));
                 settle(90);
                 if (mode == "mw-ask")

@@ -44,6 +44,59 @@
 #include <map>
 #include <mutex>
 #include <GL/glcorearb.h>
+#include "catalog/blackbox.hpp"
+#include "library/base_game.hpp"
+#include "library/game_install.hpp"
+
+// Built as one game's own app (BLACKBOX_GAME=<its title ID>): the launcher of that game. It
+// hands over to the game runner in the same app folder, /app0/game.bin (prospero-win, starting
+// the game's profile), and only shows its page to install, repair or change settings.
+#define BLACKBOX_TEXT2(x) #x
+#define BLACKBOX_TEXT(x) BLACKBOX_TEXT2(x)
+#ifdef BLACKBOX_GAME
+static constexpr const char *kSingleGame = BLACKBOX_TEXT(BLACKBOX_GAME);
+#else
+static constexpr const char *kSingleGame = "";
+#endif
+extern "C" int sceSystemServiceLoadExec(const char *path, const char **arguments);
+
+namespace
+{
+// The game is installed for this app: its install record is there, for the prefix the settings
+// install into (the plan's when they name none).
+bool single_game_installed(const std::string &app_root, const std::string &storage_root)
+{
+    std::string saved, error;
+    hui::save::read_file(storage_root + "/settings.txt", &saved, 4096);
+    const auto settings = store::parse_settings(saved);
+    for (const auto &game : store::catalog::blackbox_games())
+    {
+        if (std::string_view(game.id) != kSingleGame)
+            continue;
+        store::library::InstallPlan plan;
+        if (!store::library::load_plan(app_root + "/assets/plans/" + game.folder + ".json", plan, error))
+            return false;
+        store::library::InstallOptions options;
+        if (!settings.game_prefix.empty() && settings.game_prefix != plan.prefix)
+            options.prefix = settings.game_prefix;
+        struct stat info{};
+        return stat(store::library::record_path(store::library::effective_plan(plan, options),
+                                                {storage_root, "/data/prospero-win"})
+                        .c_str(),
+                    &info) == 0;
+    }
+    return false;
+}
+
+[[noreturn]] void play_single_game(const char *why)
+{
+    hui::sys::log("[STORE] %s: handing over to /app0/game.bin", why);
+    const char *none[] = {nullptr};
+    const int refused = sceSystemServiceLoadExec("/app0/game.bin", none);
+    hui::sys::log("[STORE] LoadExec /app0/game.bin refused rc=0x%08x", static_cast<unsigned>(refused));
+    hui::sys::quit();
+}
+} // namespace
 
 extern "C" int sceUserServiceGetInitialUser(int *user);
 
@@ -199,6 +252,11 @@ int main()
     ps5::Pad pad;
     if (!pad.open())
         sys::log("[STORE] controller unavailable");
+    // Installed: the page counts down and plays (a button keeps it open).
+    const bool installed_at_start =
+        kSingleGame[0] && elevated && single_game_installed(app_root, storage_root);
+    if (kSingleGame[0])
+        sys::log("[STORE] %s installed=%d at start", kSingleGame, installed_at_start);
     int keyboard_user = -1;
     if (sceUserServiceGetInitialUser(&keyboard_user) < 0)
         keyboard_user = -1;
@@ -227,7 +285,14 @@ int main()
     const bool requests_started =
         elevated && pthread_create(&request_thread, nullptr, development_requests, nullptr) == 0;
     store::Screen screen;
-    screen.play_intro();
+    if (kSingleGame[0])
+    {
+        screen.set_single_game(kSingleGame); // straight to the game's page, no intro
+        if (installed_at_start)
+            screen.set_autoplay(3.0f);
+    }
+    else
+        screen.play_intro();
     // The picture for coming-soon apps that have no artwork of their own.
     std::uint32_t coming_soon_texture = 0;
     {
@@ -253,7 +318,7 @@ int main()
     }
     const std::string own_version = read_content_version(app_root + "/sce_sys/param.json");
     store::Service service(elevated ? storage_root : "", own_version);
-    screen.set_self("PPSA99400", own_version);
+    screen.set_self(store::system::own_title(), own_version);
     {
         // What the player chose last time; the defaults when there is no file. A store left in
         // its sandbox keeps them too where /data is shown to it (ShadowMountPlus does that):
@@ -615,6 +680,13 @@ int main()
             }
         }
         // The page's request goes to the installer; one refused by a busy lock is asked again.
+        if (auto &order = screen.pending_order; order.kind == store::Order::Kind::play)
+        {
+            // Settings changed this frame are written first; then the game takes the title.
+            if (screen.settings_changed)
+                service.save_settings(store::format_settings(screen.settings()));
+            play_single_game("play");
+        }
         if (auto &order = screen.pending_order; order.kind != store::Order::Kind::none)
         {
             const bool accepted = order.kind == store::Order::Kind::install

@@ -41,3 +41,9 @@ dist/
 /leak-*
 /timeout-*
 /oom-*
+
+# A game app's art, copied in by tools/blackbox-assets.sh (local only, like the store's).
+/games/*/sce_sys/icon0.png
+/games/*/sce_sys/pic0.dds
+/games/*/sce_sys/pic1.dds
+/games/*/sce_sys/snd0.at9

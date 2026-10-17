@@ -13,4 +13,6 @@ namespace store::system
 // drive, or its manual list); else the sandbox's mount of it. The first that
 // holds eboot.bin wins; /app0 when none does. Found once, then kept.
 const std::string &app_folder();
+// The running app's title ID: the game's in a game's own app (BLACKBOX_GAME), else the store's.
+const char *own_title();
 } // namespace store::system
