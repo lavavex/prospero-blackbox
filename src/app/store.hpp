@@ -118,6 +118,15 @@ std::string format_settings(const Settings &settings);
 Settings parse_settings(std::string_view text);
 
 // What the installer is doing right now, as the page shows it.
+// What the game's Black Box menu left for the next start (<data>/ingame-<title>.txt): the
+// launcher applies it, then plays unless the player asked for the setup screen.
+struct InGame
+{
+    std::optional<library::Overlay> overlay;
+    int x360 = -1; // the Xbox 360 option: -1 unsaid, 0 off, 1 on
+    bool repair = false, setup = false;
+};
+
 struct Activity
 {
     std::string id; // empty when idle
@@ -244,11 +253,10 @@ class Screen
     {
         return single_game_;
     }
-    // Installed at start: the page counts down, then plays; Cross plays at once, any other
-    // button stays on the page.
-    void set_autoplay(float seconds)
+    // The in-game menu's choices: applied once the page knows the game is installed.
+    void set_ingame(InGame choices)
     {
-        autoplay_ = seconds;
+        ingame_ = std::move(choices);
     }
     bool page_open() const
     {
@@ -402,6 +410,15 @@ class Screen
     // stages, each with what it is doing or did.
     void draw_game_stages(const hui::ui::Fonts &fonts, hui::gfx::DrawList &list,
                           const hui::gfx::Rect &box, const Offer &state) const;
+    // A game's own app at rest: what it is, and its choices on the page itself (one layer).
+    void draw_single_setup(const hui::ui::Fonts &fonts, hui::gfx::DrawList &list,
+                           const hui::gfx::Rect &box, const App &app, const Offer &state) const;
+    // The Xbox 360 look chosen on the page differs from the install's: Cross repairs.
+    bool single_x360_changes(const App &app) const
+    {
+        return single_x360_ >= 0 && !app.game_options.empty() &&
+               (single_x360_ == 1) != app.game_options.front().on;
+    }
 
     hui::ui::Theme theme_;
     std::string theme_id_;       // whose colours the interface is wearing or easing toward
@@ -417,7 +434,10 @@ class Screen
     std::string game_sheet_id_;
     std::string single_game_;
     bool single_opened_ = false;
-    float autoplay_ = 0.0f;
+    std::optional<InGame> ingame_;
+    int single_row_ = 0;   // the page's choice the D-pad is on: the 360 look, then the overlay
+    int single_x360_ = -1; // the Xbox 360 look chosen on the page; -1 until the install is known
+    bool play_after_ = false; // the in-game choices' job, then the game
     void open_game_settings(const App &app, hui::ui::Feedback &feedback);
     Activity activity_;
     // How fast the running phase moves, smoothed, for the time left.

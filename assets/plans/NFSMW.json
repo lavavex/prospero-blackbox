@@ -53,6 +53,11 @@
    "size": 45568,
    "url": "https://github.com/lavavex/NFSMW-ConsoleKeyboard/releases/download/v1.1/NFSMWConsoleKeyboard.asi"
   },
+  "blackbox-menu": {
+   "name": "NFSBlackBoxMenu.asi (nfs-blackbox-ps5 mods/NFSBlackBoxMenu, built by tools/build-blackbox-menu.sh)",
+   "sha256": "037a270a02adb4586295dc5986fc07bb21ff6876a926612d34971dbd28b7d8fd",
+   "size": 1381888
+  },
   "upgrade-1.2": {
    "name": "Most Wanted 1.2 to 1.3 diff (nfs-blackbox-ps5: profiles/nfsmw/nfsmw-1.2-to-1.3.zip): put it in mods-cache by hand",
    "sha256": "0f5fbec150678eb45bef7630b96e09b6255f21b1f1f2dfd85a776a7d2283969d",
@@ -158,6 +163,10 @@
   {
    "source": "console-keyboard",
    "to": "scripts/NFSMWConsoleKeyboard.asi"
+  },
+  {
+   "source": "blackbox-menu",
+   "to": "scripts/NFSBlackBoxMenu.asi"
   }
  ],
  "system_files": [],

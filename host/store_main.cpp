@@ -501,7 +501,8 @@ int main(int argc, char **argv)
                                                      : std::vector<std::string>{},
                                    true);
                 // The plan's option, as the Service publishes it.
-                screen.set_base("PPSA99403", base, mode == "mw-installed" || mode == "mw-solo-installed",
+                screen.set_base("PPSA99403", base,
+                                mode == "mw-installed" || mode.starts_with("mw-solo-installed"),
                                 {{"x360", "Xbox 360 graphics",
                                   "The Xbox 360 look: the X360 Stuff Pack 4.2, the converted Xbox 360 "
                                   "movies, HD Content Support, Front-End Shadows, HD Reflections, "
@@ -509,10 +510,8 @@ int main(int argc, char **argv)
                                   false}});
                 if (mode.starts_with("mw-solo"))
                 {
-                    // The game's own app: its page only, counting down when installed.
+                    // The game's own app: its page only (installed, the player quit to it).
                     screen.set_single_game("PPSA99403");
-                    if (mode == "mw-solo-installed")
-                        screen.set_autoplay(30.0f); // long enough to be seen in the picture
                 }
                 assert(screen.open_app("PPSA99403"));
                 settle(90);
@@ -541,6 +540,20 @@ int main(int argc, char **argv)
                     pick.pressed = hui::action_bit(hui::Action::confirm);
                     screen.update(pick, 1.0f / 60.0f, feedback);
                     settle(40);
+                }
+                else if (mode == "mw-solo-installed-x360")
+                {
+                    // A game's own app: the 360 look switched on, so Cross repairs.
+                    screen.update(right, 1.0f / 60.0f, feedback);
+                    settle(30);
+                }
+                else if (mode == "mw-solo-overlay")
+                {
+                    // Down to the overlay, Frame rate picked.
+                    screen.update(down, 1.0f / 60.0f, feedback);
+                    settle(8);
+                    screen.update(right, 1.0f / 60.0f, feedback);
+                    settle(30);
                 }
                 else if (mode == "mw-installing")
                 {

@@ -88,6 +88,41 @@ bool single_game_installed(const std::string &app_root, const std::string &stora
     return false;
 }
 
+// What the game's Black Box menu left for this start: <data>/ingame-<title>.txt, taken (renamed
+// to .last) so that it is applied once.
+std::optional<store::InGame> take_ingame_choices(const std::string &storage_root)
+{
+    const std::string path = storage_root + "/ingame-" + kSingleGame + ".txt";
+    std::string text;
+    if (!hui::save::read_file(path, &text, 4096))
+        return std::nullopt;
+    (void)rename(path.c_str(), (path + ".last").c_str());
+    store::InGame choices;
+    std::size_t at = 0;
+    while (at < text.size())
+    {
+        const auto end = std::min(text.find('\n', at), text.size());
+        const std::string_view line(text.data() + at, end - at);
+        at = end + 1;
+        const auto equals = line.find('=');
+        if (equals == std::string_view::npos)
+            continue;
+        const auto key = line.substr(0, equals), value = line.substr(equals + 1);
+        if (key == "overlay")
+            choices.overlay = store::library::overlay_named(value);
+        else if (key == "x360")
+            choices.x360 = value == "on" ? 1 : 0;
+        else if (key == "repair")
+            choices.repair = value == "1";
+        else if (key == "setup")
+            choices.setup = value == "1";
+    }
+    hui::sys::log("[STORE] in-game choices: overlay=%s x360=%d repair=%d setup=%d",
+                  choices.overlay ? store::library::overlay_name(*choices.overlay) : "-", choices.x360,
+                  choices.repair, choices.setup);
+    return choices;
+}
+
 [[noreturn]] void play_single_game(const char *why)
 {
     hui::sys::log("[STORE] %s: handing over to /app0/game.bin", why);
@@ -197,6 +232,12 @@ int main()
     // Wherever the store is installed (system/app_folder.hpp), now that the root may have changed.
     const std::string app_root = store::system::app_folder();
     sys::log("[STORE] app folder=%s", app_root.c_str());
+    // A game's own app shows its screen only when the game isn't installed yet, or when the
+    // game's Black Box menu left choices to apply (or asked for this screen); otherwise the
+    // tile goes straight into the game.
+    const auto ingame = kSingleGame[0] && elevated ? take_ingame_choices(storage_root) : std::nullopt;
+    if (kSingleGame[0] && elevated && !ingame && single_game_installed(app_root, storage_root))
+        play_single_game("installed");
     request_path = std::string(storage_root) + "/dev/request.txt";
     handled_path = std::string(storage_root) + "/handled.txt";
     // A folder left by a sandboxed run is taken back before anything is written to it.
@@ -252,11 +293,6 @@ int main()
     ps5::Pad pad;
     if (!pad.open())
         sys::log("[STORE] controller unavailable");
-    // Installed: the page counts down and plays (a button keeps it open).
-    const bool installed_at_start =
-        kSingleGame[0] && elevated && single_game_installed(app_root, storage_root);
-    if (kSingleGame[0])
-        sys::log("[STORE] %s installed=%d at start", kSingleGame, installed_at_start);
     int keyboard_user = -1;
     if (sceUserServiceGetInitialUser(&keyboard_user) < 0)
         keyboard_user = -1;
@@ -288,8 +324,8 @@ int main()
     if (kSingleGame[0])
     {
         screen.set_single_game(kSingleGame); // straight to the game's page, no intro
-        if (installed_at_start)
-            screen.set_autoplay(3.0f);
+        if (ingame)
+            screen.set_ingame(*ingame);
     }
     else
         screen.play_intro();
@@ -318,7 +354,8 @@ int main()
     }
     const std::string own_version = read_content_version(app_root + "/sce_sys/param.json");
     store::Service service(elevated ? storage_root : "", own_version);
-    screen.set_self(store::system::own_title(), own_version);
+    // The store's own page and self-update: never in a game's app, whose title is the game's.
+    screen.set_self(kSingleGame[0] ? "" : store::system::own_title(), own_version);
     {
         // What the player chose last time; the defaults when there is no file. A store left in
         // its sandbox keeps them too where /data is shown to it (ShadowMountPlus does that):
